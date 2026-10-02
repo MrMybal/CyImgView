@@ -214,11 +214,20 @@ uint32_t ReadOrientation(IWICMetadataQueryReader* qr) {
     return 1;
 }
 
+bool DecodeGifAnimation(IWICImagingFactory* f, IWICBitmapDecoder* dec, UINT count, DecodedImage& out, std::wstring& error);
+
 // Cœur du décodage WIC. maxSize > 0 : vignette rapide (miniature EXIF, réduction DCT du JPEG).
 bool DecodeWicDecoder(IWICImagingFactory* f, IWICBitmapDecoder* dec, uint32_t maxSize, DecodedImage& out,
                       std::wstring& error) {
     GUID cf{};
     if (SUCCEEDED(dec->GetContainerFormat(&cf))) out.format = ContainerName(cf);
+    if (cf == GUID_ContainerFormatGif && maxSize == 0) {  // GIF animé : toutes les images
+        UINT n = 0;
+        if (SUCCEEDED(dec->GetFrameCount(&n)) && n > 1 && DecodeGifAnimation(f, dec, n, out, error)) return true;
+        out.frames.clear();
+        out.delays.clear();
+        out.pixels.Free();
+    }
 
     ComPtr<IWICBitmapFrameDecode> frame;
     if (FAILED(dec->GetFrame(0, &frame))) {
@@ -322,6 +331,97 @@ bool DecodeWicDecoder(IWICImagingFactory* f, IWICBitmapDecoder* dec, uint32_t ma
     return true;
 }
 
+constexpr size_t kAnimationBudget = 1024ull << 20;  // mémoire maximale pour les images d'une animation
+
+// GIF animé : chaque image du fichier est un morceau à poser sur le « canevas » (position,
+// transparence, règle d'effacement), comme le font les navigateurs.
+bool DecodeGifAnimation(IWICImagingFactory* f, IWICBitmapDecoder* dec, UINT count, DecodedImage& out, std::wstring& error) {
+    auto metaU = [](IWICMetadataQueryReader* q, const wchar_t* name, uint32_t def) {
+        PROPVARIANT pv;
+        PropVariantInit(&pv);
+        uint32_t v = def;
+        if (q && SUCCEEDED(q->GetMetadataByName(name, &pv))) {
+            if (pv.vt == VT_UI1) v = pv.bVal;
+            else if (pv.vt == VT_UI2) v = pv.uiVal;
+            else if (pv.vt == VT_UI4) v = pv.ulVal;
+            PropVariantClear(&pv);
+        }
+        return v;
+    };
+    ComPtr<IWICMetadataQueryReader> gq;
+    dec->GetMetadataQueryReader(&gq);
+    ComPtr<IWICBitmapFrameDecode> first;
+    if (FAILED(dec->GetFrame(0, &first))) return false;
+    UINT fw = 0, fh = 0;
+    first->GetSize(&fw, &fh);
+    const uint32_t W = metaU(gq.Get(), L"/logscrdesc/Width", fw), H = metaU(gq.Get(), L"/logscrdesc/Height", fh);
+    if (!W || !H || W > 16384 || H > 16384) return false;
+    const size_t stride = size_t(W) * 4, bytes = stride * H;
+    std::vector<uint8_t> canvas(bytes, 0), saved;
+
+    for (UINT i = 0; i < count; ++i) {
+        ComPtr<IWICBitmapFrameDecode> frame;
+        ComPtr<IWICMetadataQueryReader> q;
+        ComPtr<IWICFormatConverter> cv;
+        if (FAILED(dec->GetFrame(i, &frame))) break;
+        frame->GetMetadataQueryReader(&q);
+        const uint32_t left = metaU(q.Get(), L"/imgdesc/Left", 0), top = metaU(q.Get(), L"/imgdesc/Top", 0);
+        uint32_t delay = metaU(q.Get(), L"/grctlext/Delay", 10) * 10;
+        if (delay < 20) delay = 100;  // convention des navigateurs pour les délais nuls ou trop courts
+        const uint32_t disposal = metaU(q.Get(), L"/grctlext/Disposal", 0);
+        UINT w = 0, h = 0;
+        frame->GetSize(&w, &h);
+        std::vector<uint8_t> px(size_t(w) * h * 4);
+        if (FAILED(f->CreateFormatConverter(&cv)) ||
+            FAILED(cv->Initialize(frame.Get(), GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, nullptr, 0,
+                                  WICBitmapPaletteTypeCustom)) ||
+            FAILED(cv->CopyPixels(nullptr, w * 4, UINT(px.size()), px.data())))
+            break;
+        if (disposal == 3) saved = canvas;
+        // Pose du morceau (alpha prémultiplié : dst = src + dst * (1 - a))
+        for (UINT y = 0; y < h && top + y < H; ++y) {
+            const uint8_t* s = px.data() + size_t(y) * w * 4;
+            uint8_t* d = canvas.data() + (top + y) * stride + size_t(left) * 4;
+            for (UINT x = 0; x < w && left + x < W; ++x, s += 4, d += 4) {
+                const uint32_t inv = 255 - s[3];
+                for (int c = 0; c < 4; ++c) d[c] = uint8_t(s[c] + (d[c] * inv + 127) / 255);
+            }
+        }
+        // Image affichée = état du canevas
+        uint8_t* dst;
+        if (i == 0) {
+            if (!out.pixels.Alloc(bytes)) {
+                error = L"Mémoire insuffisante";
+                return false;
+            }
+            dst = out.pixels.Data();
+        } else {
+            if (bytes * (out.frames.size() + 2) > kAnimationBudget) break;  // trop d'images : on s'arrête là
+            auto pb = std::make_unique<PixelBuffer>();
+            if (!pb->Alloc(bytes)) break;
+            dst = pb->Data();
+            out.frames.push_back(std::move(pb));
+        }
+        memcpy(dst, canvas.data(), bytes);
+        out.delays.push_back(delay);
+        // Effacement avant l'image suivante
+        if (disposal == 2) {
+            for (UINT y = 0; y < h && top + y < H; ++y)
+                memset(canvas.data() + (top + y) * stride + size_t(left) * 4, 0, size_t(std::min(w, W - left)) * 4);
+        } else if (disposal == 3 && !saved.empty()) {
+            canvas = saved;
+        }
+    }
+    if (!out.pixels.Data()) return false;
+    out.width = out.fullWidth = W;
+    out.height = out.fullHeight = H;
+    out.stride = uint32_t(stride);
+    out.hasAlpha = true;
+    out.format = L"GIF animé";
+    if (out.frames.empty()) out.delays.clear();
+    return true;
+}
+
 bool DecodeWicMemory(IWICImagingFactory* f, const void* data, size_t size, uint32_t maxSize, DecodedImage& out,
                      std::wstring& error) {
     if (size > 0xFFFFFFF0ull) return false;
@@ -412,9 +512,30 @@ void HostSetError(CyImgContext* c, const wchar_t* m) {
     if (m) c->error = m;
 }
 
+uint8_t* HostAddFrame(CyImgContext* c, uint32_t* stride) {
+    DecodedImage* o = c->out;
+    if (!c->produced || c->target || !o->pixels.Data()) return nullptr;  // pas d'animation pour une vignette
+    const size_t bytes = o->pixels.Size();
+    if (bytes * (o->FrameCount() + 1) > kAnimationBudget || o->frames.size() >= 10000) return nullptr;
+    auto pb = std::make_unique<PixelBuffer>();
+    if (!pb->Alloc(bytes)) return nullptr;
+    uint8_t* p = pb->Data();
+    o->frames.push_back(std::move(pb));
+    if (stride) *stride = o->stride;
+    return p;
+}
+
+void HostSetFrameDelay(CyImgContext* c, uint32_t index, uint32_t ms) {
+    auto& d = c->out->delays;
+    if (index > 10000) return;
+    if (d.size() <= index) d.resize(size_t(index) + 1, 100);
+    d[index] = ms < 20 ? 100 : ms;
+}
+
 const CyImgHost g_host = {
     CYIMG_API_VERSION, sizeof(CyImgHost), HostTargetSize,     HostIsCancelled, HostAllocBgra,    HostDecodeEncoded,
     HostSetOrientation, HostSetFormat,   HostSetInfo,         HostQuality,     HostSetRefinable, HostSetError,
+    HostAddFrame,       HostSetFrameDelay,
 };
 
 // Vignette demandée mais le plugin a rendu une grande image : on la réduit (le cache de vignettes
@@ -566,6 +687,8 @@ bool Decoder::TryPlugin(const Plugin& p, const std::wstring& path, uint32_t maxS
     else if (p.api->name) img->format = p.api->name;
     if (!ctx.info.empty()) img->info = std::move(ctx.info);
     img->refinable = ctx.refinable && !best && maxSize == 0;
+    if (img->frames.empty()) img->delays.clear();
+    else img->delays.resize(img->FrameCount(), 100);  // durée par défaut des images sans délai
     out = std::move(img);
     return true;
 }

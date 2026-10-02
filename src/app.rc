@@ -2,6 +2,7 @@
 #include "version.h"
 
 1 ICON "app.ico"
+2 RCDATA "logo.png"  // logo affiché dans l'interface (accueil, aide)
 
 VS_VERSION_INFO VERSIONINFO
 FILEVERSION CYIMG_VERSION_MAJOR,CYIMG_VERSION_MINOR,CYIMG_VERSION_PATCH,0

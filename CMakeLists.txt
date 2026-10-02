@@ -12,6 +12,14 @@ set(CYIMG_WARNINGS /utf-8 /W4 /permissive- /Zc:__cplusplus /EHsc)
 
 set(OUT_DIR ${CMAKE_BINARY_DIR}/bin)
 
+# --- Code partagé (application, installeur, plugins) -----------------------------------------
+# deflate/zlib, archives zip, décodage des formats GPU par blocs (BC1 à BC7)
+add_library(cyimg_support STATIC src/inflate.cpp src/zip.cpp src/gpu_decode.cpp)
+target_compile_options(cyimg_support PRIVATE ${CYIMG_WARNINGS})
+target_include_directories(cyimg_support PUBLIC src include)
+target_link_libraries(cyimg_support PUBLIC d3d11)
+
+# --- Application -----------------------------------------------------------------------------
 add_executable(CyImgView WIN32
     src/main.cpp
     src/viewer.cpp
@@ -22,66 +30,48 @@ add_executable(CyImgView WIN32
     src/viewer_edit.cpp
     src/viewer_update.cpp
     src/viewer_settings.cpp
+    src/viewer_extra.cpp
+    src/viewer_slideshow.cpp
     src/updater.cpp
-    src/inflate.cpp
     src/app.rc
     src/app.manifest)
 target_compile_options(CyImgView PRIVATE ${CYIMG_WARNINGS})
-target_include_directories(CyImgView PRIVATE include)
-target_link_libraries(CyImgView PRIVATE d2d1 d3d11 dxgi dwrite windowscodecs shlwapi dwmapi shell32 ole32 propsys comctl32 comdlg32 winhttp bcrypt)
+target_link_libraries(CyImgView PRIVATE cyimg_support d2d1 d3d11 dxgi dwrite windowscodecs shlwapi dwmapi shell32
+    ole32 propsys comctl32 comdlg32 winhttp bcrypt dxguid)
 set_target_properties(CyImgView PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR})
 
-# Banc d'essai console du décodage (mesure des temps, sans interface)
-add_executable(cyimg_bench tools/bench.cpp src/decoder.cpp src/folder.cpp src/save.cpp src/updater.cpp src/inflate.cpp)
+# Banc d'essai console du décodage (mesure des temps, conversions, tests des mises à jour)
+add_executable(cyimg_bench tools/bench.cpp src/decoder.cpp src/folder.cpp src/save.cpp src/updater.cpp)
 target_compile_options(cyimg_bench PRIVATE ${CYIMG_WARNINGS})
-target_include_directories(cyimg_bench PRIVATE include)
-target_link_libraries(cyimg_bench PRIVATE windowscodecs shlwapi ole32 propsys winhttp bcrypt)
+target_link_libraries(cyimg_bench PRIVATE cyimg_support windowscodecs shlwapi ole32 propsys winhttp bcrypt)
 set_target_properties(cyimg_bench PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR})
-
-# --- LibRaw (third_party/LibRaw, LGPL 2.1 / CDDL 1.0) ----------------------------------------
-set(LIBRAW_DIR ${CMAKE_SOURCE_DIR}/third_party/LibRaw)
-file(GLOB_RECURSE LIBRAW_SOURCES CONFIGURE_DEPENDS ${LIBRAW_DIR}/src/*.cpp)
-list(FILTER LIBRAW_SOURCES EXCLUDE REGEX "/src/integration/|_ph\.cpp$")  # *_ph.cpp : agrégats (#include) des autres sources
-add_library(libraw STATIC ${LIBRAW_SOURCES})
-target_include_directories(libraw PUBLIC ${LIBRAW_DIR})
-target_compile_definitions(libraw PUBLIC LIBRAW_NODLL PRIVATE LIBRAW_BUILDLIB _CRT_SECURE_NO_WARNINGS)
-# OpenMP : dématriçage et décodage multithreads (nécessite vcomp140.dll, copiée à côté du plugin)
-target_compile_options(libraw PRIVATE /W0 /EHsc /openmp /bigobj)
-set_target_properties(libraw PROPERTIES INTERPROCEDURAL_OPTIMIZATION OFF)
-
-# --- Plugins ---------------------------------------------------------------------------------
-add_library(raw SHARED plugins/raw/raw.cpp plugins/raw/previews.cpp)
-target_compile_options(raw PRIVATE /utf-8 /W4 /EHsc)
-target_include_directories(raw PRIVATE include)
-target_link_libraries(raw PRIVATE libraw ws2_32 windowscodecs ole32)
-set_target_properties(raw PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR}/plugins)
-
-set(VCOMP_DLL "$ENV{VCToolsRedistDir}x64/Microsoft.VC143.OpenMP/vcomp140.dll")
-if(EXISTS "${VCOMP_DLL}")
-    add_custom_command(TARGET raw POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${VCOMP_DLL}" "${OUT_DIR}/plugins/vcomp140.dll")
-else()
-    message(WARNING "vcomp140.dll introuvable : le plugin RAW dépendra du redistribuable Visual C++")
-endif()
-
-# Textures Unreal Engine (.uasset non cookés et cookés). Oodle est chargé depuis une installation d'Unreal.
-add_library(uasset SHARED plugins/uasset/uasset.cpp plugins/uasset/codecs.cpp plugins/uasset/gpu_decode.cpp src/inflate.cpp)
-target_compile_options(uasset PRIVATE /utf-8 /W4 /EHsc)
-target_include_directories(uasset PRIVATE include)
-target_link_libraries(uasset PRIVATE windowscodecs ole32 advapi32 d3d11)
-set_target_properties(uasset PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR}/plugins)
 
 # --- Installeur ------------------------------------------------------------------------------
 # Programme d'installation ; tools/package.ps1 lui colle l'archive de release pour produire
 # dist/CyImgView-<version>-Setup.exe.
-add_executable(CyImgViewSetup WIN32 installer/setup.cpp installer/setup.rc installer/setup.manifest
-    src/updater.cpp src/inflate.cpp)
+add_executable(CyImgViewSetup WIN32 installer/setup.cpp installer/setup.rc installer/setup.manifest src/updater.cpp)
 target_compile_options(CyImgViewSetup PRIVATE ${CYIMG_WARNINGS})
-target_link_libraries(CyImgViewSetup PRIVATE comctl32 shell32 ole32 advapi32 winhttp bcrypt)
+target_link_libraries(CyImgViewSetup PRIVATE cyimg_support comctl32 shell32 ole32 advapi32 winhttp bcrypt)
 set_target_properties(CyImgViewSetup PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR} OUTPUT_NAME setup-stub)
 
-# TGA (Truevision) : non géré par WIC
-add_library(tga SHARED plugins/tga/tga.cpp)
-target_compile_options(tga PRIVATE /utf-8 /W4 /EHsc)
-target_include_directories(tga PRIVATE include)
-set_target_properties(tga PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR}/plugins)
+# --- Plugins ---------------------------------------------------------------------------------
+# cyimg_add_plugin(nom sources...) : DLL dans bin/plugins, liée au code partagé.
+function(cyimg_add_plugin name)
+    add_library(${name} SHARED ${ARGN})
+    target_compile_options(${name} PRIVATE /utf-8 /W4 /EHsc)
+    target_link_libraries(${name} PRIVATE cyimg_support)
+    set_target_properties(${name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR}/plugins)
+endfunction()
+
+# Chaque dossier plugins/<nom>/ décrit sa compilation dans un plugin.cmake.
+# -DCYIMG_ONLY_PLUGINS="a;b" : ne configure que ces plugins (développement, builds parallèles).
+set(CYIMG_ONLY_PLUGINS "" CACHE STRING "Liste de plugins à configurer (vide = tous)")
+file(GLOB CYIMG_PLUGIN_SCRIPTS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/plugins/*/plugin.cmake)
+foreach(script ${CYIMG_PLUGIN_SCRIPTS})
+    get_filename_component(CYIMG_PLUGIN_DIR ${script} DIRECTORY)
+    get_filename_component(CYIMG_PLUGIN_NAME ${CYIMG_PLUGIN_DIR} NAME)
+    if(CYIMG_ONLY_PLUGINS AND NOT CYIMG_PLUGIN_NAME IN_LIST CYIMG_ONLY_PLUGINS)
+        continue()
+    endif()
+    include(${script})
+endforeach()

@@ -1,4 +1,8 @@
-# CyImgView
+<p align="center">
+  <img src="docs/logo.png" alt="Logo CyImgView" width="160">
+</p>
+
+<h1 align="center">CyImgView</h1>
 
 Visionneuse d'images pour Windows, pensée pour la vitesse : C++ natif, Direct2D (rendu GPU), WIC,
 aucune dépendance externe. L'exécutable fait environ 600 Ko et n'a besoin d'aucun runtime.
@@ -22,8 +26,29 @@ Version portable : l'archive `CyImgView-<version>-win64.zip` contient l'exe et l
 
 ## Fonctionnalités
 
-- **Formats** : JPEG, PNG, GIF, BMP, TIFF, TGA (plugin `tga`), ICO, JPEG XR, DDS, ainsi que WebP, HEIF
-  et AVIF si les codecs Windows correspondants sont installés.
+- **Formats** : tout est intégré, aucun codec Windows supplémentaire n'est nécessaire.
+
+  | Famille | Formats | Plugin |
+  |---|---|---|
+  | Courants (WIC) | JPEG, PNG, GIF (animé), BMP, TIFF, ICO, JPEG XR | — |
+  | Web / modernes | WebP (animé), HEIC / HEIF, AVIF (et leurs séquences animées), JPEG XL (animé), JPEG 2000 (jp2, j2k, jpx…) | `webp`, `heif`, `jxl`, `jpeg2000` |
+  | Vectoriels | SVG / SVGZ, PDF et AI (1re page), WMF / EMF, DXF (2D) | `vector` |
+  | Fichiers de travail | PSD / PSB (image fusionnée), XCF (GIMP, calques recomposés), KRA / ORA, CLIP, et l'aperçu intégré des INDD, EPS, CDR, Affinity (afphoto, afdesign, afpub) | `psd`, `docs` |
+  | Spéciaux | EXR, HDR (Radiance), DDS (BC1 à BC7, HDR, cubemaps), TGA, FITS, DICOM (multi-images), ICNS | `exr`, `classic`, `dds`, `tga`, `dicom` |
+  | Anciens | PCX, PICT, IFF / ILBM (HAM, EHB), Netpbm (pbm, pgm, ppm, pam, pfm), XBM / XPM | `classic` |
+
+  Les images HDR (EXR, HDR, PFM, DDS float) sont ramenées à l'écran par un tone mapping simple.
+  Pour les fichiers de travail, c'est l'image fusionnée ou l'aperçu enregistré par le logiciel qui est
+  affiché (pas de recomposition des calques, sauf XCF).
+- **Animations** : GIF, WebP, JPEG XL, séquences HEIF/AVIF et DICOM multi-images sont lus en boucle.
+  Espace : lecture / pause ; `,` et `.` : image par image.
+- **Couches** (comme Photoshop) : le bouton « RVB » ouvre un panneau avec l'aperçu de chaque canal
+  (rouge, vert, bleu, alpha) ; un clic affiche ce canal seul en niveaux de gris. Raccourcis : C,
+  Ctrl+2 à Ctrl+6.
+- **Diaporama** (D) : plein écran, interface masquée, fondu enchaîné entre les images, durée par
+  image réglable (1 à 60 s, ↑ / ↓ pendant le diaporama), ordre aléatoire en option.
+- **Presse-papier** : Ctrl+C copie l'image affichée (transparence conservée), Ctrl+Maj+C le chemin
+  du fichier. Le clic droit ouvre un menu avec les actions courantes.
 - **RAW** : tous les formats gérés par [LibRaw](https://www.libraw.org) (~1000 boîtiers : CR3, CR2,
   CRW, NEF, ARW, RAF, RW2, ORF, DNG, PEF, SRW, IIQ, 3FR…) via le plugin `raw`. L'affichage est
   progressif :
@@ -100,7 +125,21 @@ plugins\raw.dll        plugin RAW (LibRaw intégré)
 plugins\vcomp140.dll   runtime OpenMP de Microsoft (LibRaw multithread)
 plugins\uasset.dll     plugin textures Unreal Engine
 plugins\tga.dll        plugin TGA
+plugins\webp.dll       WebP (libwebp)
+plugins\heif.dll       HEIC / HEIF / AVIF (libheif, libde265, dav1d)
+plugins\jxl.dll        JPEG XL (libjxl, highway)
+plugins\jpeg2000.dll   JPEG 2000 (OpenJPEG)
+plugins\exr.dll        OpenEXR (OpenEXRCore, libdeflate, zstd, OpenJPH)
+plugins\vector.dll     SVG, PDF, AI, WMF, EMF, DXF (Direct2D, Windows.Data.Pdf, GDI+)
+plugins\psd.dll        Photoshop PSD / PSB
+plugins\docs.dll       XCF, KRA, ORA, CLIP, INDD, EPS, CDR, Affinity
+plugins\dds.dll        DirectDraw Surface
+plugins\dicom.dll      DICOM
+plugins\classic.dll    Netpbm, PCX, XBM, XPM, IFF, HDR, FITS, ICNS, PICT
 ```
+
+Chaque plugin a son dossier `plugins\<nom>\` avec un `plugin.cmake`, inclus automatiquement. Pour
+ne compiler que certains plugins : `-DCYIMG_ONLY_PLUGINS="webp;psd"`.
 
 Pour déployer l'application, copiez `CyImgView.exe` et le dossier `plugins`.
 
@@ -159,6 +198,11 @@ passer par « Ouvrir avec » / l'association de fichiers.
 | F5 | Recharger le dossier |
 | Boutons latéraux de la souris | Image précédente / suivante |
 | Échap | Fermer le panneau, quitter le plein écran, puis quitter |
+| Ctrl+C / Ctrl+Maj+C | Copier l'image / le chemin du fichier |
+| Clic droit | Menu (copier, enregistrer, couches, diaporama…) |
+| C / Ctrl+2 à Ctrl+6 | Couches : RVB, rouge, vert, bleu, alpha |
+| Espace / , / . | Animation : lecture-pause / image précédente / suivante |
+| D | Diaporama (↑ ↓ : durée par image, Espace : pause, Échap : quitter) |
 | Ctrl+S | Enregistrer sous / convertir |
 | Ctrl+U | Rechercher une mise à jour |
 | P | Paramètres |
@@ -189,6 +233,7 @@ Les métadonnées EXIF ne sont pas recopiées dans le fichier enregistré.
   fonctionne aussi quand plusieurs fichiers sont ouverts d'un coup.
 - **Afficher la pellicule.**
 - **Rechercher les mises à jour automatiquement**, plus un bouton pour rechercher tout de suite.
+- **Diaporama** : ordre aléatoire, durée par image.
 
 Les réglages, ainsi que la position de la fenêtre, sont enregistrés dans
 `%APPDATA%\CyImgView\settings.ini`.
@@ -239,9 +284,11 @@ extern "C" __declspec(dllexport) const CyImgPlugin* CyImg_GetPlugin(void) { retu
   textures. Il doit être rapide, car il est appelé pour chaque fichier du dossier.
 - Si un plugin rend une image plus grande que la vignette demandée, l'hôte la réduit lui-même.
 
-Pour compiler un nouveau plugin, ajoutez-le dans `CMakeLists.txt` sur le modèle de `raw`.
+- **Animation** : après `alloc_bgra` (image 0), `host->add_frame()` ajoute chaque image suivante
+  déjà composée et `host->set_frame_delay()` fixe sa durée.
 
-Pistes de plugins : PSD (image composite), EXR/HDR, JPEG XL.
+Pour compiler un nouveau plugin, créez `plugins/<nom>/plugin.cmake` sur le modèle de `plugins/tga`
+(`cyimg_add_plugin(<nom> sources...)`) : il est inclus automatiquement.
 
 ## Mesurer les performances
 
@@ -268,6 +315,15 @@ CyImgView est distribué sous licence **GNU GPL v3.0** : voir [LICENSE](LICENSE)
 
 Composants tiers :
 - **LibRaw** (`third_party/LibRaw`) : LGPL 2.1 / CDDL 1.0.
+- **libwebp** : BSD 3 clauses (+ concession de brevets Google).
+- **libheif**, **libde265** : LGPL 3.0. **dav1d** : BSD 2 clauses.
+- **libjxl** : BSD 3 clauses (+ brevets). **highway** : Apache 2.0.
+- **OpenJPEG** : BSD 2 clauses.
+- **OpenEXR** (OpenEXRCore) et **Imath** : BSD 3 clauses. **libdeflate** : MIT. **zstd** : BSD.
+  **OpenJPH** : BSD 2 clauses.
+
+Les sources de ces bibliothèques, avec leurs licences, sont dans `third_party/`. Les autres formats
+(PSD, XCF, DDS, DICOM, FITS, PCX…) sont lus par du code écrit pour ce projet.
 - **Oodle** (RAD Game Tools / Epic Games) : il n'est **pas** distribué. Il est chargé à l'exécution
   depuis une installation d'Unreal Engine de l'utilisateur.
 - **Unreal Engine** : le format `.uasset` est lu par du code écrit pour ce projet ; aucun code d'Epic

@@ -3,5 +3,8 @@
 useDefault = true
 
 [allowlist]
-description = "Faux positif vérifié : nom de macro LibRaw (LIBRAW_WIN32_DLLDEFS) dans son journal des modifications"
-paths = ['''third_party/LibRaw/Changelog\.txt''']
+description = "Faux positifs vérifiés : macro LibRaw dans son journal, variables SIMD « data_key_lo/hi » de xxhash (zstd)"
+paths = [
+    '''third_party/LibRaw/Changelog\.txt''',
+    '''third_party/openexr/external/zstd/lib/common/xxhash\.h''',
+]

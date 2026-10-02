@@ -35,7 +35,8 @@ public:
     int Run();
 
 private:
-    enum class Btn { None, Open, Edit, SaveAs, Prev, Next, ZoomOut, ZoomIn, Fit, Actual, Rotate, Strip, Info, Help, Full, Update, Settings };
+    enum class Btn { None, Open, Edit, SaveAs, Prev, Next, ZoomOut, ZoomIn, Fit, Actual, Rotate, Strip, Info, Help, Full, Update, Settings, Channel,
+                     Slideshow, SlidePrev, SlidePlay, SlideNext, SlideLess, SlideMore, SlideShuffle, SlideExit };
     struct SettingRow {
         int id;
         D2D1_RECT_F rc;
@@ -89,6 +90,7 @@ private:
         ImagePtr src;
         std::vector<Tile> tiles;
         uint64_t lastUse = 0;
+        size_t frame = 0;  // image de l'animation actuellement dans les tuiles
     };
     struct GpuThumb {
         ComPtr<ID2D1Bitmap> bmp;
@@ -185,6 +187,42 @@ private:
     void OnUpdateResult(UpdateResult* r);
     void ShowUpdateDialog();
     void InstallUpdateNow();
+
+    // Presse-papier, menu contextuel, canaux, animation (viewer_extra.cpp)
+    void CopyToClipboard();
+    void CopyPathToClipboard();
+    void ShowContextMenu(POINT client);
+    void RevealInExplorer();
+    void SetChannel(int ch);
+    void CycleChannel(int delta);
+    static const wchar_t* ChannelName(int ch);
+    void DrawTile(ID2D1Bitmap* bmp, const D2D1_RECT_F& dst, D2D1_INTERPOLATION_MODE mode, int channel = -1);
+    void DrawChannelPanel(float cw, float ch);
+    void UpdateChannelPreview();
+    void SyncGpuFrame(GpuImage* g);
+    ID2D1Bitmap* Logo();
+
+    // Diaporama (viewer_slideshow.cpp)
+    void StartSlideshow();
+    void StopSlideshow();
+    void ToggleSlidePause();
+    void ChangeSlideDelay(int dir);
+    std::wstring SlideDelayLabel() const;
+    int SlideTarget(int delta) const;
+    void SlideGo(int delta, bool automatic);
+    void OnSlideTimer();
+    bool SlideKey(WPARAM vk);
+    bool DrawSlideshow(float cw, float ch);
+    void DrawSlideImage(const std::vector<Tile>& tiles, float W, float H, bool flip, int rot, float cw, float ch,
+                        float scale, float opacity, bool moving);
+    void DrawSlideBar(float cw, float ch, float a);  // logo de l'application (ressource PNG), chargé à la première utilisation  // envoie l'image courante de l'animation dans les tuiles  // hors BeginDraw : miniature de l'image pour le panneau Couches
+    bool Animated() const { return m_cur && m_cur->FrameCount() > 1 && !m_edit.active; }
+    const uint8_t* CurPixels() const;  // image affichée de l'animation (ou l'image fixe)
+    void SyncAnimation();              // nouvelle image affichée : remet l'animation au début
+    void ScheduleFrame();
+    void OnAnimTimer();
+    void StepFrame(int delta);
+    void TogglePlay();
 
     // Enregistrer sous (viewer_edit.cpp)
     void SaveAs();
@@ -309,4 +347,33 @@ private:
     std::vector<SettingRow> m_settingRows;
     D2D1_RECT_F m_settingsPanel{};  // grand côté de la dernière image éditée (mise à l'échelle des tailles d'outil)
     std::vector<SaveFormat> m_saveFormats;
+
+    // Vue d'un canal seul (0 = RVB, 1 = R, 2 = V, 3 = B, 4 = alpha), en niveaux de gris
+    int m_channel = 0;
+    ComPtr<ID2D1Effect> m_channelFx;
+    ComPtr<ID2D1Bitmap> m_logo;
+    bool m_showChannels = false;  // panneau « Couches » : aperçu de chaque canal, clic pour choisir
+    struct ChannelRow {
+        int ch;
+        D2D1_RECT_F rc;
+    };
+    std::vector<ChannelRow> m_channelRows;
+    ComPtr<ID2D1Bitmap1> m_chanPreview;
+    ImagePtr m_chanPreviewSrc;
+    size_t m_chanPreviewFrame = 0;
+    int m_chanPreviewRot = -1;
+    // Animation (GIF, WebP...) de m_cur
+    ImagePtr m_animImg;
+    size_t m_frame = 0;
+    bool m_playing = true;
+    double m_frameDue = 0;
+
+    // Diaporama
+    bool m_slideshow = false, m_slidePaused = false, m_slideWasFull = false, m_slideShuffle = false;
+    int m_slideDelay = 5;              // secondes par image (settings.ini [slideshow] delay)
+    std::vector<Tile> m_fadeTiles;     // image sortante du fondu enchaîné
+    float m_fadeW = 0, m_fadeH = 0;
+    bool m_fadeFlip = false;
+    int m_fadeRot = 0;
+    double m_fadeStart = -10;
 };

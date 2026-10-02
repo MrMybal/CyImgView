@@ -76,6 +76,13 @@ typedef struct CyImgHost {
 
     /* Message d'erreur affiché à l'utilisateur quand decode() échoue (ex. « ce .uasset est un Material »). */
     void (*set_error)(CyImgContext* ctx, const wchar_t* message);
+
+    /* Animation (GIF, WebP...). Après alloc_bgra (image 0), add_frame ajoute une image complète
+       (même taille, déjà composée) et retourne son tampon BGRA prémultiplié. Retourne NULL quand
+       l'hôte n'en veut plus (vignette demandée, ou mémoire maximale atteinte) : arrêter alors.
+       set_frame_delay fixe la durée d'affichage d'une image, en millisecondes. */
+    uint8_t* (*add_frame)(CyImgContext* ctx, uint32_t* stride);
+    void (*set_frame_delay)(CyImgContext* ctx, uint32_t frame_index, uint32_t delay_ms);
 } CyImgHost;
 
 #define CYIMG_HOST_HAS(host, field) \

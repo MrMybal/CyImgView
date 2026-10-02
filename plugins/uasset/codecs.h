@@ -16,7 +16,7 @@ bool OodleDecompress(const uint8_t* src, size_t srcSize, uint8_t* dst, size_t ra
 bool Lz4Decompress(const uint8_t* src, size_t srcSize, uint8_t* dst, size_t rawSize);
 
 // zlib / deflate : voir src/inflate.h (partagé avec l'application)
-#include "../../src/inflate.h"
+#include "inflate.h"
 
 // Demi-flottant IEEE -> float
 float HalfToFloat(uint16_t h);

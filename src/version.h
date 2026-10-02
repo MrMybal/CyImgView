@@ -3,7 +3,7 @@
 // Version de CyImgView : seule source de vérité (ressource .rc, mises à jour, script de packaging).
 // Les releases GitHub doivent être étiquetées « vMAJOR.MINOR.PATCH ».
 #define CYIMG_VERSION_MAJOR 1
-#define CYIMG_VERSION_MINOR 3
+#define CYIMG_VERSION_MINOR 4
 #define CYIMG_VERSION_PATCH 0
 
 #define CYIMG_STR2(x) #x

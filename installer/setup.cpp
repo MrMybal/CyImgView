@@ -34,7 +34,15 @@ const char kMagic[8] = {'C', 'Y', 'I', 'M', 'G', 'P', 'K', '1'};
 const wchar_t* kExts[] = {L"jpg", L"jpeg", L"jpe", L"jfif", L"png", L"gif", L"bmp", L"dib", L"tif", L"tiff", L"ico",
                           L"webp", L"heic", L"heif", L"avif", L"jxr", L"wdp", L"dds",
                           L"cr2", L"cr3", L"crw", L"nef", L"nrw", L"arw", L"srf", L"sr2", L"dng", L"raf", L"rw2",
-                          L"orf", L"pef", L"srw", L"x3f", L"3fr", L"iiq", L"erf", L"kdc", L"mrw", L"uasset", L"tga"};
+                          L"orf", L"pef", L"srw", L"x3f", L"3fr", L"iiq", L"erf", L"kdc", L"mrw", L"uasset", L"tga",
+                          // formats ajoutés par les plugins de la 1.4 (« Ouvrir avec » seulement, sans imposer
+                          // CyImgView comme application par défaut)
+                          L"avifs", L"heics", L"heifs", L"hif", L"jxl", L"jp2", L"j2k", L"j2c", L"jpc", L"jpf", L"jpx",
+                          L"jph", L"jhc", L"exr", L"hdr", L"rgbe", L"pfm", L"pbm", L"pgm", L"ppm", L"pnm", L"pam",
+                          L"pcx", L"xbm", L"xpm", L"iff", L"lbm", L"ilbm", L"fits", L"fit", L"fts", L"icns", L"pct",
+                          L"pict", L"dcm", L"dicom", L"psd", L"psb", L"kra", L"ora", L"xcf", L"clip", L"indd", L"eps",
+                          L"epsf", L"cdr", L"afphoto", L"afdesign", L"afpub", L"svg", L"svgz", L"pdf", L"ai", L"wmf",
+                          L"emf", L"emz", L"wmz", L"dxf"};
 
 std::wstring KnownFolder(REFKNOWNFOLDERID id) {
     PWSTR p = nullptr;

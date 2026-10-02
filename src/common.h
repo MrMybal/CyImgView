@@ -60,6 +60,12 @@ struct DecodedImage {
     std::vector<std::pair<std::wstring, std::wstring>> info;
     double decodeMs = 0;
     bool refinable = false;  // simple aperçu : une version complète peut être demandée
+    // Animation : images suivantes (même taille que `pixels`, qui est l'image 0) et durées (ms) de
+    // toutes les images. Vide pour une image fixe.
+    std::vector<std::unique_ptr<PixelBuffer>> frames;
+    std::vector<uint32_t> delays;
+    size_t FrameCount() const { return 1 + frames.size(); }
+    const uint8_t* FramePixels(size_t i) const { return i == 0 ? pixels.Data() : frames[i - 1]->Data(); }
 };
 using ImagePtr = std::shared_ptr<DecodedImage>;
 

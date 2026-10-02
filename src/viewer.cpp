@@ -25,19 +25,6 @@ constexpr wchar_t kClassName[] = L"CyImgViewWindow";
 
 using namespace ui;
 
-// Matrice image -> écran : centre l'image, miroir, quart(s) de tour exact(s), zoom, translation.
-D2D1::Matrix3x2F ImageTransform(float w, float h, bool flip, int rot, float zoom, float tx, float ty) {
-    D2D1::Matrix3x2F m = D2D1::Matrix3x2F::Translation(-w / 2, -h / 2);
-    if (flip) m = m * D2D1::Matrix3x2F::Scale(-1, 1);
-    switch (rot & 3) {
-    case 1: m = m * D2D1::Matrix3x2F(0, 1, -1, 0, 0, 0); break;
-    case 2: m = m * D2D1::Matrix3x2F(-1, 0, 0, -1, 0, 0); break;
-    case 3: m = m * D2D1::Matrix3x2F(0, -1, 1, 0, 0, 0); break;
-    default: break;
-    }
-    return m * D2D1::Matrix3x2F::Scale(zoom, zoom) * D2D1::Matrix3x2F::Translation(tx, ty);
-}
-
 void OrientationToFlipRot(uint32_t o, bool& flip, int& rot) {
     static const bool f[9] = {false, false, true, false, true, true, false, true, false};
     static const int r[9] = {0, 0, 0, 2, 2, 3, 1, 1, 3};
@@ -177,7 +164,8 @@ bool Viewer::Create(HINSTANCE inst, int show, const std::wstring& initialPath) {
     wc.hInstance = inst;
     wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
     wc.hIcon = LoadIconW(inst, MAKEINTRESOURCEW(1));
-    wc.hIconSm = wc.hIcon;
+    wc.hIconSm = static_cast<HICON>(LoadImageW(inst, MAKEINTRESOURCEW(1), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+                                               GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR));
     wc.lpszClassName = kClassName;
     RegisterClassExW(&wc);
 
@@ -239,6 +227,8 @@ void Viewer::LoadSettings() {
     m_showStrip = GetPrivateProfileIntW(L"view", L"strip", 1, f) != 0;
     m_singleInstance = GetPrivateProfileIntW(L"settings", L"single_instance", 0, f) != 0;
     m_autoUpdate = GetPrivateProfileIntW(L"update", L"auto", 1, f) != 0;
+    m_slideDelay = std::clamp(int(GetPrivateProfileIntW(L"slideshow", L"delay", 5, f)), 1, 60);
+    m_slideShuffle = GetPrivateProfileIntW(L"slideshow", L"shuffle", 0, f) != 0;
     int x = GetPrivateProfileIntW(L"window", L"x", INT_MIN, f);
     int y = GetPrivateProfileIntW(L"window", L"y", INT_MIN, f);
     int w = GetPrivateProfileIntW(L"window", L"w", 0, f);
@@ -405,6 +395,10 @@ void Viewer::DiscardDeviceResources() {
     m_gpu.clear();
     m_preuploadsLeft = 2;
     m_gpuThumbs.clear();
+    m_channelFx.Reset();
+    m_logo.Reset();
+    m_chanPreview.Reset();
+    m_chanPreviewSrc.reset();
     m_checker.Reset();
     m_shade.Reset();
     m_brush.Reset();
@@ -525,6 +519,12 @@ void Viewer::Text(const std::wstring& s, IDWriteTextFormat* tf, const D2D1_RECT_
 }
 
 bool Viewer::HudWanted() const {
+    if (m_slideshow) {  // diaporama : barre visible seulement quand la souris bouge ou la survole
+        if (NowSeconds() - m_lastActivity < 2.0) return true;
+        RECT rc;
+        GetClientRect(m_hwnd, &rc);
+        return m_mouseInside && m_mouse.y > rc.bottom - 150 * m_scale;
+    }
     if (m_edit.active || m_showSettings) return true;
     if (!m_cur && !m_placeholder && m_files.empty()) return true;
     if (m_dragging) return false;
@@ -587,10 +587,15 @@ void Viewer::Render() {
     GetClientRect(m_hwnd, &rc);
     const float cw = float(rc.right), ch = float(rc.bottom);
 
+    if (m_showChannels && !m_edit.active) UpdateChannelPreview();
     m_rt->BeginDraw();
     m_rt->SetTransform(D2D1::Matrix3x2F::Identity());
     m_rt->Clear(Rgb(kBg));
-    DrawImage(cw, ch, viewAnimating);
+    if (m_slideshow && !m_edit.active) {
+        if (DrawSlideshow(cw, ch)) animating = true;  // fondu en cours
+    } else {
+        DrawImage(cw, ch, viewAnimating);
+    }
     DrawHud(cw, ch);
     HRESULT hr = m_rt->EndDraw();
     HRESULT hp = SUCCEEDED(hr) ? m_swap->Present(1, 0) : S_OK;
@@ -660,8 +665,15 @@ void Viewer::DrawImage(float cw, float ch, bool animating) {
         } else if (m_loading) {
             if (NowSeconds() - m_loadStart > 0.12) DrawSpinner(cw / 2, ch / 2, 18 * s, 1.0f);
         } else if (m_files.empty()) {
-            DrawCenteredMessage(cw, ch, L"\uE8B9", L"Glissez une image ici",
-                                L"ou appuyez sur Ctrl+O pour ouvrir un fichier");
+            if (ID2D1Bitmap* logo = Logo()) {  // accueil : logo à la place de l'icône
+                const float r = 50 * s, cy = ch / 2 - 80 * s;
+                m_dc->DrawBitmap(logo, D2D1::RectF(cw / 2 - r, cy - r, cw / 2 + r, cy + r), 0.95f,
+                                 D2D1_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC, nullptr, nullptr);
+                DrawCenteredMessage(cw, ch, L"", L"Glissez une image ici", L"ou appuyez sur Ctrl+O pour ouvrir un fichier");
+            } else {
+                DrawCenteredMessage(cw, ch, L"\uE8B9", L"Glissez une image ici",
+                                    L"ou appuyez sur Ctrl+O pour ouvrir un fichier");
+            }
         }
         return;
     }
@@ -669,12 +681,14 @@ void Viewer::DrawImage(float cw, float ch, bool animating) {
     if (!cur) return;
     const std::wstring key = Key(cur->path);
     const bool isFull = img == m_cur;
+    SyncAnimation();
 
     GpuImage* g = nullptr;
     ID2D1Bitmap* single = nullptr;
     if (isFull) g = GetGpuImage(img, key);
     else single = GetGpuThumb(key);
     if (!g && !single) return;
+    if (g) SyncGpuFrame(g);
 
     float W = float(isFull ? img->width : (img->fullWidth ? img->fullWidth : img->width));
     float H = float(isFull ? img->height : (img->fullHeight ? img->fullHeight : img->height));
@@ -692,7 +706,7 @@ void Viewer::DrawImage(float cw, float ch, bool animating) {
     }
     const float tx = float(left + dw * z / 2.0), ty = float(top + dh * z / 2.0);
 
-    if (img->hasAlpha && m_checker) {
+    if (img->hasAlpha && m_checker && m_channel == 0) {
         m_rt->FillRectangle(D2D1::RectF(float(left), float(top), float(left + dw * z), float(top + dh * z)), m_checker.Get());
     }
 
@@ -704,9 +718,9 @@ void Viewer::DrawImage(float cw, float ch, bool animating) {
 
     m_dc->SetTransform(ImageTransform(W, H, flip, rot, z, tx, ty));
     if (g) {
-        for (auto& t : g->tiles) m_dc->DrawBitmap(t.bmp.Get(), t.dst, 1.0f, mode, nullptr, nullptr);
+        for (auto& t : g->tiles) DrawTile(t.bmp.Get(), t.dst, mode);
     } else {
-        m_dc->DrawBitmap(single, D2D1::RectF(0, 0, W, H), 1.0f, D2D1_INTERPOLATION_MODE_LINEAR, nullptr, nullptr);
+        DrawTile(single, D2D1::RectF(0, 0, W, H), D2D1_INTERPOLATION_MODE_LINEAR);
     }
     m_dc->SetTransform(D2D1::Matrix3x2F::Identity());
 
@@ -761,7 +775,9 @@ void Viewer::DrawHud(float cw, float ch) {
     const double now = NowSeconds();
 
     if (m_edit.active) DrawEditUi(cw, ch);
-    else if (a > 0.004f && (m_cur || m_placeholder || !m_files.empty() || !m_error.empty())) {
+    else if (m_slideshow) {
+        if (a > 0.004f) DrawSlideBar(cw, ch, a);
+    } else if (a > 0.004f && (m_cur || m_placeholder || !m_files.empty() || !m_error.empty())) {
         const float barH = 52 * s;
         // Dégradé haut
         if (m_shade) {
@@ -783,10 +799,12 @@ void Viewer::DrawHud(float cw, float ch) {
             {Btn::Fit, L"\uE9A6", L"Ajuster à la fenêtre (0)"},
             {Btn::Actual, L"1:1", L"Taille réelle (1)"},
             {Btn::Rotate, L"\uE7AD", L"Pivoter (R)"},
+            {m_cur ? Btn::Channel : Btn::None, ChannelName(m_channel), L"Couches : afficher un canal seul (C)"},
             {Btn::None, nullptr, nullptr},
             {Btn::Strip, L"\uECA5", L"Pellicule (T)"},
             {Btn::Info, L"\uE946", L"Informations (I)"},
             {Btn::Help, L"\uE897", L"Raccourcis (H)"},
+            {Btn::Slideshow, L"\uE786", L"Diaporama plein écran (D)"},
             {Btn::Settings, L"\uE713", L"Param\u00E8tres (P)"},
             {Btn::Full, m_fullscreen ? L"\uE73F" : L"\uE740", L"Plein écran (F)"},
         };
@@ -820,11 +838,11 @@ void Viewer::DrawHud(float cw, float ch) {
             if (b.id == Btn::Update) continue;
             bool active = (b.id == Btn::Strip && m_showStrip) || (b.id == Btn::Info && m_showInfo) ||
                           (b.id == Btn::Help && m_showHelp) || (b.id == Btn::Fit && m_fit) ||
-                          (b.id == Btn::Settings && m_showSettings);
+                          (b.id == Btn::Settings && m_showSettings) || (b.id == Btn::Channel && (m_channel != 0 || m_showChannels));
             if (b.id == hovered) FillRound(b.rc, 5 * s, kWhite, 0.14f * a);
             else if (active) FillRound(b.rc, 5 * s, kWhite, 0.07f * a);
             uint32_t col = active ? kAccent : kWhite;
-            if (b.id == Btn::Actual) Text(b.glyph, m_tfLabel.Get(), b.rc, col, 0.92f * a);
+            if (b.id == Btn::Actual || b.id == Btn::Channel) Text(b.glyph, m_tfLabel.Get(), b.rc, col, 0.92f * a);
             else Text(b.glyph, m_tfIcon.Get(), b.rc, col, 0.92f * a);
         }
 
@@ -838,6 +856,13 @@ void Viewer::DrawHud(float cw, float ch) {
             if (m_cur && !m_cur->format.empty()) sub += L"   ·   " + m_cur->format;
             if (Shown()) sub += L"   ·   " + Percent(m_zoomT);
             if (m_cur && m_cur->refinable) sub += L"   ·   développement RAW…";
+            if (Animated() && m_animImg == m_cur)
+                sub += L"   ·   image " + std::to_wstring(m_frame + 1) + L"/" + std::to_wstring(m_cur->FrameCount()) +
+                       (m_playing ? L"" : L"  (pause)");
+            if (m_channel != 0 && m_cur) {
+                static const wchar_t* names[] = {L"", L"rouge", L"vert", L"bleu", L"alpha"};
+                sub += std::wstring(L"   ·   canal ") + names[m_channel];
+            }
             Text(sub, m_tfSub.Get(), D2D1::RectF(16 * s, 28 * s, titleRight, 46 * s), kGrey, a);
         }
 
@@ -881,9 +906,12 @@ void Viewer::DrawHud(float cw, float ch) {
         }
     }
 
-    if (m_showInfo && !m_showSettings) DrawInfoPanel(cw, ch);
-    if (m_showSettings && !m_edit.active) DrawSettings(cw, ch);
-    if (m_showHelp) DrawHelp(cw, ch);
+    m_channelRows.clear();
+    if (m_slideshow) {
+    } else if (m_showInfo && !m_showSettings) DrawInfoPanel(cw, ch);
+    else if (m_showChannels && !m_showSettings && !m_edit.active) DrawChannelPanel(cw, ch);
+    if (m_showSettings && !m_edit.active && !m_slideshow) DrawSettings(cw, ch);
+    if (m_showHelp && !m_slideshow) DrawHelp(cw, ch);
 
     // Toast (niveau de zoom, messages)
     double age = now - m_toastTime;
@@ -949,6 +977,10 @@ void Viewer::DrawHelp(float cw, float ch) {
     const float s = m_scale;
     static const std::pair<const wchar_t*, const wchar_t*> keys[] = {
         {L"← → / Espace / Retour", L"Image précédente / suivante"},
+        {L"D", L"Diaporama plein écran (↑ ↓ : durée par image, Espace : pause)"},
+        {L"Ctrl+C / clic droit", L"Copier l'image (Ctrl+Maj+C : le chemin)"},
+        {L"Bouton RVB / C / Ctrl+2…6", L"Couches : canal seul (rouge, vert, bleu, alpha)"},
+        {L"Espace / , / .", L"Animation : lecture-pause / image précédente-suivante"},
         {L"Début / Fin", L"Première / dernière image"},
         {L"Molette / + / -", L"Zoom (centré sur la souris)"},
         {L"Glisser", L"Déplacer l'image zoomée"},
@@ -968,32 +1000,44 @@ void Viewer::DrawHelp(float cw, float ch) {
         {L"Échap", L"Fermer le panneau / quitter"},
     };
     const auto& plugins = m_decoder.Plugins();
-    const float rowH = 25 * s, pad = 22 * s, w = std::min(620 * s, cw - 24 * s);
-    float h = pad * 2 + 36 * s + rowH * ARRAYSIZE(keys) + 40 * s + rowH * std::max<size_t>(1, plugins.size());
+    // Deux colonnes de raccourcis, puis les plugins sur deux colonnes : tient dans un écran 1080p
+    const float rowH = 24 * s, pad = 22 * s, w = std::min(1080 * s, cw - 24 * s);
+    const size_t keyRows = (ARRAYSIZE(keys) + 1) / 2, plugRows = (std::max<size_t>(1, plugins.size()) + 1) / 2;
+    float h = pad * 2 + 36 * s + rowH * keyRows + 40 * s + rowH * plugRows;
     h = std::min(h, ch - 24 * s);
     D2D1_RECT_F p = D2D1::RectF(cw / 2 - w / 2, ch / 2 - h / 2, cw / 2 + w / 2, ch / 2 + h / 2);
     SetColor(0x000000, 0.45f);
     m_rt->FillRectangle(D2D1::RectF(0, 0, cw, ch), m_brush.Get());
     FillRound(p, 10 * s, kPanel, 0.97f);
     m_rt->PushAxisAlignedClip(p, D2D1_ANTIALIAS_MODE_ALIASED);
-    Text(L"Raccourcis   ·   CyImgView " CYIMG_VERSION_WSTR, m_tfTitle.Get(), D2D1::RectF(p.left + pad, p.top + pad - 6 * s, p.right - pad, p.top + pad + 22 * s), kWhite, 1);
-    float y = p.top + pad + 36 * s;
-    const float col = 230 * s;
-    for (auto& [k, d] : keys) {
-        Text(k, m_tfSmall.Get(), D2D1::RectF(p.left + pad, y, p.left + pad + col - 8 * s, y + rowH), kAccent, 1);
-        Text(d, m_tfSmall.Get(), D2D1::RectF(p.left + pad + col, y, p.right - pad, y + rowH), kWhite, 0.95f);
-        y += rowH;
+    float titleX = p.left + pad;
+    if (ID2D1Bitmap* logo = Logo()) {
+        const float ls = 26 * s;
+        m_dc->DrawBitmap(logo, D2D1::RectF(titleX, p.top + pad - 4 * s, titleX + ls, p.top + pad - 4 * s + ls), 1.0f,
+                         D2D1_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC, nullptr, nullptr);
+        titleX += ls + 10 * s;
     }
-    y += 12 * s;
-    Text(L"Plugins chargés", m_tfTitle.Get(), D2D1::RectF(p.left + pad, y, p.right - pad, y + 24 * s), kWhite, 1);
+    Text(L"Raccourcis   ·   CyImgView " CYIMG_VERSION_WSTR, m_tfTitle.Get(), D2D1::RectF(titleX, p.top + pad - 6 * s, p.right - pad, p.top + pad + 22 * s), kWhite, 1);
+    const float top = p.top + pad + 36 * s;
+    const float half = (w - 2 * pad) / 2, col = std::min(200 * s, half * 0.42f);
+    for (size_t i = 0; i < ARRAYSIZE(keys); ++i) {
+        const float x = p.left + pad + (i < keyRows ? 0 : half + 12 * s), y = top + rowH * float(i % keyRows);
+        Text(keys[i].first, m_tfSmall.Get(), D2D1::RectF(x, y, x + col - 8 * s, y + rowH), kAccent, 1);
+        Text(keys[i].second, m_tfSmall.Get(), D2D1::RectF(x + col, y, x + half - 12 * s, y + rowH), kWhite, 0.95f);
+    }
+    float y = top + rowH * keyRows + 12 * s;
+    Text(L"Plugins chargés (" + std::to_wstring(plugins.size()) + L")", m_tfTitle.Get(), D2D1::RectF(p.left + pad, y, p.right - pad, y + 24 * s), kWhite, 1);
     y += 28 * s;
     if (plugins.empty()) {
         Text(L"Aucun (dossier « plugins » vide)", m_tfSmall.Get(), D2D1::RectF(p.left + pad, y, p.right - pad, y + rowH), kGrey, 1);
     }
-    for (auto& pl : plugins) {
-        Text(pl.name + L"  " + pl.version, m_tfSmall.Get(), D2D1::RectF(p.left + pad, y, p.left + pad + col - 8 * s, y + rowH), kAccent, 1);
-        Text(pl.extensions, m_tfSmall.Get(), D2D1::RectF(p.left + pad + col, y, p.right - pad, y + rowH), kGrey, 1);
-        y += rowH;
+    for (size_t i = 0; i < plugins.size(); ++i) {
+        const auto& pl = plugins[i];
+        const float x = p.left + pad + (i < plugRows ? 0 : half + 12 * s), yy = y + rowH * float(i % plugRows);
+        std::wstring exts = pl.extensions;
+        std::replace(exts.begin(), exts.end(), L';', L' ');
+        Text(pl.name, m_tfSmall.Get(), D2D1::RectF(x, yy, x + col - 8 * s, yy + rowH), kAccent, 1);
+        Text(exts, m_tfSmall.Get(), D2D1::RectF(x + col, yy, x + half - 12 * s, yy + rowH), kGrey, 1);
     }
     m_rt->PopAxisAlignedClip();
 }
@@ -1465,7 +1509,7 @@ void Viewer::UpdateTitle() {
 // =============================================================================================
 // Interaction
 
-bool Viewer::StripVisible() const { return m_showStrip && m_files.size() > 1 && !m_edit.active; }
+bool Viewer::StripVisible() const { return m_showStrip && m_files.size() > 1 && !m_edit.active && !m_slideshow; }
 
 Viewer::Btn Viewer::HitButton(POINT p) const {
     if (m_hud < 0.3f) return Btn::None;
@@ -1497,6 +1541,8 @@ int Viewer::HitNavZone(POINT p) const {
     const float s = m_scale;
     float top = 60 * s, bottom = rc.bottom - (StripVisible() ? 110 * s : 20 * s);
     if (p.y < top || p.y > bottom) return 0;
+    for (const ChannelRow& r : m_channelRows)
+        if (Contains(r.rc, p)) return 0;  // panneau Couches par-dessus la flèche
     float zw = 84 * s;
     if (p.x < zw && m_index > 0) return -1;
     if (p.x > rc.right - zw && m_index < int(m_files.size()) - 1) return 1;
@@ -1549,14 +1595,33 @@ void Viewer::OnButton(Btn b) {
     case Btn::Info:
         m_showInfo = !m_showInfo;
         m_showSettings = false;
+        m_showChannels = false;
         break;
     case Btn::Settings:
         m_showSettings = !m_showSettings;
         m_showInfo = false;
+        m_showChannels = false;
         m_showHelp = false;
         break;
     case Btn::Help: m_showHelp = !m_showHelp; break;
     case Btn::Full: ToggleFullscreen(); break;
+    case Btn::Slideshow: StartSlideshow(); break;
+    case Btn::SlidePrev: SlideGo(-1, false); break;
+    case Btn::SlideNext: SlideGo(1, false); break;
+    case Btn::SlidePlay: ToggleSlidePause(); break;
+    case Btn::SlideLess: ChangeSlideDelay(-1); break;
+    case Btn::SlideMore: ChangeSlideDelay(1); break;
+    case Btn::SlideShuffle:
+        m_slideShuffle = !m_slideShuffle;
+        SaveSetting(L"slideshow", L"shuffle", m_slideShuffle);
+        ShowToast(m_slideShuffle ? L"Ordre aléatoire" : L"Ordre du dossier");
+        break;
+    case Btn::SlideExit: StopSlideshow(); break;
+    case Btn::Channel:
+        m_showChannels = !m_showChannels;
+        m_showInfo = false;
+        m_showSettings = false;
+        break;
     default: break;
     }
     Invalidate();
@@ -1566,15 +1631,33 @@ void Viewer::OnKey(WPARAM vk) {
     const bool ctrl = GetKeyState(VK_CONTROL) < 0;
     const bool shift = GetKeyState(VK_SHIFT) < 0;
     POINT c = ClientCenter();
+    if (m_slideshow) {  // diaporama : seules ses touches (et la copie) sont actives
+        if (!SlideKey(vk) && ctrl && vk == 'C') CopyToClipboard();
+        return;
+    }
     switch (vk) {
-    case VK_RIGHT: case VK_NEXT: case VK_SPACE: Navigate(1); break;
+    case 'D': if (!ctrl) StartSlideshow(); break;
+    case VK_SPACE:
+        if (Animated()) TogglePlay();
+        else Navigate(1);
+        break;
+    case VK_OEM_COMMA: StepFrame(-1); break;
+    case VK_OEM_PERIOD: StepFrame(1); break;
+    case 'C':
+        if (ctrl && shift) CopyPathToClipboard();
+        else if (ctrl) CopyToClipboard();
+        else if (m_cur) CycleChannel(shift ? -1 : 1);
+        break;
+    case VK_INSERT: if (ctrl) CopyToClipboard(); break;
+    case '2': case '3': case '4': case '5': case '6': if (ctrl) SetChannel(int(vk - '2')); break;
+    case VK_RIGHT: case VK_NEXT: Navigate(1); break;
     case VK_LEFT: case VK_PRIOR: case VK_BACK: Navigate(-1); break;
     case VK_HOME: GoTo(0); break;
     case VK_END: GoTo(int(m_files.size()) - 1); break;
     case VK_UP: ZoomStep(1.25, c); break;
     case VK_DOWN: ZoomStep(1 / 1.25, c); break;
     case '0': case VK_NUMPAD0: case VK_MULTIPLY: if (Shown()) { ApplyFit(true); ShowToast(L"Ajusté"); } break;
-    case '1': case VK_NUMPAD1: case VK_DIVIDE: if (Shown()) ZoomTo(1.0, c, true); break;
+    case '1': case VK_NUMPAD1: case VK_DIVIDE: if (!ctrl && Shown()) ZoomTo(1.0, c, true); break;
     case 'Z': ToggleActualFit(c); break;
     case 'F': case VK_F11: case VK_RETURN: ToggleFullscreen(); break;
     case 'R': Rotate(shift ? -1 : 1); break;
@@ -1606,6 +1689,7 @@ void Viewer::OnKey(WPARAM vk) {
         else if (m_showHelp) m_showHelp = false;
         else if (m_showSettings) m_showSettings = false;
         else if (m_showInfo) m_showInfo = false;
+        else if (m_showChannels) m_showChannels = false;
         else if (m_fullscreen) ToggleFullscreen();
         else PostMessageW(m_hwnd, WM_CLOSE, 0, 0);
         Invalidate();
@@ -1696,6 +1780,14 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
             StartUpdateCheck(false);
             return 0;
         }
+        if (wp == kTimerSlide) {
+            OnSlideTimer();
+            return 0;
+        }
+        if (wp == kTimerAnim) {
+            OnAnimTimer();
+            return 0;
+        }
         if (wp == TIMER_HUD && m_hud > 0.0f && !HudWanted()) Invalidate();
         return 0;
     case WM_SETCURSOR:
@@ -1714,6 +1806,9 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
             }
             if (m_fullscreen && m_hud < 0.05f && !m_showHelp && !m_showInfo) SetCursor(nullptr);
             else if (m_dragging) SetCursor(LoadCursorW(nullptr, IDC_SIZEALL));
+            else if (std::any_of(m_channelRows.begin(), m_channelRows.end(),
+                                 [&](const ChannelRow& r) { return r.ch >= 0 && Contains(r.rc, m_mouse); }))
+                SetCursor(LoadCursorW(nullptr, IDC_HAND));
             else if (HitButton(m_mouse) != Btn::None || HitStrip(m_mouse) >= 0 || HitNavZone(m_mouse) != 0)
                 SetCursor(LoadCursorW(nullptr, IDC_HAND));
             else SetCursor(LoadCursorW(nullptr, IDC_ARROW));
@@ -1738,6 +1833,10 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
         return 0;
     case WM_RBUTTONUP:
         if (m_edit.active) EditMouseUp(POINT{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)});
+        else ShowContextMenu(POINT{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)});
+        return 0;
+    case WM_CONTEXTMENU:  // touche Menu / Maj+F10
+        if (!m_edit.active && lp == -1) ShowContextMenu(ClientCenter());
         return 0;
     case WM_MOUSELEAVE:
         m_mouseInside = false;
@@ -1753,6 +1852,10 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
             Invalidate();
             return 0;
         }
+        if (m_slideshow) {  // diaporama : seulement les boutons de la barre
+            if (Btn b = HitButton(p); b != Btn::None) OnButton(b);
+            return 0;
+        }
         if (m_showSettings && !m_edit.active) {  // panneau Paramètres : clic sur une option, ou en dehors pour fermer
             for (const SettingRow& r : m_settingRows) {
                 if (Contains(r.rc, p)) {
@@ -1764,6 +1867,14 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
                 m_showSettings = false;
                 Invalidate();
                 return 0;
+            }
+        }
+        if (!m_edit.active) {  // panneau Couches : choix du canal affiché
+            for (const ChannelRow& r : m_channelRows) {
+                if (Contains(r.rc, p)) {
+                    if (r.ch >= 0) SetChannel(r.ch);  // -1 : fond du panneau
+                    return 0;
+                }
             }
         }
         if (m_edit.active) {
@@ -1826,12 +1937,21 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
         }
         return 0;
     case WM_XBUTTONUP:
+        if (m_slideshow) {
+            SlideGo(GET_XBUTTON_WPARAM(wp) == XBUTTON1 ? -1 : 1, false);
+            return TRUE;
+        }
         Navigate(GET_XBUTTON_WPARAM(wp) == XBUTTON1 ? -1 : 1);
         return TRUE;
     case WM_MOUSEWHEEL: {
         POINT p{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
         ScreenToClient(m_hwnd, &p);
         double notches = GET_WHEEL_DELTA_WPARAM(wp) / double(WHEEL_DELTA);
+        if (m_slideshow) {  // diaporama : la molette change d'image
+            SlideGo(notches < 0 ? 1 : -1, false);
+            Poke();
+            return 0;
+        }
         RECT rc;
         GetClientRect(m_hwnd, &rc);
         if (StripVisible() && m_hud > 0.3f && p.y > rc.bottom - 100 * m_scale) {

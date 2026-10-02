@@ -10,7 +10,7 @@ using namespace ui;
 
 namespace {
 
-enum SettingId { kSingleWindow = 1, kStrip, kAutoUpdate, kCheckNow };
+enum SettingId { kSingleWindow = 1, kStrip, kAutoUpdate, kCheckNow, kSlideShuffle, kSlideLess, kSlideMore };
 
 }  // namespace
 
@@ -71,6 +71,12 @@ void Viewer::OnSettingClicked(int id) {
         m_autoUpdate = !m_autoUpdate;
         SaveSetting(L"update", L"auto", m_autoUpdate);
         break;
+    case kSlideShuffle:
+        m_slideShuffle = !m_slideShuffle;
+        SaveSetting(L"slideshow", L"shuffle", m_slideShuffle);
+        break;
+    case kSlideLess: ChangeSlideDelay(-1); break;
+    case kSlideMore: ChangeSlideDelay(1); break;
     case kCheckNow:
         m_showSettings = false;
         if (m_updateAvailable) ShowUpdateDialog();
@@ -96,9 +102,11 @@ void Viewer::DrawSettings(float cw, float ch) {
         {kStrip, L"Afficher la pellicule", L"Vignettes des images du dossier en bas de l'écran (touche T).", m_showStrip},
         {kAutoUpdate, L"Rechercher les mises à jour automatiquement",
          L"Au plus une fois par jour, sur les releases GitHub de CyImgView.", m_autoUpdate},
+        {kSlideShuffle, L"Diaporama : ordre aléatoire", L"Sinon, les images défilent dans l'ordre du dossier (touche D).",
+         m_slideShuffle},
     };
     const float w = std::min(520 * s, cw - 24 * s), pad = 18 * s, rowH = 62 * s;
-    const float h = pad * 2 + 34 * s + rowH * ARRAYSIZE(rows) + 52 * s + 26 * s;
+    const float h = pad * 2 + 34 * s + rowH * (ARRAYSIZE(rows) + 1) + 52 * s + 26 * s;
     m_settingsPanel = D2D1::RectF(cw - w - 12 * s, 58 * s, cw - 12 * s, std::min(ch - 12 * s, 58 * s + h));
     const D2D1_RECT_F& p = m_settingsPanel;
     FillRound(p, 8 * s, kPanel, 0.97f);
@@ -121,6 +129,25 @@ void Viewer::DrawSettings(float cw, float ch) {
         m_rt->FillEllipse(D2D1::Ellipse(D2D1::Point2F(kx, (sw.top + sw.bottom) / 2), th / 2 - 3 * s, th / 2 - 3 * s), m_brush.Get());
         Text(r.title, m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 6 * s, sw.left - 10 * s, rc.top + 28 * s), kWhite, 1);
         Text(r.desc, m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 28 * s, sw.left - 10 * s, rc.top + 50 * s), kGrey, 0.9f);
+        y += rowH;
+    }
+    // Diaporama : durée par image, boutons − et +
+    {
+        D2D1_RECT_F rc = D2D1::RectF(p.left + 6 * s, y, p.right - 6 * s, y + rowH - 4 * s);
+        const float bs = 28 * s, vw = 56 * s;
+        D2D1_RECT_F plus = D2D1::RectF(rc.right - 12 * s - bs, rc.top + 7 * s, rc.right - 12 * s, rc.top + 7 * s + bs);
+        D2D1_RECT_F val = D2D1::RectF(plus.left - vw, plus.top, plus.left, plus.bottom);
+        D2D1_RECT_F minus = D2D1::RectF(val.left - bs, plus.top, val.left, plus.bottom);
+        for (auto [id, r] : {std::pair{kSlideLess, minus}, std::pair{kSlideMore, plus}}) {
+            const bool hov = m_mouseInside && Contains(r, m_mouse);
+            FillRound(r, bs / 2, kWhite, hov ? 0.18f : 0.09f);
+            Text(id == kSlideLess ? L"\uE738" : L"\uE710", m_tfIcon.Get(), r, kWhite, 1);
+            m_settingRows.push_back({id, r});
+        }
+        Text(SlideDelayLabel(), m_tfLabel.Get(), val, kAccent, 1);
+        Text(L"Diaporama : durée par image", m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 6 * s, minus.left - 10 * s, rc.top + 28 * s), kWhite, 1);
+        Text(L"Aussi réglable pendant le diaporama avec ↑ et ↓.", m_tfSmall.Get(),
+             D2D1::RectF(rc.left + 12 * s, rc.top + 28 * s, minus.left - 10 * s, rc.top + 50 * s), kGrey, 0.9f);
         y += rowH;
     }
     // Bouton « Rechercher une mise à jour »

@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "inflate.h"
+#include "zip.h"
 #include "version.h"
 
 #include <bcrypt.h>
@@ -313,55 +314,20 @@ struct ZipEntry {
     std::vector<uint8_t> data;
 };
 
-uint16_t Rd16(const uint8_t* p) { return uint16_t(p[0] | p[1] << 8); }
-uint32_t Rd32(const uint8_t* p) { return uint32_t(p[0]) | uint32_t(p[1]) << 8 | uint32_t(p[2]) << 16 | uint32_t(p[3]) << 24; }
-
 bool ReadZip(const std::vector<uint8_t>& z, std::vector<ZipEntry>& out, std::wstring& error) {
     error = L"archive de mise à jour invalide";
-    if (z.size() < 22) return false;
-    size_t eocd = std::string::npos;
-    for (size_t i = z.size() - 22 + 1; i-- > 0 && z.size() - i < 65557;)
-        if (Rd32(&z[i]) == 0x06054b50) {
-            eocd = i;
-            break;
-        }
-    if (eocd == std::string::npos) return false;
-    uint16_t count = Rd16(&z[eocd + 10]);
-    size_t cd = Rd32(&z[eocd + 16]);
-    for (uint16_t k = 0; k < count; ++k) {
-        if (cd + 46 > z.size() || Rd32(&z[cd]) != 0x02014b50) return false;
-        uint16_t method = Rd16(&z[cd + 10]), flags = Rd16(&z[cd + 8]);
-        uint32_t csize = Rd32(&z[cd + 20]), usize = Rd32(&z[cd + 24]);
-        uint16_t nlen = Rd16(&z[cd + 28]), xlen = Rd16(&z[cd + 30]), clen = Rd16(&z[cd + 32]);
-        uint32_t local = Rd32(&z[cd + 42]);
-        if (cd + 46 + nlen > z.size()) return false;
-        std::string name(reinterpret_cast<const char*>(&z[cd + 46]), nlen);
-        cd += 46 + size_t(nlen) + xlen + clen;
-        if (flags & 1) {
-            error = L"archive chiffrée non prise en charge";
-            return false;
-        }
-        std::replace(name.begin(), name.end(), '\\', '/');
-        if (name.empty() || name.back() == '/') continue;  // dossier
+    std::vector<ZipEntryInfo> list;
+    if (!ZipList(z.data(), z.size(), list)) return false;
+    for (auto& info : list) {
+        const std::string& name = info.name;
         if (name.find("..") != std::string::npos || name[0] == '/' || name.find(':') != std::string::npos) {
             error = L"archive suspecte (chemin hors du dossier)";
             return false;
         }
-        if (local + 30 > z.size() || Rd32(&z[local]) != 0x04034b50) return false;
-        size_t data = local + 30 + size_t(Rd16(&z[local + 26])) + Rd16(&z[local + 28]);
-        if (data + csize > z.size() || usize > (512u << 20)) return false;
+        if (info.size > (512u << 20)) return false;
         ZipEntry e;
         e.name = name;
-        e.data.resize(usize);
-        if (method == 0) {
-            if (csize != usize) return false;
-            memcpy(e.data.data(), &z[data], usize);
-        } else if (method == 8) {
-            if (!InflateRaw(&z[data], csize, e.data.data(), usize)) return false;
-        } else {
-            error = L"méthode de compression zip non prise en charge";
-            return false;
-        }
+        if (!ZipExtract(z.data(), z.size(), info, e.data)) return false;
         out.push_back(std::move(e));
     }
     error.clear();

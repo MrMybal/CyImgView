@@ -121,7 +121,7 @@ void Viewer::SaveAs() {
         bool flip;
         int rot;
         FlipRot(flip, rot);
-        if (!OrientPixels(m_cur->pixels.Data(), m_cur->width, m_cur->height, m_cur->stride, flip, rot, px, w, h, stride)) {
+        if (!OrientPixels(CurPixels(), m_cur->width, m_cur->height, m_cur->stride, flip, rot, px, w, h, stride)) {
             ShowToast(L"Mémoire insuffisante");
             return;
         }
@@ -281,7 +281,7 @@ bool Viewer::BeginEdit() {
     FlipRot(flip, rot);
     PixelBuffer px;
     uint32_t w, h, stride;
-    if (!OrientPixels(m_cur->pixels.Data(), m_cur->width, m_cur->height, m_cur->stride, flip, rot, px, w, h, stride)) {
+    if (!OrientPixels(CurPixels(), m_cur->width, m_cur->height, m_cur->stride, flip, rot, px, w, h, stride)) {
         ShowToast(L"Mémoire insuffisante");
         return false;
     }
@@ -815,6 +815,7 @@ bool Viewer::EditKey(WPARAM vk) {
         case 'Z': shift ? Redo() : Undo(); return true;
         case 'Y': Redo(); return true;
         case 'S': SaveAs(); return true;
+        case 'C': CopyToClipboard(); return true;
         default: return false;
         }
     }

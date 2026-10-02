@@ -3,3 +3,6 @@ build/
 out/
 *.user
 dist/
+
+# Fichiers sources du logo (docs/logo.png et src/app.ico en sont générés)
+/cyimgview-logo-*.png

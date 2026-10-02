@@ -32,6 +32,17 @@ New-Item -ItemType Directory -Force (Join-Path $stage 'licenses') | Out-Null
 Copy-Item (Join-Path $root 'third_party\LibRaw\LICENSE.LGPL') (Join-Path $stage 'licenses\LibRaw-LICENSE.LGPL')
 Copy-Item (Join-Path $root 'third_party\LibRaw\LICENSE.CDDL') (Join-Path $stage 'licenses\LibRaw-LICENSE.CDDL')
 Copy-Item (Join-Path $root 'third_party\LibRaw\COPYRIGHT') (Join-Path $stage 'licenses\LibRaw-COPYRIGHT')
+# Licences des bibliothèques intégrées aux plugins : licenses\<bibliothèque>-<fichier>
+$thirdLicenses = @(
+    'libwebp\COPYING', 'libwebp\PATENTS', 'libheif\COPYING', 'libde265\COPYING', 'dav1d\COPYING',
+    'libjxl\LICENSE', 'libjxl\PATENTS', 'highway\LICENSE', 'openjpeg\LICENSE', 'openexr\LICENSE.md',
+    'openexr\PATENTS', 'openexr\external\zstd\LICENSE', 'openexr\external\OpenJPH\LICENSE',
+    'libdeflate\COPYING', 'Imath\LICENSE.md')
+foreach ($l in $thirdLicenses) {
+    $src = Join-Path $root "third_party\$l"
+    if (-not (Test-Path $src)) { throw "Licence manquante : $src" }
+    Copy-Item $src (Join-Path $stage ('licenses\' + $l.Replace('\', '-')))
+}
 
 if (Test-Path $zip) { Remove-Item $zip -Force }
 Compress-Archive -Path $stage -DestinationPath $zip -CompressionLevel Optimal
