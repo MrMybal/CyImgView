@@ -139,13 +139,7 @@ bool Viewer::Create(HINSTANCE inst, int show, const std::wstring& initialPath) {
     GetModuleFileNameW(nullptr, exe, ARRAYSIZE(exe));
     m_exeDir = ParentOf(exe);
 
-    PWSTR appData = nullptr;
-    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &appData))) {
-        std::wstring dir = std::wstring(appData) + L"\\CyImgView";
-        CreateDirectoryW(dir.c_str(), nullptr);
-        m_iniPath = dir + L"\\settings.ini";
-        CoTaskMemFree(appData);
-    }
+    m_iniPath = SettingsIniPath();
 
     if (FAILED(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory1), nullptr,
                                  reinterpret_cast<void**>(m_factory.GetAddressOf()))) ||
@@ -222,7 +216,7 @@ bool Viewer::Create(HINSTANCE inst, int show, const std::wstring& initialPath) {
     // Mises à jour : nettoyage d'une installation précédente, puis recherche automatique
     // (au plus une fois toutes les 20 h, quelques secondes après le démarrage pour ne rien ralentir)
     CleanupUpdateLeftovers(m_exeDir);
-    if (!m_iniPath.empty() && GetPrivateProfileIntW(L"update", L"auto", 1, m_iniPath.c_str())) {
+    if (!m_iniPath.empty() && m_autoUpdate) {
         wchar_t last[32] = {};
         GetPrivateProfileStringW(L"update", L"last", L"0", last, 32, m_iniPath.c_str());
         if (std::time(nullptr) - _wtoi64(last) > 20 * 3600) SetTimer(m_hwnd, kTimerUpdate, 4000, nullptr);
@@ -243,6 +237,8 @@ void Viewer::LoadSettings() {
     if (m_iniPath.empty()) return;
     const wchar_t* f = m_iniPath.c_str();
     m_showStrip = GetPrivateProfileIntW(L"view", L"strip", 1, f) != 0;
+    m_singleInstance = GetPrivateProfileIntW(L"settings", L"single_instance", 0, f) != 0;
+    m_autoUpdate = GetPrivateProfileIntW(L"update", L"auto", 1, f) != 0;
     int x = GetPrivateProfileIntW(L"window", L"x", INT_MIN, f);
     int y = GetPrivateProfileIntW(L"window", L"y", INT_MIN, f);
     int w = GetPrivateProfileIntW(L"window", L"w", 0, f);
@@ -529,7 +525,7 @@ void Viewer::Text(const std::wstring& s, IDWriteTextFormat* tf, const D2D1_RECT_
 }
 
 bool Viewer::HudWanted() const {
-    if (m_edit.active) return true;
+    if (m_edit.active || m_showSettings) return true;
     if (!m_cur && !m_placeholder && m_files.empty()) return true;
     if (m_dragging) return false;
     if (NowSeconds() - m_lastActivity < 2.0) return true;
@@ -791,6 +787,7 @@ void Viewer::DrawHud(float cw, float ch) {
             {Btn::Strip, L"\uECA5", L"Pellicule (T)"},
             {Btn::Info, L"\uE946", L"Informations (I)"},
             {Btn::Help, L"\uE897", L"Raccourcis (H)"},
+            {Btn::Settings, L"\uE713", L"Param\u00E8tres (P)"},
             {Btn::Full, m_fullscreen ? L"\uE73F" : L"\uE740", L"Plein écran (F)"},
         };
         const float bs = 36 * s, gap = 2 * s, sep = 10 * s;
@@ -822,7 +819,8 @@ void Viewer::DrawHud(float cw, float ch) {
         for (auto& b : m_buttons) {
             if (b.id == Btn::Update) continue;
             bool active = (b.id == Btn::Strip && m_showStrip) || (b.id == Btn::Info && m_showInfo) ||
-                          (b.id == Btn::Help && m_showHelp) || (b.id == Btn::Fit && m_fit);
+                          (b.id == Btn::Help && m_showHelp) || (b.id == Btn::Fit && m_fit) ||
+                          (b.id == Btn::Settings && m_showSettings);
             if (b.id == hovered) FillRound(b.rc, 5 * s, kWhite, 0.14f * a);
             else if (active) FillRound(b.rc, 5 * s, kWhite, 0.07f * a);
             uint32_t col = active ? kAccent : kWhite;
@@ -883,7 +881,8 @@ void Viewer::DrawHud(float cw, float ch) {
         }
     }
 
-    if (m_showInfo) DrawInfoPanel(cw, ch);
+    if (m_showInfo && !m_showSettings) DrawInfoPanel(cw, ch);
+    if (m_showSettings && !m_edit.active) DrawSettings(cw, ch);
     if (m_showHelp) DrawHelp(cw, ch);
 
     // Toast (niveau de zoom, messages)
@@ -962,6 +961,7 @@ void Viewer::DrawHelp(float cw, float ch) {
         {L"Ctrl+O", L"Ouvrir un fichier (ou glisser-déposer)"},
         {L"Ctrl+S", L"Enregistrer sous / convertir le format"},
         {L"Ctrl+U", L"Rechercher une mise à jour"},
+        {L"P", L"Paramètres (fenêtre unique, pellicule, mises à jour)"},
         {L"E", L"Mode édition (pinceau, formes, texte, recadrage…)"},
         {L"F5", L"Recharger le dossier"},
         {L"Boutons latéraux souris", L"Image précédente / suivante"},
@@ -1546,7 +1546,15 @@ void Viewer::OnButton(Btn b) {
     case Btn::Actual: ZoomTo(1.0, c, true); break;
     case Btn::Rotate: Rotate(1); break;
     case Btn::Strip: m_showStrip = !m_showStrip; m_thumbReqLo = -1; RequestThumbs(); break;
-    case Btn::Info: m_showInfo = !m_showInfo; break;
+    case Btn::Info:
+        m_showInfo = !m_showInfo;
+        m_showSettings = false;
+        break;
+    case Btn::Settings:
+        m_showSettings = !m_showSettings;
+        m_showInfo = false;
+        m_showHelp = false;
+        break;
     case Btn::Help: m_showHelp = !m_showHelp; break;
     case Btn::Full: ToggleFullscreen(); break;
     default: break;
@@ -1573,6 +1581,7 @@ void Viewer::OnKey(WPARAM vk) {
     case 'L': Rotate(-1); break;
     case 'T': OnButton(Btn::Strip); break;
     case 'I': OnButton(Btn::Info); break;
+    case 'P': OnButton(Btn::Settings); break;
     case 'H': case VK_F1: OnButton(Btn::Help); break;
     case 'O': if (ctrl) OpenDialog(); break;
     case 'S': if (ctrl) SaveAs(); break;
@@ -1595,6 +1604,7 @@ void Viewer::OnKey(WPARAM vk) {
     case VK_ESCAPE:
         if (m_edit.active) EndEdit(true);
         else if (m_showHelp) m_showHelp = false;
+        else if (m_showSettings) m_showSettings = false;
         else if (m_showInfo) m_showInfo = false;
         else if (m_fullscreen) ToggleFullscreen();
         else PostMessageW(m_hwnd, WM_CLOSE, 0, 0);
@@ -1666,6 +1676,20 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
         }
         return 0;
     case kMsgUpdate: OnUpdateResult(reinterpret_cast<UpdateResult*>(lp)); return 0;
+    case WM_COPYDATA: {  // « une seule fenêtre » : fichier transmis par un nouveau lancement
+        auto* cds = reinterpret_cast<COPYDATASTRUCT*>(lp);
+        if (!cds || cds->dwData != kCopyDataOpen || cds->cbData < sizeof(wchar_t) || cds->cbData > 65536) break;
+        auto* path = new std::wstring(static_cast<const wchar_t*>(cds->lpData), cds->cbData / sizeof(wchar_t) - 1);
+        PostMessageW(m_hwnd, kMsgOpenPath, 0, reinterpret_cast<LPARAM>(path));  // ouverture après la réponse
+        if (IsIconic(m_hwnd)) ShowWindow(m_hwnd, SW_RESTORE);
+        SetForegroundWindow(m_hwnd);
+        return TRUE;
+    }
+    case kMsgOpenPath: {
+        std::unique_ptr<std::wstring> path(reinterpret_cast<std::wstring*>(lp));
+        OpenPath(*path);
+        return 0;
+    }
     case WM_TIMER:
         if (wp == kTimerUpdate) {
             KillTimer(m_hwnd, kTimerUpdate);
@@ -1728,6 +1752,19 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
             m_showHelp = false;
             Invalidate();
             return 0;
+        }
+        if (m_showSettings && !m_edit.active) {  // panneau Paramètres : clic sur une option, ou en dehors pour fermer
+            for (const SettingRow& r : m_settingRows) {
+                if (Contains(r.rc, p)) {
+                    OnSettingClicked(r.id);
+                    return 0;
+                }
+            }
+            if (!Contains(m_settingsPanel, p) && HitButton(p) == Btn::None) {
+                m_showSettings = false;
+                Invalidate();
+                return 0;
+            }
         }
         if (m_edit.active) {
             if (EditMouseDown(p, false, msg == WM_LBUTTONDBLCLK)) return 0;

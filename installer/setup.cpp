@@ -34,7 +34,7 @@ const char kMagic[8] = {'C', 'Y', 'I', 'M', 'G', 'P', 'K', '1'};
 const wchar_t* kExts[] = {L"jpg", L"jpeg", L"jpe", L"jfif", L"png", L"gif", L"bmp", L"dib", L"tif", L"tiff", L"ico",
                           L"webp", L"heic", L"heif", L"avif", L"jxr", L"wdp", L"dds",
                           L"cr2", L"cr3", L"crw", L"nef", L"nrw", L"arw", L"srf", L"sr2", L"dng", L"raf", L"rw2",
-                          L"orf", L"pef", L"srw", L"x3f", L"3fr", L"iiq", L"erf", L"kdc", L"mrw", L"uasset"};
+                          L"orf", L"pef", L"srw", L"x3f", L"3fr", L"iiq", L"erf", L"kdc", L"mrw", L"uasset", L"tga"};
 
 std::wstring KnownFolder(REFKNOWNFOLDERID id) {
     PWSTR p = nullptr;

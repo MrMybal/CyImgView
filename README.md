@@ -22,8 +22,8 @@ Version portable : l'archive `CyImgView-<version>-win64.zip` contient l'exe et l
 
 ## Fonctionnalités
 
-- **Formats** : JPEG, PNG, GIF, BMP, TIFF, ICO, JPEG XR, DDS, ainsi que WebP, HEIF et AVIF si les
-  codecs Windows correspondants sont installés.
+- **Formats** : JPEG, PNG, GIF, BMP, TIFF, TGA (plugin `tga`), ICO, JPEG XR, DDS, ainsi que WebP, HEIF
+  et AVIF si les codecs Windows correspondants sont installés.
 - **RAW** : tous les formats gérés par [LibRaw](https://www.libraw.org) (~1000 boîtiers : CR3, CR2,
   CRW, NEF, ARW, RAF, RW2, ORF, DNG, PEF, SRW, IIQ, 3FR…) via le plugin `raw`. L'affichage est
   progressif :
@@ -99,6 +99,7 @@ cyimg_bench.exe       banc d'essai du décodage (console)
 plugins\raw.dll        plugin RAW (LibRaw intégré)
 plugins\vcomp140.dll   runtime OpenMP de Microsoft (LibRaw multithread)
 plugins\uasset.dll     plugin textures Unreal Engine
+plugins\tga.dll        plugin TGA
 ```
 
 Pour déployer l'application, copiez `CyImgView.exe` et le dossier `plugins`.
@@ -160,6 +161,7 @@ passer par « Ouvrir avec » / l'association de fichiers.
 | Échap | Fermer le panneau, quitter le plein écran, puis quitter |
 | Ctrl+S | Enregistrer sous / convertir |
 | Ctrl+U | Rechercher une mise à jour |
+| P | Paramètres |
 | E | Mode édition |
 
 ### Mode édition
@@ -180,7 +182,15 @@ Les tailles d'outil sont en pixels de l'image et s'adaptent à sa définition.
 
 Les métadonnées EXIF ne sont pas recopiées dans le fichier enregistré.
 
-Les réglages (position de la fenêtre, pellicule) sont enregistrés dans
+### Paramètres (touche P ou bouton engrenage)
+
+- **Ouvrir les fichiers dans la fenêtre existante** (désactivé par défaut) : une image ouverte depuis
+  l'Explorateur remplace celle de la fenêtre déjà ouverte au lieu d'en créer une nouvelle. Ça
+  fonctionne aussi quand plusieurs fichiers sont ouverts d'un coup.
+- **Afficher la pellicule.**
+- **Rechercher les mises à jour automatiquement**, plus un bouton pour rechercher tout de suite.
+
+Les réglages, ainsi que la position de la fenêtre, sont enregistrés dans
 `%APPDATA%\CyImgView\settings.ini`.
 
 ## Écrire un plugin

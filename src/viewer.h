@@ -19,6 +19,13 @@
 // c'est l'étape la plus lente du lancement (pilote GPU), elle se fait pendant le reste.
 void StartGpuWarmup();
 
+// %APPDATA%\CyImgView\settings.ini (créé au besoin)
+std::wstring SettingsIniPath();
+
+// Option « une seule fenêtre » : transmet le fichier à une fenêtre CyImgView déjà ouverte.
+// Retourne true si elle l'a pris en charge (ce processus peut alors se terminer).
+bool ForwardToRunningInstance(const std::wstring& path);
+
 class Viewer {
 public:
     Viewer() = default;
@@ -28,7 +35,11 @@ public:
     int Run();
 
 private:
-    enum class Btn { None, Open, Edit, SaveAs, Prev, Next, ZoomOut, ZoomIn, Fit, Actual, Rotate, Strip, Info, Help, Full, Update };
+    enum class Btn { None, Open, Edit, SaveAs, Prev, Next, ZoomOut, ZoomIn, Fit, Actual, Rotate, Strip, Info, Help, Full, Update, Settings };
+    struct SettingRow {
+        int id;
+        D2D1_RECT_F rc;
+    };
 
     // --- Mode édition (viewer_edit.cpp) ---
     enum class Tool { Hand, Brush, Eraser, Line, Arrow, Rect, Ellipse, Text, Fill, Picker, Crop };
@@ -104,6 +115,9 @@ private:
     void DrawStrip(float cw, float ch, float alpha);
     void DrawInfoPanel(float cw, float ch);
     void DrawHelp(float cw, float ch);
+    void DrawSettings(float cw, float ch);
+    void OnSettingClicked(int id);
+    void SaveSetting(const wchar_t* section, const wchar_t* key, int value);
     void DrawSpinner(float cx, float cy, float r, float alpha);
     void DrawCenteredMessage(float cw, float ch, const wchar_t* glyph, const std::wstring& line1, const std::wstring& line2);
     GpuImage* GetGpuImage(const ImagePtr& img, const std::wstring& key);
@@ -287,6 +301,12 @@ private:
     float m_editRefLong = 0;
 
     ReleaseInfo m_release;
-    bool m_updateAvailable = false, m_updateChecking = false;  // grand côté de la dernière image éditée (mise à l'échelle des tailles d'outil)
+    bool m_updateAvailable = false, m_updateChecking = false;
+
+    // Paramètres (panneau, enregistrés dans settings.ini)
+    bool m_showSettings = false;
+    bool m_singleInstance = false, m_autoUpdate = true;
+    std::vector<SettingRow> m_settingRows;
+    D2D1_RECT_F m_settingsPanel{};  // grand côté de la dernière image éditée (mise à l'échelle des tailles d'outil)
     std::vector<SaveFormat> m_saveFormats;
 };

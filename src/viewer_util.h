@@ -11,6 +11,8 @@ namespace ui {
 
 constexpr UINT kMsgUpdate = WM_APP + 4;     // résultat d'une recherche de mise à jour (lParam = UpdateResult*)
 constexpr UINT_PTR kTimerUpdate = 2;         // recherche automatique, quelques secondes après le démarrage
+constexpr UINT kMsgOpenPath = WM_APP + 5;    // fichier transmis par une autre instance (lParam = std::wstring*)
+constexpr ULONG_PTR kCopyDataOpen = 0x43594956;  // 'CYIV' : WM_COPYDATA « ouvre ce fichier »
 
 constexpr uint32_t kBg = 0x111214;
 constexpr uint32_t kAccent = 0x4AA8FF;

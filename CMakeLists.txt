@@ -21,6 +21,7 @@ add_executable(CyImgView WIN32
     src/save.cpp
     src/viewer_edit.cpp
     src/viewer_update.cpp
+    src/viewer_settings.cpp
     src/updater.cpp
     src/inflate.cpp
     src/app.rc
@@ -78,3 +79,9 @@ add_executable(CyImgViewSetup WIN32 installer/setup.cpp installer/setup.rc insta
 target_compile_options(CyImgViewSetup PRIVATE ${CYIMG_WARNINGS})
 target_link_libraries(CyImgViewSetup PRIVATE comctl32 shell32 ole32 advapi32 winhttp bcrypt)
 set_target_properties(CyImgViewSetup PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR} OUTPUT_NAME setup-stub)
+
+# TGA (Truevision) : non géré par WIC
+add_library(tga SHARED plugins/tga/tga.cpp)
+target_compile_options(tga PRIVATE /utf-8 /W4 /EHsc)
+target_include_directories(tga PRIVATE include)
+set_target_properties(tga PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR}/plugins)
