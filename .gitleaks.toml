@@ -1,0 +1,7 @@
+# Configuration gitleaks : règles par défaut + exceptions vérifiées à la main.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Faux positif vérifié : nom de macro LibRaw (LIBRAW_WIN32_DLLDEFS) dans son journal des modifications"
+paths = ['''third_party/LibRaw/Changelog\.txt''']

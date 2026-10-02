@@ -1,0 +1,27 @@
+#include <winver.h>
+#include "../src/version.h"
+
+1 ICON "../src/app.ico"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION CYIMG_VERSION_MAJOR,CYIMG_VERSION_MINOR,CYIMG_VERSION_PATCH,0
+PRODUCTVERSION CYIMG_VERSION_MAJOR,CYIMG_VERSION_MINOR,CYIMG_VERSION_PATCH,0
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040C04B0"
+    BEGIN
+      VALUE "FileDescription", "Installation de CyImgView"
+      VALUE "ProductName", "CyImgView"
+      VALUE "CompanyName", "MrMybal"
+      VALUE "FileVersion", CYIMG_VERSION_STR
+      VALUE "ProductVersion", CYIMG_VERSION_STR
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x040C, 1200
+  END
+END

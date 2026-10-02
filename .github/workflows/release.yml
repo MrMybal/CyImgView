@@ -1,0 +1,39 @@
+# Publie une release quand une étiquette « vX.Y.Z » est poussée :
+#   git tag v1.2.0 && git push origin v1.2.0
+# L'étiquette doit correspondre à la version de src/version.h.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Vérifier la version
+        shell: pwsh
+        run: |
+          $h = Get-Content src/version.h -Raw
+          $v = '{0}.{1}.{2}' -f ([regex]::Match($h,'VERSION_MAJOR (\d+)').Groups[1].Value),
+                                ([regex]::Match($h,'VERSION_MINOR (\d+)').Groups[1].Value),
+                                ([regex]::Match($h,'VERSION_PATCH (\d+)').Groups[1].Value)
+          if ("v$v" -ne "${{ github.ref_name }}") { throw "L'étiquette ${{ github.ref_name }} ne correspond pas à src/version.h (v$v)" }
+          "VERSION=$v" >> $env:GITHUB_ENV
+
+      - name: Compiler et empaqueter
+        shell: pwsh
+        run: ./tools/package.ps1
+
+      - name: Publier la release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" "dist/CyImgView-$env:VERSION-Setup.exe" "dist/CyImgView-$env:VERSION-win64.zip" `
+            --title "CyImgView $env:VERSION" --generate-notes
