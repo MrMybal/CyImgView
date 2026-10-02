@@ -202,6 +202,11 @@ private:
     void SyncGpuFrame(GpuImage* g);
     ID2D1Bitmap* Logo();
 
+    // Filtrage de l'image affichée (réglage « Filtrage » : automatique, pixels bruts, linéaire...)
+    D2D1_INTERPOLATION_MODE FilterFor(float zoom, bool moving) const;
+    void SetFilter(int f);
+    static const wchar_t* FilterName(int f);
+
     // Diaporama (viewer_slideshow.cpp)
     void StartSlideshow();
     void StopSlideshow();
@@ -376,4 +381,8 @@ private:
     bool m_fadeFlip = false;
     int m_fadeRot = 0;
     double m_fadeStart = -10;
+
+    // Filtrage : 0 automatique, 1 pixels bruts, 2 linéaire, 3 cubique, 4 cubique haute qualité, 5 anisotrope
+    int m_filter = 0;
+    int m_filterBeforeRaw = 0;  // touche N : bascule pixels bruts <-> filtrage précédent
 };

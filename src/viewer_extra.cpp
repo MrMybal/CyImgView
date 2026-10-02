@@ -8,6 +8,7 @@
 #include <wincodec.h>
 
 #include <algorithm>
+#include <cmath>
 
 using namespace ui;
 
@@ -15,7 +16,7 @@ namespace {
 
 enum MenuId {
     kMenuCopy = 1, kMenuCopyPath, kMenuOpen, kMenuSaveAs, kMenuEdit, kMenuReveal, kMenuPlay, kMenuRotate,
-    kMenuFull, kMenuInfo, kMenuSettings, kMenuSlideshow, kMenuChannel0 = 100  // + canal
+    kMenuFull, kMenuInfo, kMenuSettings, kMenuSlideshow, kMenuChannel0 = 100, kMenuFilter0 = 200  // + canal
 };
 
 // Menus Win32 sombres, comme le reste de l'interface (uxtheme, fonctions non documentées mais
@@ -213,6 +214,10 @@ void Viewer::ShowContextMenu(POINT client) {
     }
     CheckMenuRadioItem(channels, kMenuChannel0, kMenuChannel0 + 4, kMenuChannel0 + m_channel, MF_BYCOMMAND);
     AppendMenuW(menu, MF_POPUP | (has ? 0 : MF_GRAYED), reinterpret_cast<UINT_PTR>(channels), L"Canal affiché\tC");
+    HMENU filters = CreatePopupMenu();
+    for (int f = 0; f <= 5; ++f) AppendMenuW(filters, MF_STRING, kMenuFilter0 + f, f == 1 ? L"Pixels bruts\tN" : FilterName(f));
+    CheckMenuRadioItem(filters, kMenuFilter0, kMenuFilter0 + 5, kMenuFilter0 + m_filter, MF_BYCOMMAND);
+    AppendMenuW(menu, MF_POPUP, reinterpret_cast<UINT_PTR>(filters), L"Filtrage");
     if (Animated()) add(kMenuPlay, m_playing ? L"Pause\tEspace" : L"Lecture\tEspace");
     add(kMenuRotate, L"Pivoter\tR", has);
     add(kMenuSlideshow, m_slideshow ? L"Quitter le diaporama\tÉchap" : L"Diaporama\tD", m_files.size() > 1);
@@ -241,6 +246,7 @@ void Viewer::ShowContextMenu(POINT client) {
     case kMenuSettings: OnButton(Btn::Settings); break;
     default:
         if (cmd >= kMenuChannel0 && cmd <= kMenuChannel0 + 4) SetChannel(int(cmd - kMenuChannel0));
+        else if (cmd >= kMenuFilter0 && cmd <= kMenuFilter0 + 5) SetFilter(int(cmd - kMenuFilter0));
         break;
     }
     Invalidate();
@@ -500,4 +506,38 @@ ID2D1Bitmap* Viewer::Logo() {
         return nullptr;
     m_dc->CreateBitmapFromWicBitmap(conv.Get(), nullptr, &m_logo);
     return m_logo.Get();
+}
+
+// =============================================================================================
+// Filtrage
+
+const wchar_t* Viewer::FilterName(int f) {
+    static const wchar_t* names[] = {L"Automatique", L"Pixels bruts", L"Linéaire", L"Cubique", L"Cubique HQ", L"Anisotrope"};
+    return names[std::clamp(f, 0, 5)];
+}
+
+// Automatique : pixel exact à 100 %, bicubique haute qualité en réduction, cubique en agrandissement
+// modéré, pixels nets au-delà de 300 %. Les autres choix s'appliquent à tous les niveaux de zoom.
+// Pendant un mouvement (zoom animé, glisser), filtrage linéaire, sauf en pixels bruts.
+D2D1_INTERPOLATION_MODE Viewer::FilterFor(float z, bool moving) const {
+    if (m_filter == 1) return D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
+    if (moving) return D2D1_INTERPOLATION_MODE_LINEAR;
+    switch (m_filter) {
+    case 2: return D2D1_INTERPOLATION_MODE_LINEAR;
+    case 3: return D2D1_INTERPOLATION_MODE_CUBIC;
+    case 4: return D2D1_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC;
+    case 5: return D2D1_INTERPOLATION_MODE_ANISOTROPIC;
+    default: break;
+    }
+    if (std::fabs(z - 1.0f) < 1e-4f || z >= 3.0f) return D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
+    return z < 1.0f ? D2D1_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC : D2D1_INTERPOLATION_MODE_CUBIC;
+}
+
+void Viewer::SetFilter(int f) {
+    f = std::clamp(f, 0, 5);
+    if (f == 1 && m_filter != 1) m_filterBeforeRaw = m_filter;
+    m_filter = f;
+    SaveSetting(L"view", L"filter", m_filter);
+    ShowToast(std::wstring(L"Filtrage : ") + FilterName(f));
+    Invalidate();
 }

@@ -142,9 +142,7 @@ void Viewer::DrawSlideImage(const std::vector<Tile>& tiles, float W, float H, bo
     float fit = std::min(cw / dw, ch / dh);
     fit = std::min(fit, 4.0f);  // les toutes petites images ne sont pas agrandies à l'infini
     const float z = fit * scale;
-    D2D1_INTERPOLATION_MODE mode = moving ? D2D1_INTERPOLATION_MODE_LINEAR
-                                   : z < 1.0f ? D2D1_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC
-                                              : D2D1_INTERPOLATION_MODE_CUBIC;
+    const D2D1_INTERPOLATION_MODE mode = FilterFor(z, moving);
     m_dc->SetTransform(ImageTransform(W, H, flip, rot, z, std::round(cw / 2), std::round(ch / 2)));
     for (const Tile& t : tiles) m_dc->DrawBitmap(t.bmp.Get(), t.dst, opacity, mode, nullptr, nullptr);
     m_dc->SetTransform(D2D1::Matrix3x2F::Identity());

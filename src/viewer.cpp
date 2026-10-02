@@ -229,6 +229,7 @@ void Viewer::LoadSettings() {
     m_autoUpdate = GetPrivateProfileIntW(L"update", L"auto", 1, f) != 0;
     m_slideDelay = std::clamp(int(GetPrivateProfileIntW(L"slideshow", L"delay", 5, f)), 1, 60);
     m_slideShuffle = GetPrivateProfileIntW(L"slideshow", L"shuffle", 0, f) != 0;
+    m_filter = std::clamp(int(GetPrivateProfileIntW(L"view", L"filter", 0, f)), 0, 5);
     int x = GetPrivateProfileIntW(L"window", L"x", INT_MIN, f);
     int y = GetPrivateProfileIntW(L"window", L"y", INT_MIN, f);
     int w = GetPrivateProfileIntW(L"window", L"w", 0, f);
@@ -649,10 +650,7 @@ void Viewer::DrawImage(float cw, float ch, bool animating) {
         }
         D2D1_RECT_F r = D2D1::RectF(left, top, left + m_edit.w * z, top + m_edit.h * z);
         if (m_checker) m_rt->FillRectangle(r, m_checker.Get());  // la gomme peut rendre transparent
-        D2D1_INTERPOLATION_MODE mode = animating || m_dragging ? D2D1_INTERPOLATION_MODE_LINEAR
-                                       : z >= 2.0f || std::fabs(z - 1.0f) < 1e-4f ? D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR
-                                       : z < 1.0f ? D2D1_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC
-                                                  : D2D1_INTERPOLATION_MODE_CUBIC;
+        D2D1_INTERPOLATION_MODE mode = FilterFor(z, animating || m_dragging);
         m_dc->DrawBitmap(m_edit.canvas.Get(), r, 1.0f, mode, nullptr, nullptr);
         DrawEditOverlay(left, top, z);
         return;
@@ -710,17 +708,13 @@ void Viewer::DrawImage(float cw, float ch, bool animating) {
         m_rt->FillRectangle(D2D1::RectF(float(left), float(top), float(left + dw * z), float(top + dh * z)), m_checker.Get());
     }
 
-    D2D1_INTERPOLATION_MODE mode;
-    if (!isFull || animating || m_dragging) mode = D2D1_INTERPOLATION_MODE_LINEAR;
-    else if (std::fabs(z - 1.0f) < 1e-4f || z >= 3.0f) mode = D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
-    else if (z < 1.0f) mode = D2D1_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC;
-    else mode = D2D1_INTERPOLATION_MODE_CUBIC;
+    const D2D1_INTERPOLATION_MODE mode = FilterFor(z, !isFull || animating || m_dragging);
 
     m_dc->SetTransform(ImageTransform(W, H, flip, rot, z, tx, ty));
     if (g) {
         for (auto& t : g->tiles) DrawTile(t.bmp.Get(), t.dst, mode);
     } else {
-        DrawTile(single, D2D1::RectF(0, 0, W, H), D2D1_INTERPOLATION_MODE_LINEAR);
+        DrawTile(single, D2D1::RectF(0, 0, W, H), m_filter == 1 ? D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR : D2D1_INTERPOLATION_MODE_LINEAR);
     }
     m_dc->SetTransform(D2D1::Matrix3x2F::Identity());
 
@@ -977,6 +971,7 @@ void Viewer::DrawHelp(float cw, float ch) {
     const float s = m_scale;
     static const std::pair<const wchar_t*, const wchar_t*> keys[] = {
         {L"← → / Espace / Retour", L"Image précédente / suivante"},
+        {L"N", L"Pixels bruts / filtrage (choix du filtrage dans les paramètres)"},
         {L"D", L"Diaporama plein écran (↑ ↓ : durée par image, Espace : pause)"},
         {L"Ctrl+C / clic droit", L"Copier l'image (Ctrl+Maj+C : le chemin)"},
         {L"Bouton RVB / C / Ctrl+2…6", L"Couches : canal seul (rouge, vert, bleu, alpha)"},
@@ -1637,6 +1632,9 @@ void Viewer::OnKey(WPARAM vk) {
     }
     switch (vk) {
     case 'D': if (!ctrl) StartSlideshow(); break;
+    case 'N':  // pixels bruts <-> filtrage choisi
+        if (!ctrl) SetFilter(m_filter == 1 ? (m_filterBeforeRaw == 1 ? 0 : m_filterBeforeRaw) : 1);
+        break;
     case VK_SPACE:
         if (Animated()) TogglePlay();
         else Navigate(1);

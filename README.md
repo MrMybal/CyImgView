@@ -202,6 +202,7 @@ passer par « Ouvrir avec » / l'association de fichiers.
 | Clic droit | Menu (copier, enregistrer, couches, diaporama…) |
 | C / Ctrl+2 à Ctrl+6 | Couches : RVB, rouge, vert, bleu, alpha |
 | Espace / , / . | Animation : lecture-pause / image précédente / suivante |
+| N | Pixels bruts (sans lissage) / filtrage choisi |
 | D | Diaporama (↑ ↓ : durée par image, Espace : pause, Échap : quitter) |
 | Ctrl+S | Enregistrer sous / convertir |
 | Ctrl+U | Rechercher une mise à jour |
@@ -234,6 +235,9 @@ Les métadonnées EXIF ne sont pas recopiées dans le fichier enregistré.
 - **Afficher la pellicule.**
 - **Rechercher les mises à jour automatiquement**, plus un bouton pour rechercher tout de suite.
 - **Diaporama** : ordre aléatoire, durée par image.
+- **Filtrage de l'image** : Automatique (pixel exact à 100 %, lissé en réduction, net au-delà de
+  300 %), Pixels bruts (aucun lissage, pour le pixel art), Linéaire, Cubique, Cubique HQ, Anisotrope.
+  Aussi dans le menu du clic droit ; la touche N bascule en pixels bruts.
 
 Les réglages, ainsi que la position de la fenêtre, sont enregistrés dans
 `%APPDATA%\CyImgView\settings.ini`.

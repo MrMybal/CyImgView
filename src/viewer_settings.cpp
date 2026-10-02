@@ -10,7 +10,7 @@ using namespace ui;
 
 namespace {
 
-enum SettingId { kSingleWindow = 1, kStrip, kAutoUpdate, kCheckNow, kSlideShuffle, kSlideLess, kSlideMore };
+enum SettingId { kSingleWindow = 1, kStrip, kAutoUpdate, kCheckNow, kSlideShuffle, kSlideLess, kSlideMore, kFilterPrev, kFilterNext };
 
 }  // namespace
 
@@ -75,6 +75,8 @@ void Viewer::OnSettingClicked(int id) {
         m_slideShuffle = !m_slideShuffle;
         SaveSetting(L"slideshow", L"shuffle", m_slideShuffle);
         break;
+    case kFilterPrev: SetFilter((m_filter + 5) % 6); break;
+    case kFilterNext: SetFilter((m_filter + 1) % 6); break;
     case kSlideLess: ChangeSlideDelay(-1); break;
     case kSlideMore: ChangeSlideDelay(1); break;
     case kCheckNow:
@@ -105,8 +107,8 @@ void Viewer::DrawSettings(float cw, float ch) {
         {kSlideShuffle, L"Diaporama : ordre aléatoire", L"Sinon, les images défilent dans l'ordre du dossier (touche D).",
          m_slideShuffle},
     };
-    const float w = std::min(520 * s, cw - 24 * s), pad = 18 * s, rowH = 62 * s;
-    const float h = pad * 2 + 34 * s + rowH * (ARRAYSIZE(rows) + 1) + 52 * s + 26 * s;
+    const float w = std::min(580 * s, cw - 24 * s), pad = 18 * s, rowH = 62 * s;
+    const float h = pad * 2 + 34 * s + rowH * (ARRAYSIZE(rows) + 2) + 52 * s + 26 * s;
     m_settingsPanel = D2D1::RectF(cw - w - 12 * s, 58 * s, cw - 12 * s, std::min(ch - 12 * s, 58 * s + h));
     const D2D1_RECT_F& p = m_settingsPanel;
     FillRound(p, 8 * s, kPanel, 0.97f);
@@ -129,6 +131,32 @@ void Viewer::DrawSettings(float cw, float ch) {
         m_rt->FillEllipse(D2D1::Ellipse(D2D1::Point2F(kx, (sw.top + sw.bottom) / 2), th / 2 - 3 * s, th / 2 - 3 * s), m_brush.Get());
         Text(r.title, m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 6 * s, sw.left - 10 * s, rc.top + 28 * s), kWhite, 1);
         Text(r.desc, m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 28 * s, sw.left - 10 * s, rc.top + 50 * s), kGrey, 0.9f);
+        y += rowH;
+    }
+    // Filtrage de l'image : sélecteur ‹ valeur ›
+    {
+        static const wchar_t* desc[] = {
+            L"Net à 100 %, lissé en réduction, pixels nets au-delà de 300 %.",
+            L"Aucun lissage : pixel art, inspection (touche N).",
+            L"Lissage simple et rapide.",
+            L"Bicubique : plus net que linéaire.",
+            L"Meilleure réduction, un peu plus lent.",
+            L"Réduction douce, moins de crénelage.",
+        };
+        D2D1_RECT_F rc = D2D1::RectF(p.left + 6 * s, y, p.right - 6 * s, y + rowH - 4 * s);
+        const float bs = 28 * s, vw = 116 * s;
+        D2D1_RECT_F next = D2D1::RectF(rc.right - 12 * s - bs, rc.top + 7 * s, rc.right - 12 * s, rc.top + 7 * s + bs);
+        D2D1_RECT_F val = D2D1::RectF(next.left - vw, next.top, next.left, next.bottom);
+        D2D1_RECT_F prev = D2D1::RectF(val.left - bs, next.top, val.left, next.bottom);
+        for (auto [id, r] : {std::pair{kFilterPrev, prev}, std::pair{kFilterNext, next}}) {
+            const bool hov = m_mouseInside && Contains(r, m_mouse);
+            FillRound(r, bs / 2, kWhite, hov ? 0.18f : 0.09f);
+            Text(id == kFilterPrev ? L"\uE76B" : L"\uE76C", m_tfIcon.Get(), r, kWhite, 1);
+            m_settingRows.push_back({id, r});
+        }
+        Text(FilterName(m_filter), m_tfLabel.Get(), val, kAccent, 1);
+        Text(L"Filtrage de l'image", m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 6 * s, prev.left - 10 * s, rc.top + 28 * s), kWhite, 1);
+        Text(desc[m_filter], m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 28 * s, prev.left - 10 * s, rc.top + 50 * s), kGrey, 0.9f);
         y += rowH;
     }
     // Diaporama : durée par image, boutons − et +
