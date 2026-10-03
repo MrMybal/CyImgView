@@ -1,0 +1,129 @@
+# CyImgView — mode édition « Développement » : réglages photo (français, langue source)
+@code = fr
+@name = Français
+
+# Onglets des modes d'édition
+develop.mode.retouch = Retouche
+develop.mode.develop = Développement
+develop.err.gpu = Développement indisponible (effet GPU ou d3dcompiler_47.dll)
+
+# Sections du panneau
+develop.sec.basic = Base
+develop.sec.curve = Courbe des tonalités
+develop.sec.hsl = Mélangeur de couleurs (TSL)
+develop.sec.grading = Étalonnage des couleurs
+develop.sec.detail = Détail
+develop.sec.effects = Effets
+develop.sec.geometry = Géométrie
+develop.sub.wb = Balance des blancs
+develop.sub.tone = Tonalité
+develop.sub.presence = Présence
+develop.sub.parametric = Courbe paramétrique
+develop.sub.sharpening = Netteté
+develop.sub.noise = Réduction du bruit
+develop.sub.vignette = Vignetage après recadrage
+develop.sub.grain = Grain
+develop.sub.straighten = Redresser
+develop.sub.crop = Recadrage et proportions
+
+# Réglages
+develop.p.temp = Température
+develop.p.tint = Teinte
+develop.p.exposure = Exposition
+develop.p.contrast = Contraste
+develop.p.highlights = Hautes lumières
+develop.p.shadows = Ombres
+develop.p.whites = Blancs
+develop.p.blacks = Noirs
+develop.p.texture = Texture
+develop.p.clarity = Clarté
+develop.p.dehaze = Correction du voile
+develop.p.vibrance = Vibrance
+develop.p.saturation = Saturation
+develop.p.pc_highlights = Hautes lumières
+develop.p.pc_lights = Tons clairs
+develop.p.pc_darks = Tons foncés
+develop.p.pc_shadows = Ombres
+develop.p.hue = Teinte
+develop.p.sat = Saturation
+develop.p.blend = Fusion
+develop.p.balance = Balance
+develop.p.amount = Gain
+develop.p.radius = Rayon
+develop.p.detail = Détail
+develop.p.masking = Masquage
+develop.p.nr_luma = Luminance
+develop.p.nr_color = Couleur
+develop.p.midpoint = Milieu
+develop.p.roundness = Arrondi
+develop.p.feather = Contour progressif
+develop.p.grain_amount = Quantité
+develop.p.size = Taille
+develop.p.roughness = Rugosité
+develop.p.angle = Angle
+
+# Mélangeur de couleurs
+develop.hsl.hue = Teinte
+develop.hsl.sat = Saturation
+develop.hsl.lum = Luminance
+develop.color.red = Rouges
+develop.color.orange = Orangés
+develop.color.yellow = Jaunes
+develop.color.green = Verts
+develop.color.aqua = Bleu-vert
+develop.color.blue = Bleus
+develop.color.purple = Violets
+develop.color.magenta = Magentas
+
+# Étalonnage
+develop.cg.shadows = Tons foncés
+develop.cg.midtones = Tons moyens
+develop.cg.highlights = Tons clairs
+
+# Boutons, aides
+develop.btn.auto = Auto
+develop.btn.reset_all = Réinitialiser tout
+develop.btn.geo_reset = Réinitialiser la géométrie
+develop.aspect.free = Libre
+develop.aspect.original = Original
+develop.curve.hint = Clic : ajouter un point · clic droit : supprimer
+develop.detail.hint = Affichez l'image à 100 % pour juger la netteté et le bruit
+develop.geo.hint = Appliqués en quittant le mode ou en terminant
+develop.hist.empty = Histogramme…
+develop.hint.default = Molette sur un curseur : ajuster · double-clic : valeur par défaut · Y : avant / après
+develop.hint.wb = Cliquez sur une zone qui devrait être neutre (gris ou blanc)
+develop.hint.straighten = Tracez une ligne le long de l'horizon (ou d'une verticale)
+develop.hint.crop = Tracez ou déplacez le cadre · coins : redimensionner · Entrée : terminer
+develop.view.split = Avant / après
+develop.view.original = Original
+develop.view.clipping = Écrêtage
+develop.view.before = Avant
+develop.view.after = Après
+
+# Info-bulles
+develop.tip.undo = Annuler le dernier réglage (Ctrl+Z)
+develop.tip.redo = Rétablir (Ctrl+Y)
+develop.tip.wb_tool = Pipette de balance des blancs (W)
+develop.tip.straighten_tool = Outil Redresser : tracer une ligne d'horizon (A)
+develop.tip.crop_tool = Outil Recadrage (R)
+develop.tip.split = Avant / après côte à côte (Y)
+develop.tip.original = Afficher l'original (\\)
+develop.tip.clip = Afficher les zones écrêtées (J)
+develop.tip.clip_low = Écrêtage des ombres (J)
+develop.tip.clip_high = Écrêtage des hautes lumières (J)
+develop.tip.auto = Réglage automatique de la tonalité (Ctrl+U)
+develop.tip.curve_channel = Canal de la courbe
+develop.tip.curve_reset = Réinitialiser la courbe de ce canal
+develop.tip.aspect = Proportions du recadrage
+develop.tip.aspect_flip = Inverser l'orientation (portrait / paysage)
+develop.tip.reset_all = Remettre tous les réglages à zéro (Ctrl+Maj+R)
+develop.tip.previous = Réglages précédents (ceux de la dernière image développée)
+develop.tip.copy = Copier les réglages (Ctrl+Alt+C)
+develop.tip.paste = Coller les réglages (Ctrl+Alt+V)
+
+# Messages
+develop.toast.copied = Réglages copiés
+develop.toast.pasted = Réglages collés
+develop.toast.nothing = Aucun réglage copié
+develop.toast.previous = Réglages précédents appliqués
+develop.toast.no_previous = Aucun réglage précédent

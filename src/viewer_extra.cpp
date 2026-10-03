@@ -17,11 +17,15 @@ namespace {
 
 enum MenuId {
     kMenuCopy = 1, kMenuCopyPath, kMenuOpen, kMenuSaveAs, kMenuEdit, kMenuReveal, kMenuPlay, kMenuRotate,
-    kMenuFull, kMenuInfo, kMenuSettings, kMenuSlideshow, kMenuChannel0 = 100, kMenuFilter0 = 200  // + canal
+    kMenuFull, kMenuInfo, kMenuSettings, kMenuSlideshow, kMenuChannel0 = 100, kMenuFilter0 = 200,  // + canal
+    kMenuOpenWith0 = 1000  // sous-menu « Ouvrir avec » (1000..1511)
 };
+
+}  // namespace
 
 // Menus Win32 sombres, comme le reste de l'interface (uxtheme, fonctions non documentées mais
 // stables depuis Windows 10 1903 : SetPreferredAppMode = n° 135, FlushMenuThemes = n° 136).
+// Aussi utilisé par le menu « Ouvrir avec » (viewer_openwith.cpp).
 void EnableDarkMenus() {
     static bool done = false;
     if (done) return;
@@ -35,6 +39,8 @@ void EnableDarkMenus() {
     if (setMode) setMode(2);  // ForceDark
     if (flush) flush();
 }
+
+namespace {
 
 bool SetClipboardBlob(UINT format, const void* data, size_t size) {
     HGLOBAL mem = GlobalAlloc(GMEM_MOVEABLE, size);
@@ -216,6 +222,14 @@ void Viewer::ShowContextMenu(POINT client) {
     add(kMenuSaveAs, "menu.save_as", has);
     add(kMenuEdit, "menu.edit", has);
     add(kMenuReveal, "menu.reveal", file);
+    OpenWithMenu openWith;  // sous-menu « Ouvrir avec » (icônes libérées après le menu)
+    const std::wstring openWithPath = file ? Current()->path : std::wstring();
+    if (file) {
+        BuildOpenWithMenu(openWith, openWithPath, kMenuOpenWith0);
+        AppendMenuW(menu, MF_POPUP, reinterpret_cast<UINT_PTR>(openWith.menu), T("openwith.menu"));
+    } else {
+        AppendMenuW(menu, MF_STRING | MF_GRAYED, 0, T("openwith.menu"));
+    }
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     HMENU channels = CreatePopupMenu();
     for (int c = 0; c <= 4; ++c) {
@@ -244,8 +258,10 @@ void Viewer::ShowContextMenu(POINT client) {
     POINT sp = client;
     ClientToScreen(m_hwnd, &sp);
     SetForegroundWindow(m_hwnd);  // sinon le menu ne se ferme pas en cliquant ailleurs
-    const UINT cmd = UINT(TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY, sp.x, sp.y, 0, m_hwnd, nullptr));
-    DestroyMenu(menu);  // détruit aussi le sous-menu
+    const UINT cmd = OpenWithTestMode() ? (file ? OpenWithTestCmd(openWith) : 0)
+                                        : UINT(TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY, sp.x, sp.y, 0, m_hwnd, nullptr));
+    DestroyMenu(menu);  // détruit aussi les sous-menus
+    if (file && OpenWithCommand(openWith, cmd, openWithPath)) return;
     switch (cmd) {
     case kMenuCopy: CopyToClipboard(); break;
     case kMenuCopyPath: CopyPathToClipboard(); break;

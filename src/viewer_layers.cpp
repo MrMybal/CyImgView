@@ -9,6 +9,7 @@
 // seulement quand un calque change.
 
 #include "viewer.h"
+#include "viewer_modes.h"
 #include "viewer_util.h"
 #include "i18n.h"
 
@@ -136,6 +137,8 @@ std::wstring Viewer::LayerName(const Layer& l) const {
 
 ID2D1Bitmap1* Viewer::LayerImage(int i) const {
     if (i == m_edit.layer && m_edit.fx >= 0 && m_edit.fxPreview && m_edit.fxOut) return m_edit.fxOut.Get();
+    if (!m_modes.empty())
+        if (ID2D1Bitmap1* b = Mode().LayerBitmap(i)) return b;  // aperçu du mode (Développement)
     return m_edit.layers[size_t(i)].bmp.Get();
 }
 
@@ -226,6 +229,7 @@ bool Viewer::ComposeTo(ID2D1Bitmap1* target, const D2D1_MATRIX_3X2_F& xf, const 
 
 void Viewer::PrepareEditFrame() {
     if (!m_edit.active || !m_dc || m_edit.layers.empty()) return;
+    if (!m_modes.empty()) Mode().Prepare();
     if (m_edit.fx >= 0 && m_edit.fxDirty) UpdateFxPreview();
 
     if (NeedComposite()) {
@@ -287,14 +291,23 @@ void Viewer::PrepareEditFrame() {
 }
 
 void Viewer::DrawEditDocument(const D2D1_RECT_F& r, D2D1_INTERPOLATION_MODE mode) {
+    // Le mode peut transformer tout le document (redressement) et dessiner un calque à sa façon (aperçu)
+    D2D1_MATRIX_3X2_F old, xf;
+    const bool turned = Mode().DocTransform(r, xf);
+    if (turned) {
+        m_dc->GetTransform(&old);
+        m_dc->SetTransform(*D2D1::Matrix3x2F::ReinterpretBaseType(&xf) * *D2D1::Matrix3x2F::ReinterpretBaseType(&old));
+    }
     if (NeedComposite() && m_edit.comp) {
         m_dc->DrawBitmap(m_edit.comp.Get(), r, 1.0f, mode, nullptr, nullptr);
-        return;
+    } else {
+        for (int i = 0; i < int(m_edit.layers.size()); ++i) {
+            const Layer& l = m_edit.layers[size_t(i)];
+            if (!l.visible || l.opacity <= 0 || Mode().DrawLayer(i, r, mode, l.opacity)) continue;
+            m_dc->DrawBitmap(LayerImage(i), r, l.opacity, mode, nullptr, nullptr);
+        }
     }
-    for (int i = 0; i < int(m_edit.layers.size()); ++i) {
-        const Layer& l = m_edit.layers[size_t(i)];
-        if (l.visible && l.opacity > 0) m_dc->DrawBitmap(LayerImage(i), r, l.opacity, mode, nullptr, nullptr);
-    }
+    if (turned) m_dc->SetTransform(old);
 }
 
 // =============================================================================================
@@ -951,6 +964,7 @@ void Viewer::DropEditGpu() {
     keep.fill = m_edit.fill;
     keep.gradTransparent = m_edit.gradTransparent;
     m_edit = std::move(keep);
+    for (auto& m : m_modes) m->DropGpu();
     m_editHover.reset();
     m_editButtons.clear();
     m_prevEditButtons.clear();

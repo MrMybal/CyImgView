@@ -3,8 +3,9 @@
 useDefault = true
 
 [allowlist]
-description = "Faux positifs vérifiés : macro LibRaw dans son journal, variables SIMD « data_key_lo/hi » de xxhash (zstd)"
+description = "Faux positifs vérifiés : macro LibRaw, variables SIMD de xxhash (zstd), noms de raccourcis dans les fichiers de langue"
 paths = [
     '''third_party/LibRaw/Changelog\.txt''',
     '''third_party/openexr/external/zstd/lib/common/xxhash\.h''',
+    '''src/lang/.*\.lang''',  # textes d'interface uniquement (ex. « help.key = Strg+Umschalt+O »)
 ]

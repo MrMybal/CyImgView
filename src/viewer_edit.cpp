@@ -8,6 +8,7 @@
 // depuis son état d'avant le tracé.
 
 #include "viewer.h"
+#include "viewer_modes.h"
 #include "viewer_util.h"
 #include "i18n.h"
 
@@ -96,6 +97,36 @@ void Viewer::ReloadList() {
     Invalidate();
 }
 
+// Ouvrir avec depuis l'éditeur : l'image telle qu'affichée (calques aplatis, développement compris) est
+// écrite en PNG temporaire, puis proposée aux applications du menu « Ouvrir avec ».
+void Viewer::EditOpenWith() {
+    if (m_edit.textActive) CommitText();
+    if (m_edit.fx >= 0) CloseEffect(false);
+    std::wstring tmp, err;
+    {
+        struct ExportScope {
+            Viewer& v;
+            bool on;
+            ~ExportScope() {
+                if (on) v.Mode().EndExport();
+            }
+        } exportScope{*this, Mode().BeginExport()};
+        PixelBuffer px;
+        uint32_t stride = 0;
+        bool alpha = false;
+        if (!ReadFlattened(px, stride, alpha)) {
+            ShowToast(T("edit.err.read"));
+            return;
+        }
+        tmp = WriteTempPng(px.Data(), m_edit.w, m_edit.h, stride, alpha, Current() ? Current()->path : L"image", err);
+    }
+    if (tmp.empty()) {
+        ShowToast(err);
+        return;
+    }
+    ShowOpenWithMenu(POINT{LONG(m_editOpenWithRc.left), LONG(m_editOpenWithRc.bottom)}, tmp);
+}
+
 void Viewer::SaveAs() {
     const FileEntry* cur = Current();
     if (!cur || (!m_cur && !m_edit.active)) {
@@ -109,6 +140,14 @@ void Viewer::SaveAs() {
         MessageBoxW(m_hwnd, T("edit.save.no_encoder"), L"CyImgView", MB_ICONERROR);
         return;
     }
+    // Mode Développement : document complété le temps de l'enregistrement (réglages en cours compris)
+    struct ExportScope {
+        Viewer& v;
+        bool on;
+        ~ExportScope() {
+            if (on) v.Mode().EndExport();
+        }
+    } exportScope{*this, m_edit.active && Mode().BeginExport()};
 
     // Pixels tels qu'affichés : document édité aplati, ou image orientée (EXIF + rotation manuelle)
     PixelBuffer px;
@@ -269,6 +308,8 @@ bool Viewer::BeginEdit() {
     m_userRot = 0;
     m_showHelp = false;
     m_showInfo = false;
+    InitEditModes();  // dernier mode utilisé (Retouche ou Développement)
+    if (m_mode != 0 && !Mode().Enter()) m_mode = 0;
     ApplyFit(false);
     Invalidate();
     return true;
@@ -278,6 +319,7 @@ bool Viewer::EndEdit(bool ask) {
     if (!m_edit.active) return true;
     if (m_edit.textActive) CommitText();
     if (m_edit.fx >= 0) CloseEffect(false);
+    if (!m_modes.empty()) Mode().Commit();  // réglages du mode intégrés au document (avec historique)
     if (ask && m_edit.dirty) {
         TASKDIALOG_BUTTON buttons[] = {{100, T("edit.ask.save")}, {101, T("edit.ask.discard")}};
         TASKDIALOGCONFIG tc{sizeof(tc)};
@@ -311,6 +353,7 @@ bool Viewer::EndEdit(bool ask) {
     keep.gradTransparent = m_edit.gradTransparent;
     keep.showLayers = m_edit.showLayers;
     m_edit = std::move(keep);
+    for (auto& m : m_modes) m->Close();
     m_editHover.reset();
     m_dragging = false;
     if (m_gpuSwitchPending) {  // bascule WARP -> GPU reportée pendant l'édition
@@ -751,6 +794,7 @@ void Viewer::EditCommand(EditCmd cmd, int arg) {
         break;
     }
     case EditCmd::SaveAs: SaveAs(); break;
+    case EditCmd::OpenWith: EditOpenWith(); break;
     case EditCmd::Done: EndEdit(true); break;
     case EditCmd::CropApply: ApplyCrop(); break;
     case EditCmd::CropCancel: m_edit.cropValid = false; break;
@@ -791,7 +835,7 @@ bool Viewer::EditBtn(EditCmd cmd, int arg, const D2D1_RECT_F& r, const wchar_t* 
 // =============================================================================================
 // Souris et clavier
 
-bool Viewer::EditMouseDown(POINT p, bool right, bool dbl) {
+bool Viewer::RetouchMouseDown(POINT p, bool right, bool dbl) {
     if (m_edit.renaming >= 0) EditChar(L'\r');  // clic ailleurs : renommage validé
     if (const EditButton* b = HitEdit(p)) {
         if (b->cmd == EditCmd::Slider) {
@@ -869,7 +913,7 @@ bool Viewer::EditMouseDown(POINT p, bool right, bool dbl) {
     return true;
 }
 
-void Viewer::EditMouseMove(POINT p) {
+void Viewer::RetouchMouseMove(POINT p) {
     if (m_edit.slider >= 0) {
         const D2D1_RECT_F& r = m_edit.sliderRc;
         SetSliderT(m_edit.slider, (p.x - r.left) / std::max(1.0f, r.right - r.left));
@@ -904,7 +948,7 @@ void Viewer::EditMouseMove(POINT p) {
     Invalidate();
 }
 
-void Viewer::EditMouseUp(POINT) {
+void Viewer::RetouchMouseUp(POINT) {
     if (m_edit.slider >= 0) {
         m_edit.slider = -1;
         ReleaseCapture();
@@ -957,7 +1001,7 @@ void Viewer::EditMouseUp(POINT) {
     Invalidate();
 }
 
-bool Viewer::EditChar(wchar_t c) {
+bool Viewer::RetouchChar(wchar_t c) {
     if (m_edit.renaming >= 0) {  // renommage d'un calque
         if (c == L'\b') {
             if (!m_edit.renameText.empty()) m_edit.renameText.pop_back();
@@ -987,7 +1031,7 @@ bool Viewer::EditChar(wchar_t c) {
     return true;
 }
 
-bool Viewer::EditKey(WPARAM vk) {
+bool Viewer::RetouchKey(WPARAM vk) {
     const bool ctrl = GetKeyState(VK_CONTROL) < 0;
     const bool shift = GetKeyState(VK_SHIFT) < 0;
     if (m_edit.renaming >= 0) {  // saisie du nom : le reste arrive par WM_CHAR
@@ -1097,7 +1141,7 @@ bool Viewer::EditKey(WPARAM vk) {
 }
 
 // Molette sur la liste des calques : défilement (ailleurs : zoom)
-bool Viewer::EditWheel(POINT p, double notches) {
+bool Viewer::RetouchWheel(POINT p, double notches) {
     if (!m_edit.showLayers || m_edit.fx >= 0) return false;
     RECT rc;
     GetClientRect(m_hwnd, &rc);
@@ -1219,7 +1263,7 @@ void Viewer::DrawSlider(int id, const D2D1_RECT_F& r, const wchar_t* tip) {
     m_rt->FillEllipse(D2D1::Ellipse(D2D1::Point2F(kx, sy), (hot ? 8.0f : 7.0f) * s, (hot ? 8.0f : 7.0f) * s), m_brush.Get());
 }
 
-void Viewer::DrawEditOverlay(float left, float top, float z) {
+void Viewer::DrawRetouchOverlay(float left, float top, float z) {
     const float s = m_scale;
     const auto toImage = D2D1::Matrix3x2F::Scale(z, z) * D2D1::Matrix3x2F::Translation(left, top);
     auto screen = [&](const D2D1_RECT_F& ir) {
@@ -1511,29 +1555,80 @@ void Viewer::DrawEditUi(float cw, float ch) {
     std::vector<EditButton> overlayButtons = std::move(m_editButtons);
     m_editButtons.clear();
 
-    // --- Barre du haut ---
+    // --- Barre du haut : onglets des modes, titre, boutons du mode, Enregistrer sous, Terminer ---
     const float barH = 52 * s, optH = 40 * s;
     SetColor(kPanel, 0.96f);
     m_rt->FillRectangle(D2D1::RectF(0, 0, cw, barH), m_brush.Get());
     SetColor(kWhite, 0.06f);
     m_rt->FillRectangle(D2D1::RectF(0, barH - 1, cw, barH), m_brush.Get());
 
-    const float bs = 36 * s, by = 8 * s, gap = 2 * s;
+    const float bs = 36 * s, by = 8 * s;
     float x = cw - 10 * s;
     // Terminer
     D2D1_RECT_F done = D2D1::RectF(x - 110 * s, by, x, by + bs);
     bool hDone = EditBtn(EditCmd::Done, 0, done, T("edit.tip.done"));
     FillRound(done, 6 * s, kAccent, hDone ? 1.0f : 0.85f);
-    IconLabel(done, L"", T("edit.btn.done"), 0x0B1A2A, 1);
+    IconLabel(done, L"\uE8FB", T("edit.btn.done"), 0x0B1A2A, 1);
     x = done.left - 8 * s;
     // Enregistrer sous
     D2D1_RECT_F save = D2D1::RectF(x - 150 * s, by, x, by + bs);
     EditBtn(EditCmd::SaveAs, 0, save, T("edit.tip.save_as"));
     SetColor(kWhite, 0.25f);
     m_rt->DrawRoundedRectangle(D2D1::RoundedRect(save, 6 * s, 6 * s), m_brush.Get(), 1);
-    IconLabel(save, L"", T(m_edit.dirty ? "edit.btn.save_as_dirty" : "edit.btn.save_as"), kWhite, 0.95f);
-    x = save.left - 14 * s;
+    IconLabel(save, L"\uE74E", T(m_edit.dirty ? "edit.btn.save_as_dirty" : "edit.btn.save_as"), kWhite, 0.95f);
+    // Ouvrir avec (image modifiée)
+    m_editOpenWithRc = D2D1::RectF(save.left - 6 * s - bs, by, save.left - 6 * s, by + bs);
+    EditBtn(EditCmd::OpenWith, 0, m_editOpenWithRc, T("openwith.btn"));
+    Text(L"\uE7AC", m_tfIcon.Get(), m_editOpenWithRc, kWhite, 0.92f);
+    x = Mode().DrawTopButtons(m_editOpenWithRc.left - 14 * s, by, bs);
+    // Onglets des modes, puis nom du fichier
+    const float tabsRight = DrawModeTabs(10 * s, by, bs);
+    SetColor(kWhite, 0.1f);
+    m_rt->FillRectangle(D2D1::RectF(tabsRight + 6 * s, by + 6 * s, tabsRight + 6 * s + 1, by + bs - 6 * s), m_brush.Get());
+    if (const FileEntry* cur = Current()) {
+        const float tl = tabsRight + 18 * s, tr = x - 16 * s;
+        wchar_t dims[64];
+        swprintf_s(dims, L"%u × %u", m_edit.w, m_edit.h);
+        Text(cur->name, m_tfTitle.Get(), D2D1::RectF(tl, 7 * s, tr, 28 * s), kWhite, 0.96f);
+        Text(dims + (m_edit.dirty ? L"   ·   " + std::wstring(T("edit.modified")) : std::wstring()), m_tfSub.Get(),
+             D2D1::RectF(tl, 28 * s, tr, 46 * s), kGrey, 1);
+    }
 
+    // --- Barre d'options, colonnes et panneaux du mode ---
+    Mode().DrawOptionsBar(cw, barH, optH);
+    Mode().DrawSide(cw, ch);
+
+    // Boutons de l'overlay (recadrage) au-dessus du reste, puis menus
+    for (auto& b : overlayButtons) m_editButtons.push_back(b);
+    Mode().DrawMenus(cw, ch);
+
+    // Info-bulle
+    const EditButton* hov = m_editHover ? &*m_editHover : nullptr;
+    if (hov && hov->tip && m_edit.menu == EditMenu::None) {
+        std::wstring tip = hov->tip;
+        ComPtr<IDWriteTextLayout> lay;
+        m_dwrite->CreateTextLayout(tip.c_str(), UINT32(tip.size()), m_tfSmall.Get(), 500 * s, 30 * s, &lay);
+        if (lay) {
+            DWRITE_TEXT_METRICS tm;
+            lay->GetMetrics(&tm);
+            float w = tm.width + 20 * s;
+            float l = std::clamp(hov->rc.left, 6 * s, cw - w - 6 * s);
+            float top = hov->rc.bottom + 6 * s;
+            if (hov->rc.left < 60 * s && hov->cmd == EditCmd::Tool) {  // outils : à droite de la colonne
+                l = hov->rc.right + 10 * s;
+                top = hov->rc.top + 6 * s;
+            }
+            if (top + 26 * s > ch) top = hov->rc.top - 32 * s;
+            D2D1_RECT_F r = D2D1::RectF(l, top, l + w, top + 26 * s);
+            FillRound(r, 4 * s, 0x000000, 0.85f);
+            Text(tip, m_tfCenter.Get(), r, kWhite, 1);
+        }
+    }
+}
+
+// Retouche : boutons de la barre du haut (transformations, redimensionner, effets, annuler / rétablir)
+float Viewer::DrawRetouchTopButtons(float x, float by, float bs) {
+    const float s = m_scale, gap = 2 * s;
     struct Ico { EditCmd cmd; const wchar_t* glyph; const wchar_t* tip; };
     const Ico transforms[] = {{EditCmd::FlipV, L"⇅", T("edit.tip.flip_v")},
                               {EditCmd::FlipH, L"⇄", T("edit.tip.flip_h")},
@@ -1583,18 +1678,12 @@ void Viewer::DrawEditUi(float cw, float ch) {
     D2D1_RECT_F undo = D2D1::RectF(redo.left - gap - bs, by, redo.left - gap, by + bs);
     EditBtn(EditCmd::Undo, 0, undo, T("edit.tip.undo"), false, canUndo);
     Text(L"", m_tfIcon.Get(), undo, kWhite, canUndo ? 0.92f : 0.3f);
-    // Titre
-    if (const FileEntry* cur = Current()) {
-        float tr = undo.left - 16 * s;
-        Text(T("edit.title"), m_tfTitle.Get(), D2D1::RectF(16 * s, 7 * s, tr, 28 * s), kAccent, 1);
-        wchar_t dims[64];
-        swprintf_s(dims, L"   ·   %u × %u", m_edit.w, m_edit.h);
-        Text(cur->name + dims + (m_edit.dirty ? L"   ·   " + std::wstring(T("edit.modified")) : std::wstring()), m_tfSub.Get(), D2D1::RectF(16 * s, 28 * s, tr, 46 * s), kGrey, 1);
-    }
+    return undo.left;
+}
 
-    // --- Barre d'options de l'outil ---
-    DrawOptionsBar(cw, barH, optH);
-
+// Retouche : outils (colonne de gauche), couleurs (bas), panneau Calques ou réglages d'un effet (droite)
+void Viewer::DrawRetouchSide(float cw, float ch) {
+    const float s = m_scale, barH = 52 * s, optH = 40 * s;
     // --- Outils (colonne de gauche) ---
     const int nt = int(ARRAYSIZE(kTools));
     const float tx = 10 * s;
@@ -1652,31 +1741,4 @@ void Viewer::DrawEditUi(float cw, float ch) {
     // --- Panneau de droite : réglages de l'effet, ou calques ---
     if (m_edit.fx >= 0) DrawEffectPanel(cw, ch);
     else if (m_edit.showLayers) DrawLayersPanel(cw, ch);
-
-    // Boutons de l'overlay (recadrage) au-dessus du reste, puis menus
-    for (auto& b : overlayButtons) m_editButtons.push_back(b);
-    DrawEditMenu(cw, ch);
-
-    // Info-bulle
-    const EditButton* hov = m_editHover ? &*m_editHover : nullptr;
-    if (hov && hov->tip && m_edit.menu == EditMenu::None) {
-        std::wstring tip = hov->tip;
-        ComPtr<IDWriteTextLayout> lay;
-        m_dwrite->CreateTextLayout(tip.c_str(), UINT32(tip.size()), m_tfSmall.Get(), 500 * s, 30 * s, &lay);
-        if (lay) {
-            DWRITE_TEXT_METRICS tm;
-            lay->GetMetrics(&tm);
-            float w = tm.width + 20 * s;
-            float l = std::clamp(hov->rc.left, 6 * s, cw - w - 6 * s);
-            float top = hov->rc.bottom + 6 * s;
-            if (hov->rc.left < 60 * s && hov->cmd == EditCmd::Tool) {  // outils : à droite de la colonne
-                l = hov->rc.right + 10 * s;
-                top = hov->rc.top + 6 * s;
-            }
-            if (top + 26 * s > ch) top = hov->rc.top - 32 * s;
-            D2D1_RECT_F r = D2D1::RectF(l, top, l + w, top + 26 * s);
-            FillRound(r, 4 * s, 0x000000, 0.85f);
-            Text(tip, m_tfCenter.Get(), r, kWhite, 1);
-        }
-    }
 }

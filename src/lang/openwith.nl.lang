@@ -1,0 +1,38 @@
+# CyImgView — Openen met — apps, menu, instellingen
+@code = nl
+@name = Nederlands
+
+# Barre d'outils, menus
+openwith.btn = Openen met (Ctrl+Shift+O)
+openwith.menu = Openen met\tCtrl+Shift+O
+openwith.other = Een andere app kiezen…
+openwith.configure = Configureren…
+
+# Messages
+openwith.err.no_file = Geen bestand om te openen
+openwith.err.launch = Kan %ls niet starten: %ls
+openwith.err.failed = Mislukt: %ls
+openwith.temp_suffix = _bewerkt
+
+# Panneau Raccourcis
+openwith.help.key = Ctrl+Shift+O
+openwith.help.desc = Openen met een andere app
+
+# Panneau Paramètres
+openwith.settings.title = Openen met — apps
+openwith.settings.desc = Staan bovenaan in „Openen met”. Argumenten: %1 = pad van de afbeelding.
+openwith.settings.empty = Geen apps: klik op „Toevoegen” om een programma (.exe) te kiezen.
+openwith.settings.add = Toevoegen…
+openwith.settings.edit = Bewerken…
+openwith.settings.remove = Verwijderen
+
+# Boîtes de dialogue
+openwith.dlg.pick_title = Een app kiezen
+openwith.dlg.programs = Programma's
+openwith.dlg.all_files = Alle bestanden
+openwith.dlg.edit_title = App voor „Openen met”
+openwith.dlg.name = Naam:
+openwith.dlg.path = Programma:
+openwith.dlg.args = Argumenten (%1 = pad van de afbeelding):
+openwith.dlg.ok = OK
+openwith.dlg.cancel = Annuleren

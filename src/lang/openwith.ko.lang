@@ -1,0 +1,38 @@
+# CyImgView — 연결 프로그램 — 앱, 메뉴, 설정
+@code = ko
+@name = 한국어
+
+# Barre d'outils, menus
+openwith.btn = 연결 프로그램 (Ctrl+Shift+O)
+openwith.menu = 연결 프로그램\tCtrl+Shift+O
+openwith.other = 다른 앱 선택…
+openwith.configure = 구성…
+
+# Messages
+openwith.err.no_file = 열 파일이 없습니다
+openwith.err.launch = %ls을(를) 시작할 수 없습니다: %ls
+openwith.err.failed = 실패: %ls
+openwith.temp_suffix = _편집됨
+
+# Panneau Raccourcis
+openwith.help.key = Ctrl+Shift+O
+openwith.help.desc = 다른 앱으로 열기
+
+# Panneau Paramètres
+openwith.settings.title = 연결 프로그램 — 앱
+openwith.settings.desc = “연결 프로그램”에서 가장 먼저 표시됩니다. 인수: %1 = 이미지 경로.
+openwith.settings.empty = 앱이 없습니다. “추가”를 클릭하여 프로그램(.exe)을 선택하세요.
+openwith.settings.add = 추가…
+openwith.settings.edit = 편집…
+openwith.settings.remove = 제거
+
+# Boîtes de dialogue
+openwith.dlg.pick_title = 앱 선택
+openwith.dlg.programs = 프로그램
+openwith.dlg.all_files = 모든 파일
+openwith.dlg.edit_title = “연결 프로그램” 앱
+openwith.dlg.name = 이름:
+openwith.dlg.path = 프로그램:
+openwith.dlg.args = 인수 (%1 = 이미지 경로):
+openwith.dlg.ok = 확인
+openwith.dlg.cancel = 취소

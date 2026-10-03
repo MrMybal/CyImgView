@@ -27,6 +27,26 @@ std::wstring SettingsIniPath();
 // Retourne true si elle l'a pris en charge (ce processus peut alors se terminer).
 bool ForwardToRunningInstance(const std::wstring& path);
 
+// --- Ouvrir avec (viewer_openwith.cpp) ---
+// Une entrée du menu « Ouvrir avec » : application (path + args) ou action fournie par un plugin (run).
+struct OpenWithEntry {
+    std::wstring name;
+    std::wstring path;                 // programme (.exe) ; vide pour une action de plugin
+    std::wstring args = L"\"%1\"";     // arguments, %1 = chemin de l'image
+    HICON icon = nullptr;              // facultatif, reste la propriété du fournisseur ; sinon icône du programme
+    std::function<bool(const std::wstring& path, HWND owner)> run;  // défini : appelé à la place du lancement
+};
+// Fournisseur d'actions (plugins) : appelé à chaque ouverture du menu avec le fichier visé,
+// ajoute à out les actions qui s'appliquent à ce fichier. Thread de l'interface uniquement.
+using OpenWithProvider = std::function<void(const std::wstring& path, std::vector<OpenWithEntry>& out)>;
+int RegisterOpenWithProvider(OpenWithProvider provider);  // renvoie un identifiant pour le retrait
+void UnregisterOpenWithProvider(int id);
+// Écrit une image BGRA prémultipliée en PNG dans %TEMP%\CyImgView\<nom de l'image>_modifié.png.
+// Renvoie le chemin, ou une chaîne vide (error rempli) en cas d'échec. COM doit être initialisé.
+std::wstring WriteTempPng(const uint8_t* pixels, uint32_t width, uint32_t height, uint32_t stride, bool hasAlpha,
+                          const std::wstring& imageName, std::wstring& error);
+void EnableDarkMenus();  // menus Win32 sombres (viewer_extra.cpp)
+
 class Viewer {
 public:
     Viewer() = default;
@@ -37,7 +57,7 @@ public:
 
 private:
     enum class Btn { None, Open, Edit, SaveAs, Prev, Next, ZoomOut, ZoomIn, Fit, Actual, Rotate, Strip, Info, Help, Full, Update, Settings, Channel,
-                     Slideshow, SlidePrev, SlidePlay, SlideNext, SlideLess, SlideMore, SlideShuffle, SlideExit };
+                     Slideshow, SlidePrev, SlidePlay, SlideNext, SlideLess, SlideMore, SlideShuffle, SlideExit, OpenWith };
     struct SettingRow {
         int id;
         D2D1_RECT_F rc;
@@ -48,9 +68,10 @@ private:
     enum class Tool { Hand, Brush, Eraser, Line, Arrow, Rect, Ellipse, Text, Fill, Picker, Crop, Select, Move, Gradient };
     enum class EditCmd {
         None, Panel, Tool, Color, Color2, SwapColors, CustomColor, Undo, Redo, Slider, FillToggle, GradToggle,
-        RotL, RotR, FlipH, FlipV, ResizeMenu, ResizeOpt, SaveAs, Done, CropApply, CropCancel,
+        RotL, RotR, FlipH, FlipV, ResizeMenu, ResizeOpt, SaveAs, OpenWith, Done, CropApply, CropCancel,
         LayerSelect, LayerEye, LayerNew, LayerDup, LayerDel, LayerUp, LayerDown, LayerMerge, LayerFlatten,
-        BlendMenu, BlendOpt, FxMenu, FxPick, FxApply, FxCancel, FxPreview, FxReset
+        BlendMenu, BlendOpt, FxMenu, FxPick, FxApply, FxCancel, FxPreview, FxReset,
+        ModeTab, ModeCtl  // Mode Développement : onglet d'un mode (arg = index), contrôle propre au mode (arg libre)
     };
     enum class EditMenu { None, Resize, Blend, Effects };
     enum EditSlider { kSlSize, kSlOpacity, kSlHardness, kSlLayerOpacity, kSlFx0 };  // kSlFx0 + n : réglage n de l'effet
@@ -381,6 +402,30 @@ private:
     static int EffectCount();
     static const char* EffectKey(int fx);
 
+    // --- Mode Développement : modes du mode édition (viewer_modes.h / .cpp) et Développement
+    // (viewer_develop.cpp, develop_effect.cpp). La Retouche est le mode 0 ; ses fonctions suivent. ---
+    class EditMode;
+    class RetouchMode;
+    class DevelopMode;
+    void InitEditModes();
+    EditMode& Mode() const;
+    void SwitchEditMode(int i);
+    std::shared_ptr<EditMode> NewDevelopMode();
+    float DrawModeTabs(float x, float y, float h);
+    D2D1_RECT_F EditViewArea(float cw, float ch) const;
+    const wchar_t* EditModeCursor();  // nullptr : curseurs de la Retouche
+    float DrawRetouchTopButtons(float x, float by, float bs);
+    void DrawRetouchSide(float cw, float ch);
+    void DrawRetouchOverlay(float left, float top, float z);
+    bool RetouchMouseDown(POINT p, bool right, bool dbl);
+    void RetouchMouseMove(POINT p);
+    void RetouchMouseUp(POINT p);
+    bool RetouchKey(WPARAM vk);
+    bool RetouchChar(wchar_t c);
+    bool RetouchWheel(POINT p, double notches);
+    std::vector<std::shared_ptr<EditMode>> m_modes;  // créés à la première édition, gardés jusqu'à la fin
+    int m_mode = 0;                                  // mode actif (conservé d'une édition à l'autre)
+
     HWND m_hwnd = nullptr;
     HINSTANCE m_inst = nullptr;
     std::wstring m_exeDir, m_iniPath;
@@ -499,4 +544,42 @@ private:
     // Filtrage : 0 automatique, 1 pixels bruts, 2 linéaire, 3 cubique, 4 cubique haute qualité, 5 anisotrope
     int m_filter = 0;
     int m_filterBeforeRaw = 0;  // touche N : bascule pixels bruts <-> filtrage précédent
+
+    // --- Ouvrir avec (viewer_openwith.cpp) ---
+public:
+    struct OpenWithMenu {          // sous-menu Win32 construit pour un fichier
+        HMENU menu = nullptr;      // détruit par le menu parent (ou par l'appelant s'il est seul)
+        std::vector<OpenWithEntry> items;
+        std::vector<HBITMAP> bitmaps;  // icônes des lignes, libérées par le destructeur
+        UINT first = 0;
+        ~OpenWithMenu();
+    };
+    bool OpenWith(const OpenWithEntry& e, const std::wstring& path);   // lance l'application (toast si échec)
+    void ShowOpenWithMenu(POINT clientPt, const std::wstring& path);   // menu « Ouvrir avec » pour ce fichier
+    void EditOpenWith();              // mode édition : envoie l'image modifiée (PNG temporaire)
+    D2D1_RECT_F m_editOpenWithRc{};
+    void BuildOpenWithMenu(OpenWithMenu& m, const std::wstring& path, UINT firstId);  // identifiants firstId..+511
+    bool OpenWithCommand(OpenWithMenu& m, UINT cmd, const std::wstring& path);       // false : pas une commande du menu
+    // Tests : CYIMG_OPENWITH_DUMP=<fichier> écrit le menu au lieu de l'afficher ; CYIMG_OPENWITH_RUN=<n> choisit la ligne n
+    static bool OpenWithTestMode();
+    static UINT OpenWithTestCmd(const OpenWithMenu& m);
+
+private:
+    void ShowOpenWithForCurrent();   // bouton de la barre d'outils / Ctrl+Maj+O
+    void EnsureOpenWith();           // lecture de [openwith] à la première utilisation
+    void SaveOpenWith();
+    void AddOpenWithApp();
+    void EditOpenWithApp(int i);
+    float OpenWithSettingsHeight();
+    float DrawOpenWithSettings(float left, float right, float y);  // section du panneau Paramètres, renvoie la hauteur
+    void OnOpenWithSetting(int id);
+    ID2D1Bitmap* OpenWithIcon(const std::wstring& exe);  // icône du programme pour le panneau Paramètres
+
+    std::vector<OpenWithEntry> m_openWith;  // applications configurées
+    bool m_openWithLoaded = false;
+    int m_openWithSel = -1;                 // ligne choisie dans le panneau Paramètres
+    std::unordered_map<std::wstring, ComPtr<ID2D1Bitmap>> m_openWithIcons;
+    ComPtr<ID2D1RenderTarget> m_openWithIconsRt;  // cible qui a créé les icônes (perte du device : on les refait)
+    float m_settingsScroll = 0;             // défilement du panneau Paramètres (molette)
+    bool m_settingsScrollToOpenWith = false;
 };

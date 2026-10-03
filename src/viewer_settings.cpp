@@ -7,6 +7,8 @@
 
 #include <shlobj.h>
 
+#include <algorithm>
+
 using namespace ui;
 
 namespace {
@@ -102,7 +104,9 @@ void Viewer::OnSettingClicked(int id) {
         if (m_updateAvailable) ShowUpdateDialog();
         else StartUpdateCheck(true);
         break;
-    default: break;
+    default:
+        if (id >= 1000) OnOpenWithSetting(id);  // section « Ouvrir avec » (viewer_openwith.cpp)
+        break;
     }
     Invalidate();
 }
@@ -123,16 +127,30 @@ void Viewer::DrawSettings(float cw, float ch) {
         {kSlideShuffle, "settings.shuffle", "settings.shuffle.desc", m_slideShuffle},
     };
     const float w = std::min(580 * s, cw - 24 * s), pad = 18 * s, rowH = 62 * s;
-    const float h = pad * 2 + 34 * s + rowH * (ARRAYSIZE(rows) + 3) + 52 * s + 26 * s;
+    const float owH = OpenWithSettingsHeight();
+    const float h = pad * 2 + 34 * s + rowH * (ARRAYSIZE(rows) + 3) + owH + 52 * s + 26 * s;
     m_settingsPanel = D2D1::RectF(cw - w - 12 * s, 58 * s, cw - 12 * s, std::min(ch - 12 * s, 58 * s + h));
     const D2D1_RECT_F& p = m_settingsPanel;
+    // Défilement (molette) quand le contenu dépasse la fenêtre
+    const float maxScroll = std::max(0.0f, h - (p.bottom - p.top));
+    if (m_settingsScrollToOpenWith) {  // « Configurer… » du menu Ouvrir avec : section visible
+        m_settingsScroll = pad + 34 * s + rowH * (ARRAYSIZE(rows) + 3) - 8 * s;
+        m_settingsScrollToOpenWith = false;
+    }
+    m_settingsScroll = std::clamp(m_settingsScroll, 0.0f, maxScroll);
     FillRound(p, 8 * s, kPanel, 0.97f);
     SetColor(kWhite, 0.08f);
     m_rt->DrawRoundedRectangle(D2D1::RoundedRect(p, 8 * s, 8 * s), m_brush.Get(), 1);
     m_rt->PushAxisAlignedClip(p, D2D1_ANTIALIAS_MODE_ALIASED);
-    Text(T("settings.title"), m_tfTitle.Get(), D2D1::RectF(p.left + pad, p.top + pad - 4 * s, p.right - pad, p.top + pad + 22 * s), kWhite, 1);
+    const float top = p.top - m_settingsScroll;
+    Text(T("settings.title"), m_tfTitle.Get(), D2D1::RectF(p.left + pad, top + pad - 4 * s, p.right - pad, top + pad + 22 * s), kWhite, 1);
+    if (maxScroll > 0) {  // barre de défilement
+        const float trackH = p.bottom - p.top - 16 * s, thumbH = std::max(30 * s, trackH * (p.bottom - p.top) / h);
+        const float ty = p.top + 8 * s + (trackH - thumbH) * m_settingsScroll / maxScroll;
+        FillRound(D2D1::RectF(p.right - 6 * s, ty, p.right - 3 * s, ty + thumbH), 1.5f * s, kWhite, 0.3f);
+    }
 
-    float y = p.top + pad + 34 * s;
+    float y = top + pad + 34 * s;
     for (const Row& r : rows) {
         D2D1_RECT_F rc = D2D1::RectF(p.left + 6 * s, y, p.right - 6 * s, y + rowH - 4 * s);
         if (m_mouseInside && Contains(rc, m_mouse)) FillRound(rc, 6 * s, kWhite, 0.06f);
@@ -214,6 +232,8 @@ void Viewer::DrawSettings(float cw, float ch) {
              D2D1::RectF(rc.left + 12 * s, rc.top + 28 * s, minus.left - 10 * s, rc.top + 50 * s), kGrey, 0.9f);
         y += rowH;
     }
+    // Ouvrir avec — applications (viewer_openwith.cpp)
+    y += DrawOpenWithSettings(p.left + 6 * s, p.right - 6 * s, y);
     // Bouton « Rechercher une mise à jour »
     D2D1_RECT_F btn = D2D1::RectF(p.left + pad, y + 8 * s, p.left + pad + 260 * s, y + 42 * s);
     bool hov = m_mouseInside && Contains(btn, m_mouse);

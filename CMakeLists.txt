@@ -48,16 +48,20 @@ add_executable(CyImgView WIN32
     src/viewer_edit.cpp
     src/viewer_layers.cpp
     src/viewer_effects.cpp
+    src/viewer_modes.cpp
+    src/viewer_develop.cpp
+    src/develop_effect.cpp
     src/viewer_update.cpp
     src/viewer_settings.cpp
     src/viewer_extra.cpp
     src/viewer_slideshow.cpp
+    src/viewer_openwith.cpp
     src/updater.cpp
     src/app.rc
     src/app.manifest)
 target_compile_options(CyImgView PRIVATE ${CYIMG_WARNINGS})
 target_link_libraries(CyImgView PRIVATE cyimg_support d2d1 d3d11 dxgi dwrite windowscodecs shlwapi dwmapi shell32
-    ole32 propsys comctl32 comdlg32 winhttp bcrypt dxguid)
+    ole32 propsys comctl32 comdlg32 winhttp bcrypt dxguid version uxtheme)
 target_include_directories(CyImgView PRIVATE ${CMAKE_BINARY_DIR}/gen)
 set_target_properties(CyImgView PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR})
 

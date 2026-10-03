@@ -1,0 +1,38 @@
+# CyImgView — プログラムから開く — アプリ、メニュー、設定
+@code = ja
+@name = 日本語
+
+# Barre d'outils, menus
+openwith.btn = プログラムから開く (Ctrl+Shift+O)
+openwith.menu = プログラムから開く\tCtrl+Shift+O
+openwith.other = 別のプログラムを選択…
+openwith.configure = 設定…
+
+# Messages
+openwith.err.no_file = 開くファイルがありません
+openwith.err.launch = %ls を起動できません: %ls
+openwith.err.failed = 失敗しました: %ls
+openwith.temp_suffix = _編集済み
+
+# Panneau Raccourcis
+openwith.help.key = Ctrl+Shift+O
+openwith.help.desc = 別のアプリで開く
+
+# Panneau Paramètres
+openwith.settings.title = プログラムから開く — アプリ
+openwith.settings.desc = 「プログラムから開く」の先頭に表示されます。引数: %1 = 画像のパス。
+openwith.settings.empty = アプリがありません。「追加」をクリックしてプログラム (.exe) を選択してください。
+openwith.settings.add = 追加…
+openwith.settings.edit = 編集…
+openwith.settings.remove = 削除
+
+# Boîtes de dialogue
+openwith.dlg.pick_title = アプリの選択
+openwith.dlg.programs = プログラム
+openwith.dlg.all_files = すべてのファイル
+openwith.dlg.edit_title = 「プログラムから開く」のアプリ
+openwith.dlg.name = 名前:
+openwith.dlg.path = プログラム:
+openwith.dlg.args = 引数 (%1 = 画像のパス):
+openwith.dlg.ok = OK
+openwith.dlg.cancel = キャンセル

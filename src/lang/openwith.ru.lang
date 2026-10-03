@@ -1,0 +1,38 @@
+# CyImgView — Открыть с помощью — приложения, меню, параметры
+@code = ru
+@name = Русский
+
+# Barre d'outils, menus
+openwith.btn = Открыть с помощью (Ctrl+Shift+O)
+openwith.menu = Открыть с помощью\tCtrl+Shift+O
+openwith.other = Выбрать другое приложение…
+openwith.configure = Настроить…
+
+# Messages
+openwith.err.no_file = Нет файла для открытия
+openwith.err.launch = Не удалось запустить %ls: %ls
+openwith.err.failed = Ошибка: %ls
+openwith.temp_suffix = _изменено
+
+# Panneau Raccourcis
+openwith.help.key = Ctrl+Shift+O
+openwith.help.desc = Открыть с помощью другого приложения
+
+# Panneau Paramètres
+openwith.settings.title = Открыть с помощью — приложения
+openwith.settings.desc = Показываются первыми в «Открыть с помощью». Аргументы: %1 = путь к изображению.
+openwith.settings.empty = Нет приложений: нажмите «Добавить», чтобы выбрать программу (.exe).
+openwith.settings.add = Добавить…
+openwith.settings.edit = Изменить…
+openwith.settings.remove = Удалить
+
+# Boîtes de dialogue
+openwith.dlg.pick_title = Выбор приложения
+openwith.dlg.programs = Программы
+openwith.dlg.all_files = Все файлы
+openwith.dlg.edit_title = Приложение для «Открыть с помощью»
+openwith.dlg.name = Имя:
+openwith.dlg.path = Программа:
+openwith.dlg.args = Аргументы (%1 = путь к изображению):
+openwith.dlg.ok = ОК
+openwith.dlg.cancel = Отмена

@@ -1,0 +1,38 @@
+# CyImgView — Open with — apps, menu, settings
+@code = en
+@name = English
+
+# Barre d'outils, menus
+openwith.btn = Open with (Ctrl+Shift+O)
+openwith.menu = Open with\tCtrl+Shift+O
+openwith.other = Choose another app…
+openwith.configure = Configure…
+
+# Messages
+openwith.err.no_file = No file to open
+openwith.err.launch = Could not start %ls: %ls
+openwith.err.failed = Failed: %ls
+openwith.temp_suffix = _edited
+
+# Panneau Raccourcis
+openwith.help.key = Ctrl+Shift+O
+openwith.help.desc = Open with another app
+
+# Panneau Paramètres
+openwith.settings.title = Open with — apps
+openwith.settings.desc = Listed first by “Open with”. Arguments: %1 = image path.
+openwith.settings.empty = No apps yet: click “Add” to choose a program (.exe).
+openwith.settings.add = Add…
+openwith.settings.edit = Edit…
+openwith.settings.remove = Remove
+
+# Boîtes de dialogue
+openwith.dlg.pick_title = Choose an app
+openwith.dlg.programs = Programs
+openwith.dlg.all_files = All files
+openwith.dlg.edit_title = “Open with” app
+openwith.dlg.name = Name:
+openwith.dlg.path = Program:
+openwith.dlg.args = Arguments (%1 = image path):
+openwith.dlg.ok = OK
+openwith.dlg.cancel = Cancel

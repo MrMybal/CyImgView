@@ -1,0 +1,38 @@
+# CyImgView — Apri con — app, menu, impostazioni
+@code = it
+@name = Italiano
+
+# Barre d'outils, menus
+openwith.btn = Apri con (Ctrl+Maiusc+O)
+openwith.menu = Apri con\tCtrl+Maiusc+O
+openwith.other = Scegli un'altra app…
+openwith.configure = Configura…
+
+# Messages
+openwith.err.no_file = Nessun file da aprire
+openwith.err.launch = Impossibile avviare %ls: %ls
+openwith.err.failed = Operazione non riuscita: %ls
+openwith.temp_suffix = _modificato
+
+# Panneau Raccourcis
+openwith.help.key = Ctrl+Maiusc+O
+openwith.help.desc = Apri con un'altra app
+
+# Panneau Paramètres
+openwith.settings.title = Apri con — app
+openwith.settings.desc = Proposte per prime da «Apri con». Argomenti: %1 = percorso dell'immagine.
+openwith.settings.empty = Nessuna app: fai clic su «Aggiungi» per scegliere un programma (.exe).
+openwith.settings.add = Aggiungi…
+openwith.settings.edit = Modifica…
+openwith.settings.remove = Rimuovi
+
+# Boîtes de dialogue
+openwith.dlg.pick_title = Scegli un'app
+openwith.dlg.programs = Programmi
+openwith.dlg.all_files = Tutti i file
+openwith.dlg.edit_title = App di «Apri con»
+openwith.dlg.name = Nome:
+openwith.dlg.path = Programma:
+openwith.dlg.args = Argomenti (%1 = percorso dell'immagine):
+openwith.dlg.ok = OK
+openwith.dlg.cancel = Annulla
