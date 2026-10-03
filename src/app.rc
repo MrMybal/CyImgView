@@ -15,7 +15,11 @@ BEGIN
   BEGIN
     BLOCK "040C04B0"
     BEGIN
+      VALUE "CompanyName", "MrMybal"
       VALUE "FileDescription", "CyImgView - visionneuse d'images"
+      VALUE "InternalName", "CyImgView"
+      VALUE "OriginalFilename", "CyImgView.exe"
+      VALUE "LegalCopyright", "MrMybal - GPL-3.0 - https://github.com/MrMybal/CyImgView"
       VALUE "ProductName", "CyImgView"
       VALUE "FileVersion", CYIMG_VERSION_STR
       VALUE "ProductVersion", CYIMG_VERSION_STR

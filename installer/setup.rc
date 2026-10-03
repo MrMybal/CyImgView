@@ -17,6 +17,7 @@ BEGIN
       VALUE "FileDescription", "Installation de CyImgView"
       VALUE "ProductName", "CyImgView"
       VALUE "CompanyName", "MrMybal"
+      VALUE "LegalCopyright", "MrMybal - GPL-3.0 - https://github.com/MrMybal/CyImgView"
       VALUE "FileVersion", CYIMG_VERSION_STR
       VALUE "ProductVersion", CYIMG_VERSION_STR
     END

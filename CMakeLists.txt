@@ -86,8 +86,11 @@ set_target_properties(CyImgViewSetup PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_D
 # --- Plugins ---------------------------------------------------------------------------------
 # cyimg_add_plugin(nom sources...) : DLL dans bin/plugins, liée au code partagé.
 function(cyimg_add_plugin name)
-    add_library(${name} SHARED ${ARGN})
-    target_compile_options(${name} PRIVATE /utf-8 /W4 /EHsc)
+    # Informations de version (éditeur, description) intégrées à chaque DLL
+    set(CYIMG_RC_NAME ${name})
+    configure_file(${CMAKE_SOURCE_DIR}/src/plugin_version.rc.in ${CMAKE_BINARY_DIR}/gen/plugin_${name}.rc @ONLY)
+    add_library(${name} SHARED ${ARGN} ${CMAKE_BINARY_DIR}/gen/plugin_${name}.rc)
+    target_compile_options(${name} PRIVATE "$<$<COMPILE_LANGUAGE:C,CXX>:/utf-8;/W4;/EHsc>")
     target_link_libraries(${name} PRIVATE cyimg_support)
     set_target_properties(${name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR}/plugins)
 endfunction()

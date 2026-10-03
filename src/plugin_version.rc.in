@@ -1,0 +1,30 @@
+// Informations de version d'un plugin (généré par CMake pour chaque DLL de plugins/).
+// Une DLL sans éditeur ni description ressemble, pour certains antivirus, à une DLL de détournement.
+#include <winver.h>
+#include "version.h"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION CYIMG_VERSION_MAJOR,CYIMG_VERSION_MINOR,CYIMG_VERSION_PATCH,0
+PRODUCTVERSION CYIMG_VERSION_MAJOR,CYIMG_VERSION_MINOR,CYIMG_VERSION_PATCH,0
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_DLL
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "CompanyName", "MrMybal"
+      VALUE "FileDescription", "CyImgView plugin (@CYIMG_RC_NAME@)"
+      VALUE "InternalName", "@CYIMG_RC_NAME@"
+      VALUE "OriginalFilename", "@CYIMG_RC_NAME@.dll"
+      VALUE "ProductName", "CyImgView"
+      VALUE "LegalCopyright", "MrMybal - GPL-3.0 - https://github.com/MrMybal/CyImgView"
+      VALUE "FileVersion", CYIMG_VERSION_STR
+      VALUE "ProductVersion", CYIMG_VERSION_STR
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0409, 1200
+  END
+END
