@@ -449,6 +449,22 @@ build\Release\bin\cyimg_bench.exe convert photo.CR3 photo.jpg 90
 Si la variable d'environnement `CYIMG_TRACE=1` est définie, le démarrage de la visionneuse est
 chronométré dans `%TEMP%\cyimg_trace.txt`.
 
+## Confidentialité
+
+- **Aucune télémétrie**, aucun compte, aucune publicité.
+- **Seule connexion réseau** : la recherche de mise à jour, qui interroge l'API publique de GitHub
+  (`api.github.com/repos/MrMybal/CyImgView/releases/latest`) au plus une fois toutes les 20 h, puis
+  télécharge l'archive de la release si vous acceptez la mise à jour. Aucune donnée personnelle
+  n'est envoyée (en-tête `User-Agent: CyImgView/<version>`). Désactivable dans les Paramètres.
+- **Fichiers locaux** : réglages dans `%APPDATA%\CyImgView\settings.ini` (et `develop_last.ini`
+  pour les réglages du mode Développement), journal de plantage éventuel dans
+  `%LOCALAPPDATA%\CyImgView\crash.txt` (jamais envoyé), exports temporaires de « Ouvrir avec »
+  dans `%TEMP%\CyImgView` (supprimés après 24 h).
+- **DICOM** : les données nominatives du patient (nom, identifiant, date de naissance) ne sont
+  jamais affichées.
+- « Ouvrir avec » ne lance que les applications que vous avez choisies ou que Windows associe au
+  format.
+
 ## Licence
 
 CyImgView est distribué sous licence **GNU GPL v3.0** : voir [LICENSE](LICENSE).

@@ -60,6 +60,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show) {
         GetPrivateProfileStringW(L"settings", L"language", L"", lang, ARRAYSIZE(lang), SettingsIniPath().c_str());
         i18n::Init(dir, lang);
     }
+    CleanTempExports(24);  // anciens exports temporaires « Ouvrir avec » (images modifiées)
 
     std::wstring path;
     int argc = 0;

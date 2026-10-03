@@ -4,7 +4,7 @@
 // Les releases GitHub doivent être étiquetées « vMAJOR.MINOR.PATCH ».
 #define CYIMG_VERSION_MAJOR 1
 #define CYIMG_VERSION_MINOR 8
-#define CYIMG_VERSION_PATCH 0
+#define CYIMG_VERSION_PATCH 1
 
 #define CYIMG_STR2(x) #x
 #define CYIMG_STR(x) CYIMG_STR2(x)

@@ -355,8 +355,29 @@ void UnregisterOpenWithProvider(int id) {
     p.erase(std::remove_if(p.begin(), p.end(), [&](const Provider& x) { return x.id == id; }), p.end());
 }
 
+// Confidentialité : les images modifiées exportées pour « Ouvrir avec » ne restent pas indéfiniment dans
+// %TEMP%\CyImgView (supprimées au démarrage et à chaque export au-delà de maxAgeHours).
+void CleanTempExports(int maxAgeHours) {
+    wchar_t tmp[MAX_PATH + 1] = {};
+    if (!GetTempPathW(ARRAYSIZE(tmp), tmp)) return;
+    const std::wstring dir = std::wstring(tmp) + L"CyImgView";
+    FILETIME now;
+    GetSystemTimeAsFileTime(&now);
+    const ULONGLONG nowT = (ULONGLONG(now.dwHighDateTime) << 32) | now.dwLowDateTime;
+    const ULONGLONG maxAge = ULONGLONG(maxAgeHours) * 3600ull * 10000000ull;
+    WIN32_FIND_DATAW fd;
+    HANDLE h = FindFirstFileW((dir + L"\\*.png").c_str(), &fd);
+    if (h == INVALID_HANDLE_VALUE) return;
+    do {
+        const ULONGLONG t = (ULONGLONG(fd.ftLastWriteTime.dwHighDateTime) << 32) | fd.ftLastWriteTime.dwLowDateTime;
+        if (nowT > t && nowT - t > maxAge) DeleteFileW((dir + L"\\" + fd.cFileName).c_str());  // échoue sans gravité si ouvert
+    } while (FindNextFileW(h, &fd));
+    FindClose(h);
+}
+
 std::wstring WriteTempPng(const uint8_t* pixels, uint32_t width, uint32_t height, uint32_t stride, bool hasAlpha,
                           const std::wstring& imageName, std::wstring& error) {
+    CleanTempExports(24);
     wchar_t tmp[MAX_PATH + 1] = {};
     if (!GetTempPathW(ARRAYSIZE(tmp), tmp)) {
         error = ErrorText(GetLastError());

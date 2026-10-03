@@ -43,6 +43,7 @@ int RegisterOpenWithProvider(OpenWithProvider provider);  // renvoie un identifi
 void UnregisterOpenWithProvider(int id);
 // Écrit une image BGRA prémultipliée en PNG dans %TEMP%\CyImgView\<nom de l'image>_modifié.png.
 // Renvoie le chemin, ou une chaîne vide (error rempli) en cas d'échec. COM doit être initialisé.
+void CleanTempExports(int maxAgeHours);  // supprime les anciens exports temporaires « Ouvrir avec »
 std::wstring WriteTempPng(const uint8_t* pixels, uint32_t width, uint32_t height, uint32_t stride, bool hasAlpha,
                           const std::wstring& imageName, std::wstring& error);
 void EnableDarkMenus();  // menus Win32 sombres (viewer_extra.cpp)
