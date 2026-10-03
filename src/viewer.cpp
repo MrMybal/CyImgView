@@ -387,13 +387,7 @@ bool Viewer::CreateDeviceResources() {
 }
 
 void Viewer::DiscardDeviceResources() {
-    if (m_edit.active) {  // perte du GPU : le document (texture) est perdu avec lui
-        m_edit.active = false;
-        m_edit.canvas.Reset();
-        m_edit.undo.clear();
-        m_edit.redo.clear();
-        ShowToast(T("viewer.toast.device_lost"));
-    }
+    DropEditGpu();  // perte du GPU : le document (textures des calques) est perdu avec lui
     m_gpu.clear();
     m_preuploadsLeft = 2;
     m_gpuThumbs.clear();
@@ -582,7 +576,8 @@ void Viewer::Render() {
     }
     if (now - m_toastTime < 1.1) animating = true;
     if (m_loading) animating = true;  // spinner
-    if (m_edit.textActive) animating = true;  // curseur de texte clignotant
+    if (m_edit.textActive || m_edit.renaming >= 0) animating = true;  // curseur de texte clignotant
+    m_prevEditButtons.swap(m_editButtons);    // survol : boutons de l'image précédente
     m_editButtons.clear();                    // reconstruits à chaque image (overlay + barres)
 
     RECT rc;
@@ -590,6 +585,7 @@ void Viewer::Render() {
     const float cw = float(rc.right), ch = float(rc.bottom);
 
     if (m_showChannels && !m_edit.active) UpdateChannelPreview();
+    if (m_edit.active) PrepareEditFrame();  // composition des calques, aperçu d'effet, miniatures
     m_rt->BeginDraw();
     m_rt->SetTransform(D2D1::Matrix3x2F::Identity());
     m_rt->Clear(Rgb(kBg));
@@ -642,7 +638,7 @@ void Viewer::DrawCenteredMessage(float cw, float ch, const wchar_t* glyph, const
 }
 
 void Viewer::DrawImage(float cw, float ch, bool animating) {
-    if (m_edit.active && m_edit.canvas) {  // document en cours d'édition
+    if (m_edit.active && !m_edit.layers.empty()) {  // document en cours d'édition
         float left, top, z;
         ImageRect(left, top, z);
         if (!animating) {
@@ -650,9 +646,10 @@ void Viewer::DrawImage(float cw, float ch, bool animating) {
             top = std::round(top);
         }
         D2D1_RECT_F r = D2D1::RectF(left, top, left + m_edit.w * z, top + m_edit.h * z);
-        if (m_checker) m_rt->FillRectangle(r, m_checker.Get());  // la gomme peut rendre transparent
-        D2D1_INTERPOLATION_MODE mode = FilterFor(z, animating || m_dragging);
-        m_dc->DrawBitmap(m_edit.canvas.Get(), r, 1.0f, mode, nullptr, nullptr);
+        if (m_checker) m_rt->FillRectangle(r, m_checker.Get());  // calques transparents, gomme
+        // pendant un tracé : filtrage linéaire (pas de recalcul des niveaux de réduction à chaque segment)
+        D2D1_INTERPOLATION_MODE mode = FilterFor(z, animating || m_dragging || m_edit.drawing);
+        DrawEditDocument(r, mode);
         DrawEditOverlay(left, top, z);
         return;
     }
@@ -1086,8 +1083,9 @@ D2D1_RECT_F Viewer::ViewArea() const {
     RECT rc;
     GetClientRect(m_hwnd, &rc);
     if (!m_edit.active) return D2D1::RectF(0, 0, float(rc.right), float(rc.bottom));
-    const float s = m_scale;
-    return D2D1::RectF(64 * s, 60 * s, std::max(65 * s, rc.right - 12 * s), std::max(61 * s, rc.bottom - 74 * s));
+    const float s = m_scale;  // barre du haut + options, outils, couleurs, panneau Calques
+    const float right = (m_edit.showLayers || m_edit.fx >= 0) ? 256 * s : 12 * s;
+    return D2D1::RectF(64 * s, 100 * s, std::max(65 * s, rc.right - right), std::max(101 * s, rc.bottom - 74 * s));
 }
 
 double Viewer::FitZoom() const {
@@ -1793,13 +1791,15 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
             return 0;
         }
         if (wp == TIMER_HUD && m_hud > 0.0f && !HudWanted()) Invalidate();
+        if (wp == TIMER_HUD && m_edit.active && (m_edit.selValid || m_edit.drawing)) Invalidate();  // pointillés de la sélection
         return 0;
     case WM_SETCURSOR:
         if (LOWORD(lp) == HTCLIENT) {
             LPCWSTR cur = IDC_ARROW;
             if (m_edit.active) {
-                if (HitEdit(m_mouse)) cur = IDC_HAND;
-                else if (m_dragging || m_edit.spacePan || m_edit.tool == Tool::Hand) cur = IDC_SIZEALL;
+                if (const EditButton* b = HitEdit(m_mouse)) cur = b->cmd == EditCmd::Panel ? IDC_ARROW : IDC_HAND;
+                else if (m_dragging || m_edit.spacePan || m_edit.tool == Tool::Hand || m_edit.tool == Tool::Move) cur = IDC_SIZEALL;
+                else if (m_edit.fx >= 0) cur = IDC_ARROW;
                 else if (m_edit.tool == Tool::Text) cur = IDC_IBEAM;
                 else if (m_edit.tool == Tool::Brush || m_edit.tool == Tool::Eraser) {
                     SetCursor(nullptr);  // remplacé par le cercle de taille du pinceau
@@ -1924,8 +1924,8 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
         return 0;
     case WM_CAPTURECHANGED:
         m_dragging = false;
-        if (m_edit.active && (m_edit.drawing || m_edit.sliderDrag) && reinterpret_cast<HWND>(lp) != m_hwnd) {
-            m_edit.sliderDrag = false;
+        if (m_edit.active && (m_edit.drawing || m_edit.slider >= 0) && reinterpret_cast<HWND>(lp) != m_hwnd) {
+            m_edit.slider = -1;
             if (m_edit.drawing) EditMouseUp(m_mouse);  // capture perdue : on termine le tracé
         }
         return 0;
@@ -1957,6 +1957,7 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
             Poke();
             return 0;
         }
+        if (m_edit.active && EditWheel(p, notches)) return 0;  // liste des calques
         RECT rc;
         GetClientRect(m_hwnd, &rc);
         if (StripVisible() && m_hud > 0.3f && p.y > rc.bottom - 100 * m_scale) {

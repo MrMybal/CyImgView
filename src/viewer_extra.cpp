@@ -85,15 +85,26 @@ void Viewer::CopyToClipboard() {
     PixelBuffer px;
     uint32_t w = 0, h = 0, stride = 0;
     bool alpha = false;
-    if (m_edit.active) {
+    if (m_edit.active) {  // sélection du calque actif, sinon image aplatie
         if (m_edit.textActive) CommitText();
-        if (!ReadCanvas(px, stride)) {
+        if (m_edit.fx >= 0) CloseEffect(false);
+        bool ok;
+        if (m_edit.selValid) {
+            const D2D1_RECT_U rc = D2D1::RectU(UINT32(m_edit.sel.left), UINT32(m_edit.sel.top), UINT32(m_edit.sel.right),
+                                               UINT32(m_edit.sel.bottom));
+            ok = ReadBitmap(CurLayer().bmp.Get(), px, stride, &rc);
+            w = rc.right - rc.left;
+            h = rc.bottom - rc.top;
+            alpha = true;
+        } else {
+            ok = ReadFlattened(px, stride, alpha);
+            w = m_edit.w;
+            h = m_edit.h;
+        }
+        if (!ok) {
             ShowToast(T("clip.err.read"));
             return;
         }
-        w = m_edit.w;
-        h = m_edit.h;
-        alpha = m_edit.hasAlpha;
     } else {
         if (!m_cur) {
             ShowToast(T(Shown() ? "clip.loading" : "clip.none"));

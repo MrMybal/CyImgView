@@ -13,6 +13,7 @@
 #include <dxgi1_2.h>
 
 #include <functional>
+#include <optional>
 #include <unordered_map>
 
 // Lance la création du device Direct3D sur un thread dès le démarrage du processus :
@@ -42,38 +43,97 @@ private:
         D2D1_RECT_F rc;
     };
 
-    // --- Mode édition (viewer_edit.cpp) ---
-    enum class Tool { Hand, Brush, Eraser, Line, Arrow, Rect, Ellipse, Text, Fill, Picker, Crop };
+    // --- Mode édition (viewer_edit.cpp : outils et interface ; viewer_layers.cpp : calques, historique,
+    // sélection ; viewer_effects.cpp : effets) ---
+    enum class Tool { Hand, Brush, Eraser, Line, Arrow, Rect, Ellipse, Text, Fill, Picker, Crop, Select, Move, Gradient };
     enum class EditCmd {
-        None, Tool, Color, Color2, SwapColors, CustomColor, Undo, Redo, Slider, FillToggle,
-        RotL, RotR, FlipH, FlipV, ResizeMenu, ResizeOpt, SaveAs, Done, CropApply, CropCancel
+        None, Panel, Tool, Color, Color2, SwapColors, CustomColor, Undo, Redo, Slider, FillToggle, GradToggle,
+        RotL, RotR, FlipH, FlipV, ResizeMenu, ResizeOpt, SaveAs, Done, CropApply, CropCancel,
+        LayerSelect, LayerEye, LayerNew, LayerDup, LayerDel, LayerUp, LayerDown, LayerMerge, LayerFlatten,
+        BlendMenu, BlendOpt, FxMenu, FxPick, FxApply, FxCancel, FxPreview, FxReset
     };
+    enum class EditMenu { None, Resize, Blend, Effects };
+    enum EditSlider { kSlSize, kSlOpacity, kSlHardness, kSlLayerOpacity, kSlFx0 };  // kSlFx0 + n : réglage n de l'effet
     struct EditButton {
         EditCmd cmd;
         int arg;
         D2D1_RECT_F rc;
         const wchar_t* tip;
     };
+    struct Layer {
+        ComPtr<ID2D1Bitmap1> bmp;  // taille du document, alpha prémultiplié ; jamais modifiée si l'historique la partage
+        std::wstring name;         // vide : nom automatique (« Fond » pour num = 0, sinon « Calque num »)
+        int num = 0;
+        bool visible = true;
+        float opacity = 1;
+        int blend = 0;             // 0 normal, 1 produit, 2 écran, 3 incrustation, 4 obscurcir, 5 éclaircir, 6 différence, 7 addition
+        uint64_t ver = 0;          // identifiant du contenu (change à chaque modification des pixels)
+    };
+    struct LayerThumb {
+        ComPtr<ID2D1Bitmap1> bmp;
+        uint64_t ver = 0;
+    };
+    struct EditUndo {
+        int layer = -1;                // >= 0 : pixels de ce calque seulement (bmp, ver)
+        ComPtr<ID2D1Bitmap1> bmp;
+        uint64_t ver = 0;
+        std::vector<Layer> layers;     // layer < 0 : document complet
+        int cur = 0;
+        uint32_t w = 0, h = 0;
+    };
+    struct ComposeItem {
+        ID2D1Bitmap1* bmp;
+        float opacity;
+        int blend;
+    };
     struct EditState {
         bool active = false;
-        ComPtr<ID2D1Bitmap1> canvas;  // document, sur le GPU
+        std::vector<Layer> layers;  // de bas en haut
+        int layer = 0;              // calque actif
+        int layerSeq = 0;           // dernier numéro de « Calque n »
+        uint64_t verSeq = 0;
         uint32_t w = 0, h = 0;
         bool hasAlpha = false;
         bool dirty = false;
-        std::vector<ComPtr<ID2D1Bitmap1>> undo, redo;
+        std::vector<EditUndo> undo, redo;
         Tool tool = Tool::Brush, prevTool = Tool::Brush;
         uint32_t color = 0xE53935, color2 = 0xFFFFFF;
-        float size = 8, fontSize = 48;
-        bool fill = false;
+        float size = 8, fontSize = 48, opacity = 100, hardness = 100;
+        bool fill = false, gradTransparent = false;
         // interaction en cours (coordonnées image)
         bool drawing = false, secondary = false, shift = false;
         D2D1_POINT_2F start{}, cur{};
-        bool sliderDrag = false, spacePan = false, resizeMenu = false;
+        int slider = -1;            // curseur en cours de glissement
+        D2D1_RECT_F sliderRc{};
+        bool spacePan = false;
+        EditMenu menu = EditMenu::None;
+        D2D1_RECT_F menuAnchor{};
         bool cropValid = false;
         D2D1_RECT_F crop{};
+        bool selValid = false;      // sélection rectangulaire (pixels entiers)
+        D2D1_RECT_F sel{};
         bool textActive = false;
         D2D1_POINT_2F textPos{};
         std::wstring text;
+        // pinceau / gomme : tracé accumulé (MAX) puis composé sur l'état d'origine du calque
+        ComPtr<ID2D1Bitmap1> strokeBuf, strokeBase;
+        float dabCarry = 0;
+        D2D1_RECT_F moveSel{};      // outil Déplacer : sélection au début du glissement
+        // affichage composé quand un calque visible n'est pas en mode Normal
+        ComPtr<ID2D1Bitmap1> comp, scratch;
+        std::vector<uint64_t> compSig;
+        std::vector<LayerThumb> thumbs;
+        // panneau Calques
+        bool showLayers = true;
+        int layerScroll = 0;
+        int renaming = -1;
+        std::wstring renameText;
+        // effet en cours de réglage (aperçu en direct)
+        int fx = -1;
+        float fxVal[3]{};
+        bool fxPreview = true, fxDirty = false;
+        ComPtr<ID2D1Bitmap1> fxOut;
+        uint64_t fxVer = 0;
     };
     struct ButtonRect {
         Btn id;
@@ -238,11 +298,15 @@ private:
     void ReloadList();
     void ForgetFile(const std::wstring& path);
 
-    // Mode édition (viewer_edit.cpp)
+    // Mode édition : entrée / sortie, outils, interface (viewer_edit.cpp)
     bool BeginEdit();
     bool EndEdit(bool ask);  // false si l'utilisateur annule
     void DrawEditUi(float cw, float ch);
     void DrawEditOverlay(float left, float top, float z);
+    void DrawOptionsBar(float cw, float y, float h);
+    void DrawEditMenu(float cw, float ch);
+    void DrawSlider(int id, const D2D1_RECT_F& r, const wchar_t* tip);
+    bool EditBtn(EditCmd cmd, int arg, const D2D1_RECT_F& r, const wchar_t* tip, bool active = false, bool enabled = true);
     void DrawToolIcon(Tool t, const D2D1_RECT_F& r, uint32_t col, float a);
     void IconLabel(const D2D1_RECT_F& r, const wchar_t* glyph, const std::wstring& label, uint32_t col, float a);
     void DrawShape(Tool t, D2D1_POINT_2F a, D2D1_POINT_2F b, uint32_t col, float size, bool fill);
@@ -254,23 +318,68 @@ private:
     void EditMouseUp(POINT p);
     bool EditKey(WPARAM vk);
     bool EditChar(wchar_t c);
+    bool EditWheel(POINT p, double notches);
     void EditCommand(EditCmd cmd, int arg);
     void SetTool(Tool t);
+    float SliderT(int id) const;           // position 0..1 d'un curseur
+    void SetSliderT(int id, float t);
     ComPtr<ID2D1Bitmap1> NewCanvas(uint32_t w, uint32_t h);
     bool DrawOn(ID2D1Bitmap1* target, const std::function<void()>& fn);
-    bool ReadCanvas(PixelBuffer& out, uint32_t& stride);
-    bool PushUndo();
-    void ReplaceCanvas(ComPtr<ID2D1Bitmap1> c);
-    void Undo();
-    void Redo();
+    bool DrawOnLayer(const std::function<void()>& fn, bool clipToSel = true);  // calque actif, limité à la sélection
     void TransformCanvas(EditCmd kind);
     void ResizeCanvas(uint32_t w, uint32_t h);
     void ApplyCrop();
     void FloodFill(D2D1_POINT_2F p, uint32_t rgb);
     void PickColor(D2D1_POINT_2F p, bool secondary);
     void CommitText();
+    bool BeginStroke();
     void StrokeTo(D2D1_POINT_2F a, D2D1_POINT_2F b, bool dot);
-    float& SliderValue();
+    void ApplyGradient(D2D1_POINT_2F a, D2D1_POINT_2F b);
+    void MoveLayerTo(float dx, float dy);
+    bool ErasesToColor() const;  // fond d'une image opaque : la gomme peint la couleur secondaire
+
+    // Calques, historique, sélection, presse-papier (viewer_layers.cpp)
+    Layer& CurLayer() { return m_edit.layers[size_t(m_edit.layer)]; }
+    ID2D1Bitmap1* LayerImage(int i) const;  // pixels affichés (aperçu d'effet compris)
+    void Touch(Layer& l) { l.ver = ++m_edit.verSeq; }
+    std::wstring LayerName(const Layer& l) const;
+    static const char* BlendKey(int mode);
+    bool PushUndo();                          // copie du calque actif avant de le modifier
+    void PushLayerSwap(ComPtr<ID2D1Bitmap1> bmp);  // remplace le calque actif (l'ancien part dans l'historique)
+    void PushDocUndo();                       // avant une opération sur la pile ou une transformation
+    void SetDocument(std::vector<ComPtr<ID2D1Bitmap1>> bmps);  // nouvelles textures de tous les calques
+    void TrimHistory();
+    size_t EditBytes() const;
+    bool CanAddLayer();
+    void Undo();
+    void Redo();
+    void RestoreUndo(EditUndo& e, std::vector<EditUndo>& opposite);
+    bool ComposeTo(ID2D1Bitmap1* target, const D2D1_MATRIX_3X2_F& xf, const std::vector<ComposeItem>& items);
+    std::vector<ComposeItem> VisibleItems() const;
+    bool NeedComposite() const;
+    void PrepareEditFrame();  // hors BeginDraw : composition, aperçu d'effet, miniatures
+    void DrawEditDocument(const D2D1_RECT_F& r, D2D1_INTERPOLATION_MODE mode);
+    bool ReadBitmap(ID2D1Bitmap1* bmp, PixelBuffer& out, uint32_t& stride, const D2D1_RECT_U* rc = nullptr);
+    bool ReadFlattened(PixelBuffer& out, uint32_t& stride, bool& alpha);
+    void AddLayer(ComPtr<ID2D1Bitmap1> bmp, std::wstring name);
+    void LayerCommand(EditCmd cmd, int arg);
+    void DrawLayersPanel(float cw, float ch);
+    D2D1_RECT_F LayersPanelRect(float cw, float ch) const;
+    void SelectAll();
+    void Deselect();
+    void ClearSelection();
+    void PasteAsLayer();
+    bool WritePsd(const std::wstring& path, std::wstring& err);
+    void DropEditGpu();  // perte du device : le document est perdu
+
+    // Effets (viewer_effects.cpp)
+    void OpenEffect(int fx);
+    void CloseEffect(bool apply);
+    void UpdateFxPreview();
+    ComPtr<ID2D1Image> BuildEffect(ID2D1Image* input, std::vector<ComPtr<ID2D1Effect>>& keep);
+    void DrawEffectPanel(float cw, float ch);
+    static int EffectCount();
+    static const char* EffectKey(int fx);
 
     HWND m_hwnd = nullptr;
     HINSTANCE m_inst = nullptr;
@@ -342,8 +451,8 @@ private:
     std::vector<ButtonRect> m_buttons;
 
     EditState m_edit;
-    std::vector<EditButton> m_editButtons;
-    D2D1_RECT_F m_sliderRect{};
+    std::vector<EditButton> m_editButtons, m_prevEditButtons;
+    std::optional<EditButton> m_editHover;  // bouton survolé (image précédente), pendant DrawEditUi
     bool m_gpuSwitchPending = false;
     float m_editRefLong = 0;
 

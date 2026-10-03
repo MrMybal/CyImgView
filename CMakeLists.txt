@@ -46,6 +46,8 @@ add_executable(CyImgView WIN32
     src/folder.cpp
     src/save.cpp
     src/viewer_edit.cpp
+    src/viewer_layers.cpp
+    src/viewer_effects.cpp
     src/viewer_update.cpp
     src/viewer_settings.cpp
     src/viewer_extra.cpp
