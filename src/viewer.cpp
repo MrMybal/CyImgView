@@ -574,7 +574,7 @@ void Viewer::Render() {
         m_hud = hudT > m_hud ? std::min(hudT, m_hud + step) : std::max(hudT, m_hud - step);
         animating = true;
     }
-    if (now - m_toastTime < 1.1) animating = true;
+    if (now - m_toastTime < m_toastDur) animating = true;
     if (m_loading) animating = true;  // spinner
     if (m_edit.textActive || m_edit.renaming >= 0) animating = true;  // curseur de texte clignotant
     m_prevEditButtons.swap(m_editButtons);    // survol : boutons de l'image précédente
@@ -905,8 +905,8 @@ void Viewer::DrawHud(float cw, float ch) {
 
     // Toast (niveau de zoom, messages)
     double age = now - m_toastTime;
-    if (age < 1.1 && !m_toast.empty()) {
-        float ta = age < 0.75 ? 1.0f : float(1.0 - (age - 0.75) / 0.35);
+    if (age < m_toastDur && !m_toast.empty()) {
+        float ta = age < m_toastDur - 0.35 ? 1.0f : float((m_toastDur - age) / 0.35);
         ComPtr<IDWriteTextLayout> lay;
         m_dwrite->CreateTextLayout(m_toast.c_str(), UINT32(m_toast.size()), m_tfToast.Get(), cw, 60 * s, &lay);
         float w = 140 * s;
@@ -995,10 +995,11 @@ void Viewer::DrawHelp(float cw, float ch) {
         {"viewer.help.k.esc", nullptr, "viewer.help.d.esc"},
     };
     const auto& plugins = m_decoder.Plugins();
+    EnsureEditPlugins();
     // Deux colonnes de raccourcis, puis les plugins sur deux colonnes : tient dans un écran 1080p
     const float rowH = 24 * s, pad = 22 * s, w = std::min(1080 * s, cw - 24 * s);
     const size_t keyRows = (ARRAYSIZE(keys) + 1) / 2, plugRows = (std::max<size_t>(1, plugins.size()) + 1) / 2;
-    float h = pad * 2 + 36 * s + rowH * keyRows + 40 * s + rowH * plugRows;
+    float h = pad * 2 + 36 * s + rowH * keyRows + 40 * s + rowH * plugRows + EditPluginsHelpHeight(rowH);
     h = std::min(h, ch - 24 * s);
     D2D1_RECT_F p = D2D1::RectF(cw / 2 - w / 2, ch / 2 - h / 2, cw / 2 + w / 2, ch / 2 + h / 2);
     SetColor(0x000000, 0.45f);
@@ -1039,6 +1040,7 @@ void Viewer::DrawHelp(float cw, float ch) {
         Text(TrOr(nameKey.c_str(), pl.name.c_str()), m_tfSmall.Get(), D2D1::RectF(x, yy, x + col - 8 * s, yy + rowH), kAccent, 1);
         Text(exts, m_tfSmall.Get(), D2D1::RectF(x + col, yy, x + half - 12 * s, yy + rowH), kGrey, 1);
     }
+    DrawEditPluginsHelp(p.left + pad, p.right - pad, y + rowH * plugRows + 8 * s, rowH, col);
     m_rt->PopAxisAlignedClip();
 }
 
@@ -1189,9 +1191,10 @@ void Viewer::Rotate(int quarter) {
     Invalidate();
 }
 
-void Viewer::ShowToast(const std::wstring& s) {
+void Viewer::ShowToast(const std::wstring& s, double seconds) {
     m_toast = s;
     m_toastTime = NowSeconds();
+    m_toastDur = seconds;
     Invalidate();
 }
 
@@ -1766,6 +1769,7 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
         }
         return 0;
     case kMsgUpdate: OnUpdateResult(reinterpret_cast<UpdateResult*>(lp)); return 0;
+    case kMsgPlugJob: OnPluginJobs(); return 0;
     case WM_COPYDATA: {  // « une seule fenêtre » : fichier transmis par un nouveau lancement
         auto* cds = reinterpret_cast<COPYDATASTRUCT*>(lp);
         if (!cds || cds->dwData != kCopyDataOpen || cds->cbData < sizeof(wchar_t) || cds->cbData > 65536) break;

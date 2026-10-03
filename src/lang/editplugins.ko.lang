@@ -1,0 +1,82 @@
+# CyImgView — bundled editing plugins (fx_extra, annotate, bw_mode, share_actions) — 한국어
+@code = ko
+@name = 한국어
+
+# fx_extra
+plugin.fx_extra.name = 추가 효과
+plugin.fx_extra.category = 추가 효과
+plugin.fx_extra.noise = 노이즈
+plugin.fx_extra.threshold = 흑백 임계값
+plugin.fx_extra.duotone = 듀오톤
+plugin.fx_extra.aberration = 색수차
+plugin.fx_extra.amount = 양
+plugin.fx_extra.mono = 단색
+plugin.fx_extra.level = 레벨
+plugin.fx_extra.shadows = 어두운 영역
+plugin.fx_extra.highlights = 밝은 영역
+plugin.fx_extra.contrast = 대비
+plugin.fx_extra.offset = 오프셋
+
+# annotate
+plugin.annotate.name = 주석
+plugin.annotate.badge = 번호 배지
+plugin.annotate.badge_hint = 클릭: 번호 배지(기본 색, 오른쪽 클릭: 보조 색). 번호가 자동으로 증가합니다.
+plugin.annotate.size = 크기
+plugin.annotate.number = 번호
+plugin.annotate.highlighter = 형광펜
+plugin.annotate.highlighter_hint = 드래그하여 강조(곱하기), Shift: 직선.
+plugin.annotate.width = 두께
+plugin.annotate.color = 색
+plugin.annotate.opacity = 불투명도
+plugin.annotate.redact = 가림 흐림
+plugin.annotate.redact_hint = 사각형을 그려 정보를 가립니다(픽셀화, 흐림 또는 검은 상자).
+plugin.annotate.style = 스타일
+plugin.annotate.style.choices = 픽셀화|흐림|검은 상자
+plugin.annotate.strength = 강도
+plugin.annotate.bubble = 말풍선
+plugin.annotate.bubble_hint = 가리킬 지점에서 말풍선 위치로 드래그(또는 클릭)한 다음 텍스트를 입력합니다.
+plugin.annotate.text_size = 텍스트 크기
+plugin.annotate.shape = 모양
+plugin.annotate.shape.choices = 둥근 모양|사각형
+plugin.annotate.bubble_title = 말풍선 텍스트
+plugin.annotate.bubble_sample = 텍스트
+
+# bw_mode
+plugin.bw_mode.name = 흑백
+plugin.bw_mode.mode = 흑백
+plugin.bw_mode.hint = 흑백 변환: 색 혼합, 대비, 토닝, 그레인.
+plugin.bw_mode.presets = 사전 설정
+plugin.bw_mode.neutral = 중립
+plugin.bw_mode.high_contrast = 고대비
+plugin.bw_mode.red_filter = 빨간색 필터
+plugin.bw_mode.sepia = 세피아
+plugin.bw_mode.mixer = 혼합
+plugin.bw_mode.method = 방식
+plugin.bw_mode.method.choices = 색|R G B 채널
+plugin.bw_mode.red = 빨강
+plugin.bw_mode.orange = 주황
+plugin.bw_mode.yellow = 노랑
+plugin.bw_mode.green = 초록
+plugin.bw_mode.cyan = 청록
+plugin.bw_mode.blue = 파랑
+plugin.bw_mode.magenta = 자홍
+plugin.bw_mode.chan_r = 빨강 채널
+plugin.bw_mode.chan_g = 초록 채널
+plugin.bw_mode.chan_b = 파랑 채널
+plugin.bw_mode.tone = 톤
+plugin.bw_mode.brightness = 밝기
+plugin.bw_mode.contrast = 대비
+plugin.bw_mode.toning = 토닝
+plugin.bw_mode.shadow_hue = 어두운 영역 색조
+plugin.bw_mode.shadow_sat = 어두운 영역 채도
+plugin.bw_mode.high_hue = 밝은 영역 색조
+plugin.bw_mode.high_sat = 밝은 영역 채도
+plugin.bw_mode.balance = 균형
+plugin.bw_mode.grain = 그레인
+plugin.bw_mode.grain_amount = 양
+plugin.bw_mode.grain_size = 크기
+
+# share_actions
+plugin.share_actions.name = 공유
+plugin.share_actions.print = 인쇄…
+plugin.share_actions.browser = 브라우저에서 열기

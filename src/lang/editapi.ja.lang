@@ -1,0 +1,19 @@
+# CyImgView — editing plugin API: host texts (日本語)
+@code = ja
+@name = 日本語
+
+editapi.err.crashed = 「%ls」（%ls）がクラッシュしました：このセッションでは無効になります
+editapi.err.failed = 「%ls」が失敗しました
+editapi.err.disabled = 「%ls」はこのセッションでは無効です（プラグインがクラッシュしました）
+editapi.disabled = （無効）
+editapi.fx.computing = 計算中…
+editapi.fx.applying = 適用中…
+editapi.tip.color = 色を選択
+editapi.mode.reset = リセット
+editapi.tip.mode_reset = すべての設定を既定値に戻す
+editapi.help.title = 編集プラグイン（%d）
+editapi.help.none = 編集プラグインはインストールされていません
+editapi.help.effects = 効果：%d
+editapi.help.tools = ツール：%d
+editapi.help.modes = モード：%d
+editapi.help.actions = プログラムから開く：%d

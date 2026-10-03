@@ -1,0 +1,82 @@
+# CyImgView — plugins d'édition livrés (fx_extra, annotate, bw_mode, share_actions) — Français
+@code = fr
+@name = Français
+
+# fx_extra
+plugin.fx_extra.name = Effets supplémentaires
+plugin.fx_extra.category = Effets supplémentaires
+plugin.fx_extra.noise = Bruit
+plugin.fx_extra.threshold = Seuil noir et blanc
+plugin.fx_extra.duotone = Bichromie
+plugin.fx_extra.aberration = Aberration chromatique
+plugin.fx_extra.amount = Quantité
+plugin.fx_extra.mono = Monochrome
+plugin.fx_extra.level = Niveau
+plugin.fx_extra.shadows = Ombres
+plugin.fx_extra.highlights = Hautes lumières
+plugin.fx_extra.contrast = Contraste
+plugin.fx_extra.offset = Décalage
+
+# annotate
+plugin.annotate.name = Annotation
+plugin.annotate.badge = Pastille numérotée
+plugin.annotate.badge_hint = Clic : pastille numérotée (couleur principale ; clic droit : secondaire). Le numéro s'incrémente.
+plugin.annotate.size = Taille
+plugin.annotate.number = Numéro
+plugin.annotate.highlighter = Surligneur
+plugin.annotate.highlighter_hint = Glisser pour surligner (mode produit) ; Maj : trait droit.
+plugin.annotate.width = Épaisseur
+plugin.annotate.color = Couleur
+plugin.annotate.opacity = Opacité
+plugin.annotate.redact = Flou de masquage
+plugin.annotate.redact_hint = Tracer un rectangle pour masquer une information (pixellisation, flou ou bloc noir).
+plugin.annotate.style = Style
+plugin.annotate.style.choices = Pixellisation|Flou|Bloc noir
+plugin.annotate.strength = Force
+plugin.annotate.bubble = Bulle de texte
+plugin.annotate.bubble_hint = Glisser de la pointe vers l'emplacement de la bulle (ou cliquer), puis saisir le texte.
+plugin.annotate.text_size = Taille du texte
+plugin.annotate.shape = Forme
+plugin.annotate.shape.choices = Arrondie|Rectangle
+plugin.annotate.bubble_title = Texte de la bulle
+plugin.annotate.bubble_sample = Texte
+
+# bw_mode
+plugin.bw_mode.name = Noir & blanc
+plugin.bw_mode.mode = Noir & blanc
+plugin.bw_mode.hint = Conversion en noir et blanc : mélangeur de couleurs, contraste, virage et grain.
+plugin.bw_mode.presets = Préréglages
+plugin.bw_mode.neutral = Neutre
+plugin.bw_mode.high_contrast = Contraste élevé
+plugin.bw_mode.red_filter = Filtre rouge
+plugin.bw_mode.sepia = Sépia
+plugin.bw_mode.mixer = Mélangeur
+plugin.bw_mode.method = Méthode
+plugin.bw_mode.method.choices = Couleurs|Canaux R V B
+plugin.bw_mode.red = Rouge
+plugin.bw_mode.orange = Orange
+plugin.bw_mode.yellow = Jaune
+plugin.bw_mode.green = Vert
+plugin.bw_mode.cyan = Cyan
+plugin.bw_mode.blue = Bleu
+plugin.bw_mode.magenta = Magenta
+plugin.bw_mode.chan_r = Canal rouge
+plugin.bw_mode.chan_g = Canal vert
+plugin.bw_mode.chan_b = Canal bleu
+plugin.bw_mode.tone = Tonalité
+plugin.bw_mode.brightness = Luminosité
+plugin.bw_mode.contrast = Contraste
+plugin.bw_mode.toning = Virage
+plugin.bw_mode.shadow_hue = Teinte des ombres
+plugin.bw_mode.shadow_sat = Saturation des ombres
+plugin.bw_mode.high_hue = Teinte des lumières
+plugin.bw_mode.high_sat = Saturation des lumières
+plugin.bw_mode.balance = Équilibre
+plugin.bw_mode.grain = Grain
+plugin.bw_mode.grain_amount = Quantité
+plugin.bw_mode.grain_size = Taille
+
+# share_actions
+plugin.share_actions.name = Partage
+plugin.share_actions.print = Imprimer…
+plugin.share_actions.browser = Ouvrir dans le navigateur

@@ -1,0 +1,19 @@
+# CyImgView — editing plugin API: host texts (한국어)
+@code = ko
+@name = 한국어
+
+editapi.err.crashed = "%ls"(%ls)이(가) 충돌했습니다: 이번 세션 동안 비활성화됩니다
+editapi.err.failed = "%ls" 실패
+editapi.err.disabled = "%ls"은(는) 이번 세션 동안 비활성화되었습니다(플러그인 충돌)
+editapi.disabled = (비활성화됨)
+editapi.fx.computing = 계산 중…
+editapi.fx.applying = 적용 중…
+editapi.tip.color = 색 선택
+editapi.mode.reset = 초기화
+editapi.tip.mode_reset = 모든 설정을 기본값으로 되돌리기
+editapi.help.title = 편집 플러그인(%d)
+editapi.help.none = 설치된 편집 플러그인 없음
+editapi.help.effects = 효과: %d
+editapi.help.tools = 도구: %d
+editapi.help.modes = 모드: %d
+editapi.help.actions = 연결 프로그램: %d

@@ -1,0 +1,82 @@
+# CyImgView — bundled editing plugins (fx_extra, annotate, bw_mode, share_actions) — Polski
+@code = pl
+@name = Polski
+
+# fx_extra
+plugin.fx_extra.name = Dodatkowe efekty
+plugin.fx_extra.category = Dodatkowe efekty
+plugin.fx_extra.noise = Szum
+plugin.fx_extra.threshold = Próg czarno-biały
+plugin.fx_extra.duotone = Duotone
+plugin.fx_extra.aberration = Aberracja chromatyczna
+plugin.fx_extra.amount = Ilość
+plugin.fx_extra.mono = Monochromatyczny
+plugin.fx_extra.level = Poziom
+plugin.fx_extra.shadows = Cienie
+plugin.fx_extra.highlights = Światła
+plugin.fx_extra.contrast = Kontrast
+plugin.fx_extra.offset = Przesunięcie
+
+# annotate
+plugin.annotate.name = Adnotacje
+plugin.annotate.badge = Numerowany znacznik
+plugin.annotate.badge_hint = Kliknięcie: numerowany znacznik (kolor główny; prawy przycisk: dodatkowy). Numer rośnie.
+plugin.annotate.size = Rozmiar
+plugin.annotate.number = Numer
+plugin.annotate.highlighter = Zakreślacz
+plugin.annotate.highlighter_hint = Przeciągnij, aby zakreślić (mnożenie); Shift: linia prosta.
+plugin.annotate.width = Grubość
+plugin.annotate.color = Kolor
+plugin.annotate.opacity = Krycie
+plugin.annotate.redact = Zamazywanie
+plugin.annotate.redact_hint = Narysuj prostokąt, aby ukryć informację (pikselizacja, rozmycie lub czarny blok).
+plugin.annotate.style = Styl
+plugin.annotate.style.choices = Pikselizacja|Rozmycie|Czarny blok
+plugin.annotate.strength = Siła
+plugin.annotate.bubble = Dymek z tekstem
+plugin.annotate.bubble_hint = Przeciągnij od wskaźnika do miejsca dymka (lub kliknij), a następnie wpisz tekst.
+plugin.annotate.text_size = Rozmiar tekstu
+plugin.annotate.shape = Kształt
+plugin.annotate.shape.choices = Zaokrąglony|Prostokąt
+plugin.annotate.bubble_title = Tekst dymka
+plugin.annotate.bubble_sample = Tekst
+
+# bw_mode
+plugin.bw_mode.name = Czerń i biel
+plugin.bw_mode.mode = Czerń i biel
+plugin.bw_mode.hint = Konwersja na czerń i biel: mikser kolorów, kontrast, tonowanie i ziarno.
+plugin.bw_mode.presets = Ustawienia wstępne
+plugin.bw_mode.neutral = Neutralny
+plugin.bw_mode.high_contrast = Wysoki kontrast
+plugin.bw_mode.red_filter = Filtr czerwony
+plugin.bw_mode.sepia = Sepia
+plugin.bw_mode.mixer = Mikser
+plugin.bw_mode.method = Metoda
+plugin.bw_mode.method.choices = Kolory|Kanały R G B
+plugin.bw_mode.red = Czerwony
+plugin.bw_mode.orange = Pomarańczowy
+plugin.bw_mode.yellow = Żółty
+plugin.bw_mode.green = Zielony
+plugin.bw_mode.cyan = Cyjan
+plugin.bw_mode.blue = Niebieski
+plugin.bw_mode.magenta = Purpurowy
+plugin.bw_mode.chan_r = Kanał czerwony
+plugin.bw_mode.chan_g = Kanał zielony
+plugin.bw_mode.chan_b = Kanał niebieski
+plugin.bw_mode.tone = Ton
+plugin.bw_mode.brightness = Jasność
+plugin.bw_mode.contrast = Kontrast
+plugin.bw_mode.toning = Tonowanie
+plugin.bw_mode.shadow_hue = Odcień cieni
+plugin.bw_mode.shadow_sat = Nasycenie cieni
+plugin.bw_mode.high_hue = Odcień świateł
+plugin.bw_mode.high_sat = Nasycenie świateł
+plugin.bw_mode.balance = Balans
+plugin.bw_mode.grain = Ziarno
+plugin.bw_mode.grain_amount = Ilość
+plugin.bw_mode.grain_size = Rozmiar
+
+# share_actions
+plugin.share_actions.name = Udostępnianie
+plugin.share_actions.print = Drukuj…
+plugin.share_actions.browser = Otwórz w przeglądarce

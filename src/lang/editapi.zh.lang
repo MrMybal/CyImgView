@@ -1,0 +1,19 @@
+# CyImgView — editing plugin API: host texts (简体中文)
+@code = zh
+@name = 简体中文
+
+editapi.err.crashed = “%ls”（%ls）已崩溃：本次会话中已禁用
+editapi.err.failed = “%ls”失败
+editapi.err.disabled = “%ls”在本次会话中已禁用（插件已崩溃）
+editapi.disabled = （已禁用）
+editapi.fx.computing = 正在计算…
+editapi.fx.applying = 正在应用…
+editapi.tip.color = 选择颜色
+editapi.mode.reset = 重置
+editapi.tip.mode_reset = 将所有设置恢复为默认值
+editapi.help.title = 编辑插件（%d）
+editapi.help.none = 未安装编辑插件
+editapi.help.effects = 效果：%d
+editapi.help.tools = 工具：%d
+editapi.help.modes = 模式：%d
+editapi.help.actions = 打开方式：%d

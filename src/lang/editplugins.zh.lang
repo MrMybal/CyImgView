@@ -1,0 +1,82 @@
+# CyImgView — bundled editing plugins (fx_extra, annotate, bw_mode, share_actions) — 简体中文
+@code = zh
+@name = 简体中文
+
+# fx_extra
+plugin.fx_extra.name = 附加效果
+plugin.fx_extra.category = 附加效果
+plugin.fx_extra.noise = 杂色
+plugin.fx_extra.threshold = 黑白阈值
+plugin.fx_extra.duotone = 双色调
+plugin.fx_extra.aberration = 色差
+plugin.fx_extra.amount = 数量
+plugin.fx_extra.mono = 单色
+plugin.fx_extra.level = 色阶
+plugin.fx_extra.shadows = 阴影
+plugin.fx_extra.highlights = 高光
+plugin.fx_extra.contrast = 对比度
+plugin.fx_extra.offset = 偏移
+
+# annotate
+plugin.annotate.name = 标注
+plugin.annotate.badge = 编号标记
+plugin.annotate.badge_hint = 单击：编号标记（主颜色；右键：辅助颜色）。编号自动递增。
+plugin.annotate.size = 大小
+plugin.annotate.number = 编号
+plugin.annotate.highlighter = 荧光笔
+plugin.annotate.highlighter_hint = 拖动以突出显示（正片叠底）；Shift：直线。
+plugin.annotate.width = 粗细
+plugin.annotate.color = 颜色
+plugin.annotate.opacity = 不透明度
+plugin.annotate.redact = 遮挡模糊
+plugin.annotate.redact_hint = 绘制矩形以隐藏信息（像素化、模糊或黑块）。
+plugin.annotate.style = 样式
+plugin.annotate.style.choices = 像素化|模糊|黑块
+plugin.annotate.strength = 强度
+plugin.annotate.bubble = 文字气泡
+plugin.annotate.bubble_hint = 从指向点拖动到气泡位置（或单击），然后输入文字。
+plugin.annotate.text_size = 文字大小
+plugin.annotate.shape = 形状
+plugin.annotate.shape.choices = 圆角|矩形
+plugin.annotate.bubble_title = 气泡文字
+plugin.annotate.bubble_sample = 文字
+
+# bw_mode
+plugin.bw_mode.name = 黑白
+plugin.bw_mode.mode = 黑白
+plugin.bw_mode.hint = 黑白转换：颜色混合器、对比度、色调分离和颗粒。
+plugin.bw_mode.presets = 预设
+plugin.bw_mode.neutral = 中性
+plugin.bw_mode.high_contrast = 高对比度
+plugin.bw_mode.red_filter = 红色滤镜
+plugin.bw_mode.sepia = 褐色
+plugin.bw_mode.mixer = 混合器
+plugin.bw_mode.method = 方法
+plugin.bw_mode.method.choices = 颜色|R G B 通道
+plugin.bw_mode.red = 红色
+plugin.bw_mode.orange = 橙色
+plugin.bw_mode.yellow = 黄色
+plugin.bw_mode.green = 绿色
+plugin.bw_mode.cyan = 青色
+plugin.bw_mode.blue = 蓝色
+plugin.bw_mode.magenta = 洋红
+plugin.bw_mode.chan_r = 红色通道
+plugin.bw_mode.chan_g = 绿色通道
+plugin.bw_mode.chan_b = 蓝色通道
+plugin.bw_mode.tone = 色调
+plugin.bw_mode.brightness = 亮度
+plugin.bw_mode.contrast = 对比度
+plugin.bw_mode.toning = 色调分离
+plugin.bw_mode.shadow_hue = 阴影色相
+plugin.bw_mode.shadow_sat = 阴影饱和度
+plugin.bw_mode.high_hue = 高光色相
+plugin.bw_mode.high_sat = 高光饱和度
+plugin.bw_mode.balance = 平衡
+plugin.bw_mode.grain = 颗粒
+plugin.bw_mode.grain_amount = 数量
+plugin.bw_mode.grain_size = 大小
+
+# share_actions
+plugin.share_actions.name = 共享
+plugin.share_actions.print = 打印…
+plugin.share_actions.browser = 在浏览器中打开

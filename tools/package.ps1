@@ -24,8 +24,10 @@ if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
 New-Item -ItemType Directory -Force (Join-Path $stage 'plugins') | Out-Null
 
 Copy-Item (Join-Path $bin 'CyImgView.exe') $stage
-Get-ChildItem (Join-Path $bin 'plugins') -Filter *.dll | Where-Object { $_.Name -notlike 'oo2core*' } |
-    Copy-Item -Destination (Join-Path $stage 'plugins')   # Oodle n'est jamais redistribué
+# Oodle n'est jamais redistribué ; les plugins de test (CYIMG_TEST_PLUGINS) vont dans bin/testplugins,
+# jamais dans bin\plugins : le filtre crashtest* n'est qu'une sécurité en cas de copie manuelle.
+Get-ChildItem (Join-Path $bin 'plugins') -Filter *.dll | Where-Object { $_.Name -notlike 'oo2core*' -and $_.Name -notlike 'crashtest*' } |
+    Copy-Item -Destination (Join-Path $stage 'plugins')
 Copy-Item (Join-Path $root 'README.md') $stage
 Copy-Item (Join-Path $root 'LICENSE') $stage
 New-Item -ItemType Directory -Force (Join-Path $stage 'licenses') | Out-Null

@@ -1,0 +1,19 @@
+# CyImgView — editing plugin API: host texts (Русский)
+@code = ru
+@name = Русский
+
+editapi.err.crashed = «%ls» (%ls) аварийно завершился: отключён до конца сеанса
+editapi.err.failed = «%ls»: ошибка
+editapi.err.disabled = «%ls» отключён до конца сеанса (сбой плагина)
+editapi.disabled = (отключено)
+editapi.fx.computing = Вычисление…
+editapi.fx.applying = Применение…
+editapi.tip.color = Выбрать цвет
+editapi.mode.reset = Сбросить
+editapi.tip.mode_reset = Вернуть все настройки к значениям по умолчанию
+editapi.help.title = Плагины редактирования (%d)
+editapi.help.none = Плагины редактирования не установлены
+editapi.help.effects = Эффекты: %d
+editapi.help.tools = Инструменты: %d
+editapi.help.modes = Режимы: %d
+editapi.help.actions = Открыть с помощью: %d

@@ -230,7 +230,7 @@ bool Viewer::ComposeTo(ID2D1Bitmap1* target, const D2D1_MATRIX_3X2_F& xf, const 
 void Viewer::PrepareEditFrame() {
     if (!m_edit.active || !m_dc || m_edit.layers.empty()) return;
     if (!m_modes.empty()) Mode().Prepare();
-    if (m_edit.fx >= 0 && m_edit.fxDirty) UpdateFxPreview();
+    if (m_edit.fx >= 0 && (m_edit.fxDirty || m_edit.fx >= EffectCount())) UpdateFxPreview();  // effet de plugin : calculs à suivre
 
     if (NeedComposite()) {
         std::vector<uint64_t> sig{m_edit.w, m_edit.h};
@@ -955,6 +955,7 @@ void Viewer::DropEditGpu() {
     if (!m_edit.active) return;
     EditState keep;
     keep.tool = m_edit.tool;
+    keep.ptool = m_edit.ptool;
     keep.color = m_edit.color;
     keep.color2 = m_edit.color2;
     keep.size = m_edit.size;

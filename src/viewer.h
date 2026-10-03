@@ -65,16 +65,19 @@ private:
 
     // --- Mode édition (viewer_edit.cpp : outils et interface ; viewer_layers.cpp : calques, historique,
     // sélection ; viewer_effects.cpp : effets) ---
-    enum class Tool { Hand, Brush, Eraser, Line, Arrow, Rect, Ellipse, Text, Fill, Picker, Crop, Select, Move, Gradient };
+    enum class Tool { Hand, Brush, Eraser, Line, Arrow, Rect, Ellipse, Text, Fill, Picker, Crop, Select, Move, Gradient,
+                      Plugin };  // Plugin : outil d'un plugin d'édition (EditState::ptool)
     enum class EditCmd {
         None, Panel, Tool, Color, Color2, SwapColors, CustomColor, Undo, Redo, Slider, FillToggle, GradToggle,
         RotL, RotR, FlipH, FlipV, ResizeMenu, ResizeOpt, SaveAs, OpenWith, Done, CropApply, CropCancel,
         LayerSelect, LayerEye, LayerNew, LayerDup, LayerDel, LayerUp, LayerDown, LayerMerge, LayerFlatten,
         BlendMenu, BlendOpt, FxMenu, FxPick, FxApply, FxCancel, FxPreview, FxReset,
-        ModeTab, ModeCtl  // Mode Développement : onglet d'un mode (arg = index), contrôle propre au mode (arg libre)
+        ModeTab, ModeCtl,  // Mode Développement : onglet d'un mode (arg = index), contrôle propre au mode (arg libre)
+        PlugTool, PlugToolParam, PlugFxParam  // plugins d'édition : outil (arg = index), paramètre (arg = n | choix << 8)
     };
     enum class EditMenu { None, Resize, Blend, Effects };
-    enum EditSlider { kSlSize, kSlOpacity, kSlHardness, kSlLayerOpacity, kSlFx0 };  // kSlFx0 + n : réglage n de l'effet
+    enum EditSlider { kSlSize, kSlOpacity, kSlHardness, kSlLayerOpacity, kSlFx0,  // kSlFx0 + n : réglage n de l'effet
+                      kSlPlugTool0 = kSlFx0 + 64 };                             // kSlPlugTool0 + n : paramètre n de l'outil de plugin
     struct EditButton {
         EditCmd cmd;
         int arg;
@@ -118,6 +121,7 @@ private:
         bool dirty = false;
         std::vector<EditUndo> undo, redo;
         Tool tool = Tool::Brush, prevTool = Tool::Brush;
+        int ptool = -1;             // outil de plugin actif (tool == Tool::Plugin)
         uint32_t color = 0xE53935, color2 = 0xFFFFFF;
         float size = 8, fontSize = 48, opacity = 100, hardness = 100;
         bool fill = false, gradTransparent = false;
@@ -235,7 +239,7 @@ private:
     void ToggleActualFit(POINT anchor);
     void ClampPan(double& px, double& py, double zoom) const;
     void Rotate(int quarter);
-    void ShowToast(const std::wstring& s);
+    void ShowToast(const std::wstring& s, double seconds = 1.1);  // seconds : durée d'affichage
     void ToggleFullscreen();
     void Invalidate() { InvalidateRect(m_hwnd, nullptr, FALSE); }
     POINT ClientCenter() const;
@@ -399,8 +403,43 @@ private:
     void UpdateFxPreview();
     ComPtr<ID2D1Image> BuildEffect(ID2D1Image* input, std::vector<ComPtr<ID2D1Effect>>& keep);
     void DrawEffectPanel(float cw, float ch);
-    static int EffectCount();
+    static int EffectCount();  // effets intégrés ; m_edit.fx >= EffectCount() : effet d'un plugin
     static const char* EffectKey(int fx);
+
+    // --- Plugins d'édition (viewer_editplugins.cpp, include/cyimg_edit_plugin.h) : effets, outils,
+    // modes, actions « Ouvrir avec ». Chargés à la première utilisation. ---
+    struct PlugHost;   // fonctions de l'hôte (CyImgEditHost)
+    struct PlugState;  // état des outils et de l'effet de plugin en cours
+    class EditMode;
+    class PluginEditMode;
+    void EnsureEditPlugins();
+    void OnPluginJobs();  // calcul terminé (message kMsgPlugJob)
+    void PluginCrashed(const std::wstring& what, const std::wstring& file, const std::wstring& where);
+    void OpenPluginEffect(int i);
+    void ClosePluginEffect(bool apply);
+    void UpdatePluginFxPreview();
+    void DrawPluginEffectPanel(float cw, float ch);
+    void DrawEffectsMenu(float cw, float ch);
+    void PluginParamCmd(bool tool, int arg);
+    float PluginSliderT(bool tool, int k) const;
+    void SetPluginSliderT(bool tool, int k, float t);
+    int PluginToolCount() const;
+    void DrawPluginToolIcon(int i, const D2D1_RECT_F& r, uint32_t col, float a);
+    float DrawPluginToolParams(float x, float y, float h);
+    std::wstring PluginToolHint() const;
+    const wchar_t* PluginToolName(int i) const;  // info-bulle (nom et raccourci), valable jusqu'à la fin
+    void SetPluginTool(int i);
+    void ActivatePluginTool(bool on);
+    bool PluginToolDown(D2D1_POINT_2F ip, bool right, bool dbl);
+    void PluginToolMove(POINT p);
+    void PluginToolUp(D2D1_POINT_2F ip);
+    void PluginToolCancel();
+    bool PluginToolKey(WPARAM vk);
+    void DrawPluginToolOverlay(float left, float top, float z);
+    std::vector<std::shared_ptr<EditMode>> NewPluginModes();
+    float EditPluginsHelpHeight(float rowH);
+    void DrawEditPluginsHelp(float left, float right, float y, float rowH, float col);
+    std::shared_ptr<PlugState> m_plug;
 
     // --- Mode Développement : modes du mode édition (viewer_modes.h / .cpp) et Développement
     // (viewer_develop.cpp, develop_effect.cpp). La Retouche est le mode 0 ; ses fonctions suivent. ---
@@ -487,7 +526,7 @@ private:
     POINT m_dragStart{};
     double m_dragPanX = 0, m_dragPanY = 0;
     std::wstring m_toast;
-    double m_toastTime = -10;
+    double m_toastTime = -10, m_toastDur = 1.1;
     double m_stripPos = 0, m_stripPosT = 0;
     int m_thumbReqLo = -1, m_thumbReqHi = -1, m_thumbReqIndex = -1;
     double m_lastFrame = 0;

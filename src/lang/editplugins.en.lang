@@ -1,0 +1,82 @@
+# CyImgView — bundled editing plugins (fx_extra, annotate, bw_mode, share_actions) — English
+@code = en
+@name = English
+
+# fx_extra
+plugin.fx_extra.name = Extra effects
+plugin.fx_extra.category = Extra effects
+plugin.fx_extra.noise = Noise
+plugin.fx_extra.threshold = Black & white threshold
+plugin.fx_extra.duotone = Duotone
+plugin.fx_extra.aberration = Chromatic aberration
+plugin.fx_extra.amount = Amount
+plugin.fx_extra.mono = Monochrome
+plugin.fx_extra.level = Level
+plugin.fx_extra.shadows = Shadows
+plugin.fx_extra.highlights = Highlights
+plugin.fx_extra.contrast = Contrast
+plugin.fx_extra.offset = Offset
+
+# annotate
+plugin.annotate.name = Annotation
+plugin.annotate.badge = Numbered badge
+plugin.annotate.badge_hint = Click: numbered badge (primary color; right click: secondary). The number increments.
+plugin.annotate.size = Size
+plugin.annotate.number = Number
+plugin.annotate.highlighter = Highlighter
+plugin.annotate.highlighter_hint = Drag to highlight (multiply mode); Shift: straight line.
+plugin.annotate.width = Thickness
+plugin.annotate.color = Color
+plugin.annotate.opacity = Opacity
+plugin.annotate.redact = Redaction blur
+plugin.annotate.redact_hint = Draw a rectangle to hide information (pixelate, blur or black box).
+plugin.annotate.style = Style
+plugin.annotate.style.choices = Pixelate|Blur|Black box
+plugin.annotate.strength = Strength
+plugin.annotate.bubble = Speech bubble
+plugin.annotate.bubble_hint = Drag from the pointer tip to where the bubble goes (or click), then type the text.
+plugin.annotate.text_size = Text size
+plugin.annotate.shape = Shape
+plugin.annotate.shape.choices = Rounded|Rectangle
+plugin.annotate.bubble_title = Bubble text
+plugin.annotate.bubble_sample = Text
+
+# bw_mode
+plugin.bw_mode.name = Black & white
+plugin.bw_mode.mode = Black & white
+plugin.bw_mode.hint = Black and white conversion: color mixer, contrast, toning and grain.
+plugin.bw_mode.presets = Presets
+plugin.bw_mode.neutral = Neutral
+plugin.bw_mode.high_contrast = High contrast
+plugin.bw_mode.red_filter = Red filter
+plugin.bw_mode.sepia = Sepia
+plugin.bw_mode.mixer = Mixer
+plugin.bw_mode.method = Method
+plugin.bw_mode.method.choices = Colors|R G B channels
+plugin.bw_mode.red = Red
+plugin.bw_mode.orange = Orange
+plugin.bw_mode.yellow = Yellow
+plugin.bw_mode.green = Green
+plugin.bw_mode.cyan = Cyan
+plugin.bw_mode.blue = Blue
+plugin.bw_mode.magenta = Magenta
+plugin.bw_mode.chan_r = Red channel
+plugin.bw_mode.chan_g = Green channel
+plugin.bw_mode.chan_b = Blue channel
+plugin.bw_mode.tone = Tone
+plugin.bw_mode.brightness = Brightness
+plugin.bw_mode.contrast = Contrast
+plugin.bw_mode.toning = Toning
+plugin.bw_mode.shadow_hue = Shadow hue
+plugin.bw_mode.shadow_sat = Shadow saturation
+plugin.bw_mode.high_hue = Highlight hue
+plugin.bw_mode.high_sat = Highlight saturation
+plugin.bw_mode.balance = Balance
+plugin.bw_mode.grain = Grain
+plugin.bw_mode.grain_amount = Amount
+plugin.bw_mode.grain_size = Size
+
+# share_actions
+plugin.share_actions.name = Sharing
+plugin.share_actions.print = Print…
+plugin.share_actions.browser = Open in browser

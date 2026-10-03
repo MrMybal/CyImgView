@@ -426,6 +426,7 @@ void Viewer::SaveOpenWith() {
 
 void Viewer::BuildOpenWithMenu(OpenWithMenu& m, const std::wstring& path, UINT firstId) {
     EnsureOpenWith();
+    EnsureEditPlugins();  // actions des plugins d'édition (fournisseurs enregistrés au chargement)
     m.first = firstId;
     m.menu = CreatePopupMenu();
     const int size = GetSystemMetricsForDpi(SM_CXSMICON, GetDpiForWindow(m_hwnd));

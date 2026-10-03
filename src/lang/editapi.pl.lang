@@ -1,0 +1,19 @@
+# CyImgView — editing plugin API: host texts (Polski)
+@code = pl
+@name = Polski
+
+editapi.err.crashed = „%ls” (%ls) uległ awarii: wyłączony do końca sesji
+editapi.err.failed = „%ls” nie powiódł się
+editapi.err.disabled = „%ls” jest wyłączony do końca sesji (wtyczka uległa awarii)
+editapi.disabled = (wyłączony)
+editapi.fx.computing = Obliczanie…
+editapi.fx.applying = Stosowanie…
+editapi.tip.color = Wybierz kolor
+editapi.mode.reset = Resetuj
+editapi.tip.mode_reset = Przywróć wszystkie ustawienia do wartości domyślnych
+editapi.help.title = Wtyczki edycji (%d)
+editapi.help.none = Brak zainstalowanych wtyczek edycji
+editapi.help.effects = Efekty: %d
+editapi.help.tools = Narzędzia: %d
+editapi.help.modes = Tryby: %d
+editapi.help.actions = Otwórz za pomocą: %d

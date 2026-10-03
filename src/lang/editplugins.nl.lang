@@ -1,0 +1,82 @@
+# CyImgView — bundled editing plugins (fx_extra, annotate, bw_mode, share_actions) — Nederlands
+@code = nl
+@name = Nederlands
+
+# fx_extra
+plugin.fx_extra.name = Extra effecten
+plugin.fx_extra.category = Extra effecten
+plugin.fx_extra.noise = Ruis
+plugin.fx_extra.threshold = Zwart-witdrempel
+plugin.fx_extra.duotone = Duotoon
+plugin.fx_extra.aberration = Chromatische aberratie
+plugin.fx_extra.amount = Hoeveelheid
+plugin.fx_extra.mono = Monochroom
+plugin.fx_extra.level = Niveau
+plugin.fx_extra.shadows = Schaduwen
+plugin.fx_extra.highlights = Hoge lichten
+plugin.fx_extra.contrast = Contrast
+plugin.fx_extra.offset = Verschuiving
+
+# annotate
+plugin.annotate.name = Annotatie
+plugin.annotate.badge = Genummerde markering
+plugin.annotate.badge_hint = Klik: genummerde markering (hoofdkleur; rechtsklik: tweede kleur). Het nummer loopt op.
+plugin.annotate.size = Grootte
+plugin.annotate.number = Nummer
+plugin.annotate.highlighter = Markeerstift
+plugin.annotate.highlighter_hint = Slepen om te markeren (vermenigvuldigen); Shift: rechte lijn.
+plugin.annotate.width = Dikte
+plugin.annotate.color = Kleur
+plugin.annotate.opacity = Dekking
+plugin.annotate.redact = Onherkenbaar maken
+plugin.annotate.redact_hint = Teken een rechthoek om informatie te verbergen (pixelen, vervagen of zwart blok).
+plugin.annotate.style = Stijl
+plugin.annotate.style.choices = Pixelen|Vervagen|Zwart blok
+plugin.annotate.strength = Sterkte
+plugin.annotate.bubble = Tekstballon
+plugin.annotate.bubble_hint = Sleep van de punt naar de plek van de ballon (of klik) en typ de tekst.
+plugin.annotate.text_size = Tekstgrootte
+plugin.annotate.shape = Vorm
+plugin.annotate.shape.choices = Afgerond|Rechthoek
+plugin.annotate.bubble_title = Tekst van de ballon
+plugin.annotate.bubble_sample = Tekst
+
+# bw_mode
+plugin.bw_mode.name = Zwart-wit
+plugin.bw_mode.mode = Zwart-wit
+plugin.bw_mode.hint = Zwart-witconversie: kleurmixer, contrast, toning en korrel.
+plugin.bw_mode.presets = Voorinstellingen
+plugin.bw_mode.neutral = Neutraal
+plugin.bw_mode.high_contrast = Hoog contrast
+plugin.bw_mode.red_filter = Roodfilter
+plugin.bw_mode.sepia = Sepia
+plugin.bw_mode.mixer = Mixer
+plugin.bw_mode.method = Methode
+plugin.bw_mode.method.choices = Kleuren|R G B-kanalen
+plugin.bw_mode.red = Rood
+plugin.bw_mode.orange = Oranje
+plugin.bw_mode.yellow = Geel
+plugin.bw_mode.green = Groen
+plugin.bw_mode.cyan = Cyaan
+plugin.bw_mode.blue = Blauw
+plugin.bw_mode.magenta = Magenta
+plugin.bw_mode.chan_r = Rood kanaal
+plugin.bw_mode.chan_g = Groen kanaal
+plugin.bw_mode.chan_b = Blauw kanaal
+plugin.bw_mode.tone = Toon
+plugin.bw_mode.brightness = Helderheid
+plugin.bw_mode.contrast = Contrast
+plugin.bw_mode.toning = Toning
+plugin.bw_mode.shadow_hue = Tint schaduwen
+plugin.bw_mode.shadow_sat = Verzadiging schaduwen
+plugin.bw_mode.high_hue = Tint hoge lichten
+plugin.bw_mode.high_sat = Verzadiging hoge lichten
+plugin.bw_mode.balance = Balans
+plugin.bw_mode.grain = Korrel
+plugin.bw_mode.grain_amount = Hoeveelheid
+plugin.bw_mode.grain_size = Grootte
+
+# share_actions
+plugin.share_actions.name = Delen
+plugin.share_actions.print = Afdrukken…
+plugin.share_actions.browser = Openen in browser

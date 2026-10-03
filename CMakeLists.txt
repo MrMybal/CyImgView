@@ -56,6 +56,8 @@ add_executable(CyImgView WIN32
     src/viewer_extra.cpp
     src/viewer_slideshow.cpp
     src/viewer_openwith.cpp
+    src/viewer_editplugins.cpp
+    src/edit_plugins.cpp
     src/updater.cpp
     src/app.rc
     src/app.manifest)
@@ -89,6 +91,10 @@ function(cyimg_add_plugin name)
     target_link_libraries(${name} PRIVATE cyimg_support)
     set_target_properties(${name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR}/plugins)
 endfunction()
+
+# Plugins de test (volontairement défaillants) : jamais livrés, compilés dans bin/testplugins.
+# -DCYIMG_TEST_PLUGINS=ON pour les construire (tests de robustesse de l'hôte).
+option(CYIMG_TEST_PLUGINS "Compiler les plugins de test (bin/testplugins, non livrés)" OFF)
 
 # Chaque dossier plugins/<nom>/ décrit sa compilation dans un plugin.cmake.
 # -DCYIMG_ONLY_PLUGINS="a;b" : ne configure que ces plugins (développement, builds parallèles).

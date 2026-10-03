@@ -1,0 +1,19 @@
+# CyImgView — editing plugin API: host texts (Nederlands)
+@code = nl
+@name = Nederlands
+
+editapi.err.crashed = ‘%ls’ (%ls) is vastgelopen: uitgeschakeld voor deze sessie
+editapi.err.failed = ‘%ls’ is mislukt
+editapi.err.disabled = ‘%ls’ is uitgeschakeld voor deze sessie (de plug-in is vastgelopen)
+editapi.disabled = (uitgeschakeld)
+editapi.fx.computing = Bezig met berekenen…
+editapi.fx.applying = Bezig met toepassen…
+editapi.tip.color = Kleur kiezen
+editapi.mode.reset = Herstellen
+editapi.tip.mode_reset = Alle instellingen terugzetten op hun standaardwaarde
+editapi.help.title = Bewerkingsplug-ins (%d)
+editapi.help.none = Geen bewerkingsplug-in geïnstalleerd
+editapi.help.effects = Effecten: %d
+editapi.help.tools = Gereedschappen: %d
+editapi.help.modes = Modi: %d
+editapi.help.actions = Openen met: %d

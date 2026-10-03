@@ -1,0 +1,82 @@
+# CyImgView — bundled editing plugins (fx_extra, annotate, bw_mode, share_actions) — 日本語
+@code = ja
+@name = 日本語
+
+# fx_extra
+plugin.fx_extra.name = 追加の効果
+plugin.fx_extra.category = 追加の効果
+plugin.fx_extra.noise = ノイズ
+plugin.fx_extra.threshold = 2 階調化
+plugin.fx_extra.duotone = ダブルトーン
+plugin.fx_extra.aberration = 色収差
+plugin.fx_extra.amount = 量
+plugin.fx_extra.mono = モノクロ
+plugin.fx_extra.level = しきい値
+plugin.fx_extra.shadows = シャドウ
+plugin.fx_extra.highlights = ハイライト
+plugin.fx_extra.contrast = コントラスト
+plugin.fx_extra.offset = ずれ
+
+# annotate
+plugin.annotate.name = 注釈
+plugin.annotate.badge = 番号付きマーカー
+plugin.annotate.badge_hint = クリック：番号付きマーカー（メインカラー、右クリック：サブカラー）。番号は自動で増えます。
+plugin.annotate.size = サイズ
+plugin.annotate.number = 番号
+plugin.annotate.highlighter = 蛍光ペン
+plugin.annotate.highlighter_hint = ドラッグで強調（乗算）、Shift：直線。
+plugin.annotate.width = 太さ
+plugin.annotate.color = 色
+plugin.annotate.opacity = 不透明度
+plugin.annotate.redact = ぼかしで隠す
+plugin.annotate.redact_hint = 矩形を描いて情報を隠します（モザイク、ぼかし、黒塗り）。
+plugin.annotate.style = スタイル
+plugin.annotate.style.choices = モザイク|ぼかし|黒塗り
+plugin.annotate.strength = 強さ
+plugin.annotate.bubble = 吹き出し
+plugin.annotate.bubble_hint = 指し示す点から吹き出しの位置へドラッグ（またはクリック）し、テキストを入力します。
+plugin.annotate.text_size = 文字サイズ
+plugin.annotate.shape = 形
+plugin.annotate.shape.choices = 角丸|四角形
+plugin.annotate.bubble_title = 吹き出しのテキスト
+plugin.annotate.bubble_sample = テキスト
+
+# bw_mode
+plugin.bw_mode.name = 白黒
+plugin.bw_mode.mode = 白黒
+plugin.bw_mode.hint = 白黒変換：カラーミキサー、コントラスト、調色、粒子。
+plugin.bw_mode.presets = プリセット
+plugin.bw_mode.neutral = ニュートラル
+plugin.bw_mode.high_contrast = ハイコントラスト
+plugin.bw_mode.red_filter = 赤フィルター
+plugin.bw_mode.sepia = セピア
+plugin.bw_mode.mixer = ミキサー
+plugin.bw_mode.method = 方式
+plugin.bw_mode.method.choices = 色|R G B チャンネル
+plugin.bw_mode.red = レッド
+plugin.bw_mode.orange = オレンジ
+plugin.bw_mode.yellow = イエロー
+plugin.bw_mode.green = グリーン
+plugin.bw_mode.cyan = シアン
+plugin.bw_mode.blue = ブルー
+plugin.bw_mode.magenta = マゼンタ
+plugin.bw_mode.chan_r = レッドチャンネル
+plugin.bw_mode.chan_g = グリーンチャンネル
+plugin.bw_mode.chan_b = ブルーチャンネル
+plugin.bw_mode.tone = トーン
+plugin.bw_mode.brightness = 明るさ
+plugin.bw_mode.contrast = コントラスト
+plugin.bw_mode.toning = 調色
+plugin.bw_mode.shadow_hue = シャドウの色相
+plugin.bw_mode.shadow_sat = シャドウの彩度
+plugin.bw_mode.high_hue = ハイライトの色相
+plugin.bw_mode.high_sat = ハイライトの彩度
+plugin.bw_mode.balance = バランス
+plugin.bw_mode.grain = 粒子
+plugin.bw_mode.grain_amount = 量
+plugin.bw_mode.grain_size = サイズ
+
+# share_actions
+plugin.share_actions.name = 共有
+plugin.share_actions.print = 印刷…
+plugin.share_actions.browser = ブラウザーで開く

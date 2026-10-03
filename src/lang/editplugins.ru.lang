@@ -1,0 +1,82 @@
+# CyImgView — bundled editing plugins (fx_extra, annotate, bw_mode, share_actions) — Русский
+@code = ru
+@name = Русский
+
+# fx_extra
+plugin.fx_extra.name = Дополнительные эффекты
+plugin.fx_extra.category = Дополнительные эффекты
+plugin.fx_extra.noise = Шум
+plugin.fx_extra.threshold = Порог (чёрно-белое)
+plugin.fx_extra.duotone = Дуплекс
+plugin.fx_extra.aberration = Хроматическая аберрация
+plugin.fx_extra.amount = Количество
+plugin.fx_extra.mono = Монохромный
+plugin.fx_extra.level = Уровень
+plugin.fx_extra.shadows = Тени
+plugin.fx_extra.highlights = Света
+plugin.fx_extra.contrast = Контраст
+plugin.fx_extra.offset = Смещение
+
+# annotate
+plugin.annotate.name = Аннотации
+plugin.annotate.badge = Нумерованная метка
+plugin.annotate.badge_hint = Щелчок: нумерованная метка (основной цвет; правая кнопка: дополнительный). Номер увеличивается.
+plugin.annotate.size = Размер
+plugin.annotate.number = Номер
+plugin.annotate.highlighter = Маркер
+plugin.annotate.highlighter_hint = Перетащите, чтобы выделить (умножение); Shift: прямая линия.
+plugin.annotate.width = Толщина
+plugin.annotate.color = Цвет
+plugin.annotate.opacity = Непрозрачность
+plugin.annotate.redact = Скрытие размытием
+plugin.annotate.redact_hint = Нарисуйте прямоугольник, чтобы скрыть информацию (пикселизация, размытие или чёрный блок).
+plugin.annotate.style = Стиль
+plugin.annotate.style.choices = Пикселизация|Размытие|Чёрный блок
+plugin.annotate.strength = Сила
+plugin.annotate.bubble = Выноска с текстом
+plugin.annotate.bubble_hint = Перетащите от острия к месту выноски (или щёлкните), затем введите текст.
+plugin.annotate.text_size = Размер текста
+plugin.annotate.shape = Форма
+plugin.annotate.shape.choices = Скруглённая|Прямоугольник
+plugin.annotate.bubble_title = Текст выноски
+plugin.annotate.bubble_sample = Текст
+
+# bw_mode
+plugin.bw_mode.name = Чёрно-белое
+plugin.bw_mode.mode = Чёрно-белое
+plugin.bw_mode.hint = Чёрно-белое преобразование: микшер цветов, контраст, тонирование и зерно.
+plugin.bw_mode.presets = Предустановки
+plugin.bw_mode.neutral = Нейтральный
+plugin.bw_mode.high_contrast = Высокий контраст
+plugin.bw_mode.red_filter = Красный фильтр
+plugin.bw_mode.sepia = Сепия
+plugin.bw_mode.mixer = Микшер
+plugin.bw_mode.method = Метод
+plugin.bw_mode.method.choices = Цвета|Каналы R G B
+plugin.bw_mode.red = Красный
+plugin.bw_mode.orange = Оранжевый
+plugin.bw_mode.yellow = Жёлтый
+plugin.bw_mode.green = Зелёный
+plugin.bw_mode.cyan = Голубой
+plugin.bw_mode.blue = Синий
+plugin.bw_mode.magenta = Пурпурный
+plugin.bw_mode.chan_r = Красный канал
+plugin.bw_mode.chan_g = Зелёный канал
+plugin.bw_mode.chan_b = Синий канал
+plugin.bw_mode.tone = Тон
+plugin.bw_mode.brightness = Яркость
+plugin.bw_mode.contrast = Контраст
+plugin.bw_mode.toning = Тонирование
+plugin.bw_mode.shadow_hue = Оттенок теней
+plugin.bw_mode.shadow_sat = Насыщенность теней
+plugin.bw_mode.high_hue = Оттенок светов
+plugin.bw_mode.high_sat = Насыщенность светов
+plugin.bw_mode.balance = Баланс
+plugin.bw_mode.grain = Зерно
+plugin.bw_mode.grain_amount = Количество
+plugin.bw_mode.grain_size = Размер
+
+# share_actions
+plugin.share_actions.name = Отправка
+plugin.share_actions.print = Печать…
+plugin.share_actions.browser = Открыть в браузере

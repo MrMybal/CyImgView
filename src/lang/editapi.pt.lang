@@ -1,0 +1,19 @@
+# CyImgView — editing plugin API: host texts (Português)
+@code = pt
+@name = Português
+
+editapi.err.crashed = «%ls» (%ls) falhou gravemente: desativado nesta sessão
+editapi.err.failed = «%ls» falhou
+editapi.err.disabled = «%ls» está desativado nesta sessão (o plugin falhou)
+editapi.disabled = (desativado)
+editapi.fx.computing = A calcular…
+editapi.fx.applying = A aplicar…
+editapi.tip.color = Escolher uma cor
+editapi.mode.reset = Repor
+editapi.tip.mode_reset = Repor todos os ajustes nos valores predefinidos
+editapi.help.title = Plugins de edição (%d)
+editapi.help.none = Nenhum plugin de edição instalado
+editapi.help.effects = Efeitos: %d
+editapi.help.tools = Ferramentas: %d
+editapi.help.modes = Modos: %d
+editapi.help.actions = Abrir com: %d

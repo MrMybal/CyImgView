@@ -1,0 +1,82 @@
+# CyImgView — bundled editing plugins (fx_extra, annotate, bw_mode, share_actions) — Português
+@code = pt
+@name = Português
+
+# fx_extra
+plugin.fx_extra.name = Efeitos adicionais
+plugin.fx_extra.category = Efeitos adicionais
+plugin.fx_extra.noise = Ruído
+plugin.fx_extra.threshold = Limiar preto e branco
+plugin.fx_extra.duotone = Duotone
+plugin.fx_extra.aberration = Aberração cromática
+plugin.fx_extra.amount = Quantidade
+plugin.fx_extra.mono = Monocromático
+plugin.fx_extra.level = Nível
+plugin.fx_extra.shadows = Sombras
+plugin.fx_extra.highlights = Realces
+plugin.fx_extra.contrast = Contraste
+plugin.fx_extra.offset = Deslocamento
+
+# annotate
+plugin.annotate.name = Anotação
+plugin.annotate.badge = Marcador numerado
+plugin.annotate.badge_hint = Clique: marcador numerado (cor principal; clique direito: secundária). O número aumenta.
+plugin.annotate.size = Tamanho
+plugin.annotate.number = Número
+plugin.annotate.highlighter = Marcador
+plugin.annotate.highlighter_hint = Arrastar para realçar (modo multiplicar); Shift: linha reta.
+plugin.annotate.width = Espessura
+plugin.annotate.color = Cor
+plugin.annotate.opacity = Opacidade
+plugin.annotate.redact = Desfoque de ocultação
+plugin.annotate.redact_hint = Traçar um retângulo para ocultar uma informação (pixelização, desfoque ou bloco preto).
+plugin.annotate.style = Estilo
+plugin.annotate.style.choices = Pixelização|Desfoque|Bloco preto
+plugin.annotate.strength = Intensidade
+plugin.annotate.bubble = Balão de texto
+plugin.annotate.bubble_hint = Arrastar da ponta até ao lugar do balão (ou clicar) e escrever o texto.
+plugin.annotate.text_size = Tamanho do texto
+plugin.annotate.shape = Forma
+plugin.annotate.shape.choices = Arredondada|Retângulo
+plugin.annotate.bubble_title = Texto do balão
+plugin.annotate.bubble_sample = Texto
+
+# bw_mode
+plugin.bw_mode.name = Preto e branco
+plugin.bw_mode.mode = Preto e branco
+plugin.bw_mode.hint = Conversão para preto e branco: misturador de cores, contraste, viragem e grão.
+plugin.bw_mode.presets = Predefinições
+plugin.bw_mode.neutral = Neutro
+plugin.bw_mode.high_contrast = Alto contraste
+plugin.bw_mode.red_filter = Filtro vermelho
+plugin.bw_mode.sepia = Sépia
+plugin.bw_mode.mixer = Misturador
+plugin.bw_mode.method = Método
+plugin.bw_mode.method.choices = Cores|Canais R G B
+plugin.bw_mode.red = Vermelho
+plugin.bw_mode.orange = Laranja
+plugin.bw_mode.yellow = Amarelo
+plugin.bw_mode.green = Verde
+plugin.bw_mode.cyan = Ciano
+plugin.bw_mode.blue = Azul
+plugin.bw_mode.magenta = Magenta
+plugin.bw_mode.chan_r = Canal vermelho
+plugin.bw_mode.chan_g = Canal verde
+plugin.bw_mode.chan_b = Canal azul
+plugin.bw_mode.tone = Tom
+plugin.bw_mode.brightness = Brilho
+plugin.bw_mode.contrast = Contraste
+plugin.bw_mode.toning = Viragem
+plugin.bw_mode.shadow_hue = Matiz das sombras
+plugin.bw_mode.shadow_sat = Saturação das sombras
+plugin.bw_mode.high_hue = Matiz dos realces
+plugin.bw_mode.high_sat = Saturação dos realces
+plugin.bw_mode.balance = Equilíbrio
+plugin.bw_mode.grain = Grão
+plugin.bw_mode.grain_amount = Quantidade
+plugin.bw_mode.grain_size = Tamanho
+
+# share_actions
+plugin.share_actions.name = Partilha
+plugin.share_actions.print = Imprimir…
+plugin.share_actions.browser = Abrir no navegador

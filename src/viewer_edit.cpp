@@ -275,6 +275,7 @@ bool Viewer::BeginEdit() {
     }
     EditState fresh;  // on garde les réglages d'une session à l'autre
     fresh.tool = m_edit.tool;
+    fresh.ptool = m_edit.ptool;
     fresh.color = m_edit.color;
     fresh.color2 = m_edit.color2;
     fresh.size = m_edit.size;
@@ -285,6 +286,8 @@ bool Viewer::BeginEdit() {
     fresh.gradTransparent = m_edit.gradTransparent;
     fresh.showLayers = m_edit.showLayers;
     if (fresh.tool == Tool::Crop || fresh.tool == Tool::Picker) fresh.tool = Tool::Brush;
+    EnsureEditPlugins();  // outils, effets et modes des plugins (premier passage seulement)
+    if (fresh.tool == Tool::Plugin && (fresh.ptool < 0 || fresh.ptool >= PluginToolCount())) fresh.tool = Tool::Brush;
     // Tailles d'outil en pixels de l'image : on les adapte à sa définition (8 px est invisible sur 24 Mpx)
     const float longSide = float(std::max(w, h));
     if (m_editRefLong > 0) {
@@ -310,6 +313,7 @@ bool Viewer::BeginEdit() {
     m_showInfo = false;
     InitEditModes();  // dernier mode utilisé (Retouche ou Développement)
     if (m_mode != 0 && !Mode().Enter()) m_mode = 0;
+    if (m_edit.tool == Tool::Plugin) ActivatePluginTool(true);
     ApplyFit(false);
     Invalidate();
     return true;
@@ -319,6 +323,7 @@ bool Viewer::EndEdit(bool ask) {
     if (!m_edit.active) return true;
     if (m_edit.textActive) CommitText();
     if (m_edit.fx >= 0) CloseEffect(false);
+    if (m_edit.tool == Tool::Plugin && m_edit.drawing) PluginToolCancel();
     if (!m_modes.empty()) Mode().Commit();  // réglages du mode intégrés au document (avec historique)
     if (ask && m_edit.dirty) {
         TASKDIALOG_BUTTON buttons[] = {{100, T("edit.ask.save")}, {101, T("edit.ask.discard")}};
@@ -341,8 +346,10 @@ bool Viewer::EndEdit(bool ask) {
             if (m_edit.dirty) return false;  // enregistrement annulé ou en échec
         }
     }
+    if (m_edit.tool == Tool::Plugin) ActivatePluginTool(false);
     EditState keep;  // réglages conservés
     keep.tool = m_edit.tool;
+    keep.ptool = m_edit.ptool;
     keep.color = m_edit.color;
     keep.color2 = m_edit.color2;
     keep.size = m_edit.size;
@@ -391,9 +398,12 @@ D2D1_POINT_2F Viewer::ScreenToImage(POINT p) const {
 
 void Viewer::SetTool(Tool t) {
     if (m_edit.textActive && t != Tool::Text) CommitText();
+    if (m_edit.tool == Tool::Plugin && t != Tool::Plugin) ActivatePluginTool(false);
     if (t != Tool::Crop) m_edit.cropValid = false;
     if (t == Tool::Picker && m_edit.tool != Tool::Picker) m_edit.prevTool = m_edit.tool;
+    const bool activate = t == Tool::Plugin && m_edit.tool != Tool::Plugin;
     m_edit.tool = t;
+    if (activate) ActivatePluginTool(true);
     m_edit.menu = EditMenu::None;
     Invalidate();
 }
@@ -754,7 +764,8 @@ void Viewer::EditCommand(EditCmd cmd, int arg) {
     switch (cmd) {
     case EditCmd::Panel: case EditCmd::Slider: case EditCmd::Color: case EditCmd::Color2: case EditCmd::SwapColors:
     case EditCmd::CustomColor: case EditCmd::FxMenu: case EditCmd::FxPick: case EditCmd::FxApply: case EditCmd::FxCancel:
-    case EditCmd::FxPreview: case EditCmd::FxReset: case EditCmd::ResizeMenu: case EditCmd::Undo:
+    case EditCmd::FxPreview: case EditCmd::FxReset: case EditCmd::ResizeMenu: case EditCmd::Undo: case EditCmd::PlugFxParam:
+    case EditCmd::PlugToolParam:
         break;
     default:
         if (m_edit.fx >= 0) CloseEffect(false);
@@ -809,6 +820,9 @@ void Viewer::EditCommand(EditCmd cmd, int arg) {
     case EditCmd::FxCancel: CloseEffect(false); break;
     case EditCmd::FxPreview: m_edit.fxPreview = !m_edit.fxPreview; break;
     case EditCmd::FxReset: OpenEffect(m_edit.fx); break;
+    case EditCmd::PlugTool: SetPluginTool(arg); break;
+    case EditCmd::PlugToolParam: PluginParamCmd(true, arg); break;
+    case EditCmd::PlugFxParam: PluginParamCmd(false, arg); break;
     default: break;
     }
     Invalidate();
@@ -906,6 +920,7 @@ bool Viewer::RetouchMouseDown(POINT p, bool right, bool dbl) {
         break;
     case Tool::Fill: FloodFill(ip, right ? m_edit.color2 : m_edit.color); break;
     case Tool::Picker: PickColor(ip, right); break;
+    case Tool::Plugin: m_edit.drawing = PluginToolDown(ip, right, dbl); break;
     default: break;
     }
     if (m_edit.drawing) SetCapture(m_hwnd);
@@ -918,6 +933,10 @@ void Viewer::RetouchMouseMove(POINT p) {
         const D2D1_RECT_F& r = m_edit.sliderRc;
         SetSliderT(m_edit.slider, (p.x - r.left) / std::max(1.0f, r.right - r.left));
         Invalidate();
+        return;
+    }
+    if (m_edit.tool == Tool::Plugin && m_edit.fx < 0 && m_edit.menu == EditMenu::None) {  // survol ou glissement
+        PluginToolMove(p);
         return;
     }
     if (!m_edit.drawing) return;
@@ -948,7 +967,7 @@ void Viewer::RetouchMouseMove(POINT p) {
     Invalidate();
 }
 
-void Viewer::RetouchMouseUp(POINT) {
+void Viewer::RetouchMouseUp(POINT p) {
     if (m_edit.slider >= 0) {
         m_edit.slider = -1;
         ReleaseCapture();
@@ -963,6 +982,7 @@ void Viewer::RetouchMouseUp(POINT) {
     case Tool::Brush: case Tool::Eraser: case Tool::Move:
         m_edit.strokeBase.Reset();
         break;
+    case Tool::Plugin: PluginToolUp(ScreenToImage(p)); break;
     case Tool::Line: case Tool::Arrow: case Tool::Rect: case Tool::Ellipse: {
         if (dx * dx + dy * dy < 1 || !PushUndo()) break;
         uint32_t col = m_edit.secondary ? m_edit.color2 : m_edit.color;
@@ -1089,6 +1109,8 @@ bool Viewer::RetouchKey(WPARAM vk) {
     case VK_ESCAPE:
         if (m_edit.menu != EditMenu::None) {
             m_edit.menu = EditMenu::None;
+        } else if (m_edit.drawing && m_edit.tool == Tool::Plugin) {
+            PluginToolCancel();
         } else if (m_edit.drawing && m_edit.tool == Tool::Move) {  // déplacement annulé
             MoveLayerTo(0, 0);
             m_edit.sel = m_edit.moveSel;
@@ -1135,8 +1157,8 @@ bool Viewer::RetouchKey(WPARAM vk) {
         Invalidate();
         return true;
     }
-    // Navigation, zoom, plein écran : gérés par le mode visionneuse (avec confirmation si besoin)
-    default: return false;
+    // Raccourcis des outils de plugins ; navigation, zoom, plein écran : gérés par le mode visionneuse
+    default: return PluginToolKey(vk);
     }
 }
 
@@ -1231,6 +1253,7 @@ void Viewer::DrawToolIcon(Tool t, const D2D1_RECT_F& r, uint32_t col, float a) {
         m_rt->FillEllipse(D2D1::Ellipse(D2D1::Point2F(cx + 5 * s, cy - 5 * s), 4 * s, 4 * s), br);
         break;
     case Tool::Crop: Text(L"", m_tfIconMid.Get(), r, col, a); break;
+    case Tool::Plugin: DrawPluginToolIcon(m_edit.ptool, r, col, a); break;
     }
 }
 
@@ -1382,6 +1405,9 @@ void Viewer::DrawRetouchOverlay(float left, float top, float z) {
         }
     }
 
+    // Outil d'un plugin : aperçu dessiné par le plugin
+    if (m_edit.tool == Tool::Plugin && m_edit.fx < 0) DrawPluginToolOverlay(left, top, z);
+
     // Taille du pinceau sous le curseur (cercle intérieur : partie pleine d'un pinceau doux)
     if ((m_edit.tool == Tool::Brush || m_edit.tool == Tool::Eraser) && m_mouseInside && !HitEdit(m_mouse) &&
         !m_edit.spacePan && m_edit.fx < 0 && m_edit.slider < 0) {
@@ -1463,6 +1489,7 @@ void Viewer::DrawOptionsBar(float cw, float y, float h) {
              D2D1::RectF(x, y, x + 220 * s, y + h), kGrey, 1);
         x += 230 * s;
     }
+    if (t == Tool::Plugin) x = DrawPluginToolParams(x, y, h);
     // Outils sans réglage : aide
     const char* hint = nullptr;
     switch (t) {
@@ -1473,7 +1500,7 @@ void Viewer::DrawOptionsBar(float cw, float y, float h) {
     case Tool::Crop: hint = "edit.hint.crop"; break;
     default: break;
     }
-    std::wstring hintText = hint ? T(hint) : L"";
+    std::wstring hintText = hint ? T(hint) : t == Tool::Plugin ? PluginToolHint() : L"";
     if (t == Tool::Select && m_edit.selValid) {
         wchar_t b[64];
         swprintf_s(b, L"%.0f × %.0f   ·   ", m_edit.sel.right - m_edit.sel.left, m_edit.sel.bottom - m_edit.sel.top);
@@ -1485,6 +1512,7 @@ void Viewer::DrawOptionsBar(float cw, float y, float h) {
 // Menus déroulants (Redimensionner, Effets, Mode de fusion), dessinés par-dessus tout
 void Viewer::DrawEditMenu(float cw, float ch) {
     if (m_edit.menu == EditMenu::None) return;
+    if (m_edit.menu == EditMenu::Effects) return DrawEffectsMenu(cw, ch);  // effets intégrés et des plugins
     const float s = m_scale, ih = 30 * s;
     const D2D1_RECT_F a = m_edit.menuAnchor;
     int n = 0;
@@ -1614,7 +1642,7 @@ void Viewer::DrawEditUi(float cw, float ch) {
             float w = tm.width + 20 * s;
             float l = std::clamp(hov->rc.left, 6 * s, cw - w - 6 * s);
             float top = hov->rc.bottom + 6 * s;
-            if (hov->rc.left < 60 * s && hov->cmd == EditCmd::Tool) {  // outils : à droite de la colonne
+            if (hov->rc.left < 60 * s && (hov->cmd == EditCmd::Tool || hov->cmd == EditCmd::PlugTool)) {  // outils : à droite de la colonne
                 l = hov->rc.right + 10 * s;
                 top = hov->rc.top + 6 * s;
             }
@@ -1685,11 +1713,13 @@ float Viewer::DrawRetouchTopButtons(float x, float by, float bs) {
 void Viewer::DrawRetouchSide(float cw, float ch) {
     const float s = m_scale, barH = 52 * s, optH = 40 * s;
     // --- Outils (colonne de gauche) ---
-    const int nt = int(ARRAYSIZE(kTools));
+    // (outils des plugins à la suite, après un séparateur)
+    const int nt = int(ARRAYSIZE(kTools)), np = PluginToolCount();
     const float tx = 10 * s;
     float ty = barH + optH + 10 * s;
-    const float tb = std::clamp((ch - ty - 80 * s) / nt, 26 * s, 40 * s);
-    D2D1_RECT_F panel = D2D1::RectF(tx - 4 * s, ty - 4 * s, tx + tb + 4 * s, ty + tb * nt + 4 * s);
+    const float sepH = np ? 9 * s : 0;
+    const float tb = std::clamp((ch - ty - 80 * s - sepH) / float(nt + np), 22 * s, 40 * s);
+    D2D1_RECT_F panel = D2D1::RectF(tx - 4 * s, ty - 4 * s, tx + tb + 4 * s, ty + tb * float(nt + np) + sepH + 4 * s);
     FillRound(panel, 8 * s, kPanel, 0.93f);
     for (int i = 0; i < nt; ++i) {
         const ToolDef& td = kTools[i];
@@ -1701,6 +1731,18 @@ void Viewer::DrawRetouchSide(float cw, float ch) {
         bool active = int(m_edit.tool) == td.tool;
         EditBtn(EditCmd::Tool, td.tool, r, T(td.tip), active);
         DrawToolIcon(Tool(td.tool), r, active ? kAccent : kWhite, 0.95f);
+        ty += tb;
+    }
+    if (np) {
+        ty += sepH;
+        SetColor(kAccent, 0.35f);
+        m_rt->FillRectangle(D2D1::RectF(tx + 4 * s, ty - sepH / 2 - 0.5f, tx + tb - 4 * s, ty - sepH / 2 + 0.5f), m_brush.Get());
+    }
+    for (int i = 0; i < np; ++i) {
+        const D2D1_RECT_F r = D2D1::RectF(tx, ty, tx + tb, ty + tb);
+        const bool active = m_edit.tool == Tool::Plugin && m_edit.ptool == i;
+        EditBtn(EditCmd::PlugTool, i, r, PluginToolName(i), active);
+        DrawPluginToolIcon(i, r, active ? kAccent : kWhite, 0.95f);
         ty += tb;
     }
 

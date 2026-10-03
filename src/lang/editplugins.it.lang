@@ -1,0 +1,82 @@
+# CyImgView — bundled editing plugins (fx_extra, annotate, bw_mode, share_actions) — Italiano
+@code = it
+@name = Italiano
+
+# fx_extra
+plugin.fx_extra.name = Effetti aggiuntivi
+plugin.fx_extra.category = Effetti aggiuntivi
+plugin.fx_extra.noise = Disturbo
+plugin.fx_extra.threshold = Soglia bianco e nero
+plugin.fx_extra.duotone = Bicromia
+plugin.fx_extra.aberration = Aberrazione cromatica
+plugin.fx_extra.amount = Quantità
+plugin.fx_extra.mono = Monocromatico
+plugin.fx_extra.level = Livello
+plugin.fx_extra.shadows = Ombre
+plugin.fx_extra.highlights = Luci
+plugin.fx_extra.contrast = Contrasto
+plugin.fx_extra.offset = Spostamento
+
+# annotate
+plugin.annotate.name = Annotazione
+plugin.annotate.badge = Contrassegno numerato
+plugin.annotate.badge_hint = Clic: contrassegno numerato (colore principale; clic destro: secondario). Il numero aumenta.
+plugin.annotate.size = Dimensione
+plugin.annotate.number = Numero
+plugin.annotate.highlighter = Evidenziatore
+plugin.annotate.highlighter_hint = Trascinare per evidenziare (moltiplica); Maiusc: linea retta.
+plugin.annotate.width = Spessore
+plugin.annotate.color = Colore
+plugin.annotate.opacity = Opacità
+plugin.annotate.redact = Sfocatura di oscuramento
+plugin.annotate.redact_hint = Tracciare un rettangolo per nascondere un'informazione (pixel, sfocatura o blocco nero).
+plugin.annotate.style = Stile
+plugin.annotate.style.choices = Pixel|Sfocatura|Blocco nero
+plugin.annotate.strength = Intensità
+plugin.annotate.bubble = Fumetto
+plugin.annotate.bubble_hint = Trascinare dalla punta alla posizione del fumetto (o fare clic), poi digitare il testo.
+plugin.annotate.text_size = Dimensione del testo
+plugin.annotate.shape = Forma
+plugin.annotate.shape.choices = Arrotondata|Rettangolo
+plugin.annotate.bubble_title = Testo del fumetto
+plugin.annotate.bubble_sample = Testo
+
+# bw_mode
+plugin.bw_mode.name = Bianco e nero
+plugin.bw_mode.mode = Bianco e nero
+plugin.bw_mode.hint = Conversione in bianco e nero: miscelatore colori, contrasto, viraggio e grana.
+plugin.bw_mode.presets = Predefiniti
+plugin.bw_mode.neutral = Neutro
+plugin.bw_mode.high_contrast = Contrasto elevato
+plugin.bw_mode.red_filter = Filtro rosso
+plugin.bw_mode.sepia = Seppia
+plugin.bw_mode.mixer = Miscelatore
+plugin.bw_mode.method = Metodo
+plugin.bw_mode.method.choices = Colori|Canali R G B
+plugin.bw_mode.red = Rosso
+plugin.bw_mode.orange = Arancione
+plugin.bw_mode.yellow = Giallo
+plugin.bw_mode.green = Verde
+plugin.bw_mode.cyan = Ciano
+plugin.bw_mode.blue = Blu
+plugin.bw_mode.magenta = Magenta
+plugin.bw_mode.chan_r = Canale rosso
+plugin.bw_mode.chan_g = Canale verde
+plugin.bw_mode.chan_b = Canale blu
+plugin.bw_mode.tone = Tono
+plugin.bw_mode.brightness = Luminosità
+plugin.bw_mode.contrast = Contrasto
+plugin.bw_mode.toning = Viraggio
+plugin.bw_mode.shadow_hue = Tinta delle ombre
+plugin.bw_mode.shadow_sat = Saturazione delle ombre
+plugin.bw_mode.high_hue = Tinta delle luci
+plugin.bw_mode.high_sat = Saturazione delle luci
+plugin.bw_mode.balance = Bilanciamento
+plugin.bw_mode.grain = Grana
+plugin.bw_mode.grain_amount = Quantità
+plugin.bw_mode.grain_size = Dimensione
+
+# share_actions
+plugin.share_actions.name = Condivisione
+plugin.share_actions.print = Stampa…
+plugin.share_actions.browser = Apri nel browser

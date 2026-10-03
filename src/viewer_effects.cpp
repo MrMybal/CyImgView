@@ -108,7 +108,9 @@ float Viewer::SliderT(int id) const {
     case kSlLayerOpacity: return m_edit.layers.empty() ? 1.0f : m_edit.layers[size_t(m_edit.layer)].opacity;
     default: break;
     }
+    if (id >= kSlPlugTool0) return PluginSliderT(true, id - kSlPlugTool0);
     const int k = id - kSlFx0;
+    if (m_edit.fx >= EffectCount()) return PluginSliderT(false, k);
     if (m_edit.fx < 0 || k < 0 || k >= kFx[m_edit.fx].count) return 0;
     const FxParam& p = kFx[m_edit.fx].p[k];
     const float t = (m_edit.fxVal[k] - p.min) / (p.max - p.min);
@@ -132,7 +134,9 @@ void Viewer::SetSliderT(int id, float t) {
         return;
     default: break;
     }
+    if (id >= kSlPlugTool0) return SetPluginSliderT(true, id - kSlPlugTool0, t);
     const int k = id - kSlFx0;
+    if (m_edit.fx >= EffectCount()) return SetPluginSliderT(false, k, t);
     if (m_edit.fx < 0 || k < 0 || k >= kFx[m_edit.fx].count) return;
     const FxParam& p = kFx[m_edit.fx].p[k];
     float v = p.min + (p.max - p.min) * (p.sq ? t * t : t);
@@ -150,7 +154,8 @@ void Viewer::OpenEffect(int fx) {
     if (m_edit.textActive) CommitText();
     if (m_edit.fx >= 0) CloseEffect(false);
     m_edit.menu = EditMenu::None;
-    if (fx < 0 || fx >= EffectCount() || m_edit.layers.empty()) return;
+    if (fx >= EffectCount()) return OpenPluginEffect(fx - EffectCount());  // effet d'un plugin
+    if (fx < 0 || m_edit.layers.empty()) return;
     m_edit.fx = fx;
     for (int k = 0; k < 3; ++k) m_edit.fxVal[k] = kFx[fx].p[k].def;
     // flou : rayon par défaut proportionnel à la définition (8 px est invisible sur 24 Mpx)
@@ -162,6 +167,7 @@ void Viewer::OpenEffect(int fx) {
 
 void Viewer::CloseEffect(bool apply) {
     if (m_edit.fx < 0) return;
+    if (m_edit.fx >= EffectCount()) return ClosePluginEffect(apply);
     if (apply) {
         if (m_edit.fxDirty || !m_edit.fxOut) UpdateFxPreview();
         if (m_edit.fxOut) PushLayerSwap(std::move(m_edit.fxOut));
@@ -339,6 +345,7 @@ ComPtr<ID2D1Image> Viewer::BuildEffect(ID2D1Image* input, std::vector<ComPtr<ID2
 
 // Aperçu : copie du calque, effet dessiné par-dessus dans la sélection (ou partout)
 void Viewer::UpdateFxPreview() {
+    if (m_edit.fx >= EffectCount()) return UpdatePluginFxPreview();
     m_edit.fxDirty = false;
     if (m_edit.fx < 0 || m_edit.layers.empty()) return;
     if (!m_edit.fxOut || m_edit.fxOut->GetPixelSize().width != m_edit.w || m_edit.fxOut->GetPixelSize().height != m_edit.h)
@@ -368,6 +375,7 @@ void Viewer::UpdateFxPreview() {
 // Panneau de réglages (à la place du panneau Calques)
 void Viewer::DrawEffectPanel(float cw, float ch) {
     if (m_edit.fx < 0) return;
+    if (m_edit.fx >= EffectCount()) return DrawPluginEffectPanel(cw, ch);
     const float s = m_scale, pad = 12 * s;
     const FxDef& d = kFx[m_edit.fx];
     const D2D1_RECT_F full = LayersPanelRect(cw, ch);

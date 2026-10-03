@@ -1,7 +1,7 @@
 #pragma once
 
 // Modes du mode édition (onglets de la barre du haut) : Retouche (calques et outils, viewer_edit.cpp),
-// Développement (réglages photo, viewer_develop.cpp), et d'autres plus tard (plugins).
+// Développement (réglages photo, viewer_develop.cpp), modes des plugins d'édition (viewer_editplugins.cpp).
 //
 // Le Viewer garde ce qui est commun : document (calques, historique), barre du haut (onglets,
 // Enregistrer sous, Terminer), zoom et déplacement de la vue, info-bulles. Tout le reste passe par le
@@ -19,6 +19,7 @@ public:
     EditMode& operator=(const EditMode&) = delete;
 
     virtual const char* NameKey() const = 0;   // clé de traduction du nom de l'onglet
+    virtual const wchar_t* Name() const;       // nom affiché, valable jusqu'à la fin (par défaut : T(NameKey()))
     virtual const wchar_t* Glyph() const = 0;  // icône (Segoe MDL2) de l'onglet
 
     // Cycle de vie

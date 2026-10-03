@@ -47,7 +47,10 @@ void Viewer::InitEditModes() {
     if (!m_modes.empty()) return;
     m_modes.push_back(std::make_shared<RetouchMode>(*this));
     m_modes.push_back(NewDevelopMode());
+    for (auto& m : NewPluginModes()) m_modes.push_back(std::move(m));  // onglets des plugins d'édition
 }
+
+const wchar_t* Viewer::EditMode::Name() const { return T(NameKey()); }
 
 Viewer::EditMode& Viewer::Mode() const { return *m_modes[size_t(std::clamp(m_mode, 0, int(m_modes.size()) - 1))]; }
 
@@ -115,14 +118,14 @@ void Viewer::DrawEditOverlay(float left, float top, float z) { Mode().DrawOverla
 float Viewer::DrawModeTabs(float x, float y, float h) {
     const float s = m_scale;
     for (int i = 0; i < int(m_modes.size()); ++i) {
-        const std::wstring label = T(m_modes[size_t(i)]->NameKey());
+        const std::wstring label = m_modes[size_t(i)]->Name();
         ComPtr<IDWriteTextLayout> lay;
         DWRITE_TEXT_METRICS tm{};
         if (SUCCEEDED(m_dwrite->CreateTextLayout(label.c_str(), UINT32(label.size()), m_tfLabel.Get(), 1000, 100, &lay)))
             lay->GetMetrics(&tm);
         const D2D1_RECT_F r = D2D1::RectF(x, y, x + tm.width + 52 * s, y + h);
         const bool active = i == m_mode;
-        const bool hov = EditBtn(EditCmd::ModeTab, i, r, T(m_modes[size_t(i)]->NameKey()), active);
+        const bool hov = EditBtn(EditCmd::ModeTab, i, r, m_modes[size_t(i)]->Name(), active);
         if (active) {
             SetColor(kAccent, 1);
             m_rt->FillRectangle(D2D1::RectF(r.left + 8 * s, r.bottom - 2.5f * s, r.right - 8 * s, r.bottom), m_brush.Get());

@@ -14,6 +14,7 @@ constexpr UINT_PTR kTimerUpdate = 2;         // recherche automatique, quelques 
 constexpr UINT_PTR kTimerSlide = 4;          // diaporama : image suivante
 constexpr UINT_PTR kTimerAnim = 3;           // image suivante d'une animation
 constexpr UINT kMsgOpenPath = WM_APP + 5;    // fichier transmis par une autre instance (lParam = std::wstring*)
+constexpr UINT kMsgPlugJob = WM_APP + 6;    // calcul d'un plugin d'édition terminé (editplug::DispatchJobs)
 constexpr ULONG_PTR kCopyDataOpen = 0x43594956;  // 'CYIV' : WM_COPYDATA « ouvre ce fichier »
 
 constexpr uint32_t kBg = 0x111214;

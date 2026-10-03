@@ -1657,7 +1657,7 @@ bool Viewer::DevelopMode::MouseDown(POINT p, bool right, bool dbl) {
     if (const EditButton* b = v.HitEdit(p)) {
         switch (b->cmd) {
         case EditCmd::ModeCtl: return Control(b->arg, p, right, dbl);
-        case EditCmd::Done: case EditCmd::SaveAs:
+        case EditCmd::Done: case EditCmd::SaveAs: case EditCmd::OpenWith:
             if (!right) v.EditCommand(b->cmd, 0);
             return true;
         default: return true;  // panneau
