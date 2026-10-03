@@ -3,6 +3,7 @@
 
 #include "viewer.h"
 #include "viewer_util.h"
+#include "i18n.h"
 
 #include <algorithm>
 #include <cmath>
@@ -18,7 +19,7 @@ double Ease(double t) { return t * t * (3 - 2 * t); }  // départ et arrivée en
 
 }  // namespace
 
-std::wstring Viewer::SlideDelayLabel() const { return std::to_wstring(m_slideDelay) + L" s"; }
+std::wstring Viewer::SlideDelayLabel() const { return Tf("slide.delay", m_slideDelay); }
 
 void Viewer::ChangeSlideDelay(int dir) {
     int i = 0;
@@ -27,14 +28,14 @@ void Viewer::ChangeSlideDelay(int dir) {
     m_slideDelay = kDelays[i];
     SaveSetting(L"slideshow", L"delay", m_slideDelay);
     if (m_slideshow && !m_slidePaused) SetTimer(m_hwnd, kTimerSlide, UINT(m_slideDelay * 1000), nullptr);
-    ShowToast(L"Diaporama : " + SlideDelayLabel() + L" par image");
+    ShowToast(Tf("slide.toast.delay", SlideDelayLabel().c_str()));
     Invalidate();
 }
 
 void Viewer::StartSlideshow() {
     if (m_slideshow) return;
     if (m_files.size() < 2) {
-        ShowToast(L"Il faut au moins deux images dans le dossier");
+        ShowToast(T("slide.err.two_images"));
         return;
     }
     if (m_edit.active && !EndEdit(true)) return;
@@ -50,7 +51,7 @@ void Viewer::StartSlideshow() {
     ApplyFit(false);
     RequestLoads();
     SetTimer(m_hwnd, kTimerSlide, UINT(m_slideDelay * 1000), nullptr);
-    ShowToast(L"Diaporama · " + SlideDelayLabel() + L" par image · Échap pour quitter");
+    ShowToast(Tf("slide.toast.start", SlideDelayLabel().c_str()));
     Invalidate();
 }
 
@@ -69,7 +70,7 @@ void Viewer::ToggleSlidePause() {
     m_slidePaused = !m_slidePaused;
     if (m_slidePaused) KillTimer(m_hwnd, kTimerSlide);
     else SetTimer(m_hwnd, kTimerSlide, UINT(m_slideDelay * 1000), nullptr);
-    ShowToast(m_slidePaused ? L"Diaporama en pause" : L"Lecture du diaporama");
+    ShowToast(T(m_slidePaused ? "slide.toast.paused" : "slide.toast.playing"));
     Invalidate();
 }
 
@@ -204,22 +205,22 @@ void Viewer::DrawSlideBar(float cw, float ch, float a) {
         Text(glyph, m_tfIcon.Get(), r, on ? kAccent : kWhite, 0.95f * a);
         x += bs + 2 * s;
     };
-    button(Btn::SlidePrev, L"", L"Précédente (←)");
-    button(Btn::SlidePlay, m_slidePaused ? L"" : L"", m_slidePaused ? L"Lecture (Espace)" : L"Pause (Espace)");
-    button(Btn::SlideNext, L"", L"Suivante (→)");
+    button(Btn::SlidePrev, L"", T("slide.tip.prev"));
+    button(Btn::SlidePlay, m_slidePaused ? L"" : L"", T(m_slidePaused ? "slide.tip.play" : "slide.tip.pause"));
+    button(Btn::SlideNext, L"", T("slide.tip.next"));
     x += 8 * s;
-    button(Btn::SlideLess, L"", L"Moins de temps par image (↓)");
+    button(Btn::SlideLess, L"", T("slide.tip.less"));
     Text(SlideDelayLabel(), m_tfLabel.Get(), D2D1::RectF(x - 2 * s, y, x + 48 * s, y + bs), kWhite, a);
     x += 48 * s;
-    button(Btn::SlideMore, L"", L"Plus de temps par image (↑)");
-    button(Btn::SlideShuffle, L"", L"Ordre aléatoire", m_slideShuffle);
+    button(Btn::SlideMore, L"", T("slide.tip.more"));
+    button(Btn::SlideShuffle, L"", T("slide.tip.shuffle"), m_slideShuffle);
     x += 8 * s;
     if (cur) {
         std::wstring pos = std::to_wstring(m_index + 1) + L" / " + std::to_wstring(m_files.size());
         Text(pos, m_tfSmall.Get(), D2D1::RectF(x, y, bar.right - bs - 20 * s, y + bs), kGrey, a);
     }
     x = bar.right - bs - 14 * s;
-    button(Btn::SlideExit, L"", L"Quitter le diaporama (Échap)");
+    button(Btn::SlideExit, L"", T("slide.tip.exit"));
 
     // Nom du fichier au-dessus de la barre
     if (cur) Text(cur->name, m_tfCenter.Get(), D2D1::RectF(0, bar.top - 30 * s, cw, bar.top - 6 * s), kWhite, 0.85f * a);

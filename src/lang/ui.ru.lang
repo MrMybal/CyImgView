@@ -1,0 +1,152 @@
+# CyImgView — ui (Русский)
+@code = ru
+@name = Русский
+
+# Контекстное меню (правый щелчок): текст\tсочетание клавиш
+menu.copy = Копировать изображение\tCtrl+C
+menu.copy_path = Копировать путь к файлу\tCtrl+Shift+C
+menu.open = Открыть…\tCtrl+O
+menu.save_as = Сохранить как…\tCtrl+S
+menu.edit = Изменить\tE
+menu.reveal = Показать в проводнике
+menu.channels = Отображаемый канал\tC
+menu.channel.rgb = RGB (все цвета)\tCtrl+2
+menu.channel.red = Красный\tCtrl+3
+menu.channel.green = Зелёный\tCtrl+4
+menu.channel.blue = Синий\tCtrl+5
+menu.channel.alpha = Альфа (прозрачность)\tCtrl+6
+menu.filter = Фильтрация
+menu.filter.raw = Без сглаживания\tN
+menu.play = Воспроизвести\tПробел
+menu.pause = Пауза\tПробел
+menu.rotate = Повернуть\tR
+menu.slideshow = Слайд-шоу\tD
+menu.slideshow_stop = Выйти из слайд-шоу\tEsc
+menu.fullscreen = Во весь экран\tF
+menu.info = Сведения\tI
+menu.settings = Параметры\tP
+
+# Буфер обмена
+clip.err.read = Не удалось прочитать изображение
+clip.loading = Изображение загружается…
+clip.none = Нет изображения для копирования
+clip.err.memory = Недостаточно памяти
+clip.busy = Буфер обмена занят, повторите попытку
+clip.copied = Изображение скопировано
+clip.failed = Не удалось скопировать
+clip.path_copied = Путь скопирован
+
+# Панель «Каналы»
+channels.title = Каналы
+channels.rgb = RGB
+channels.rgba = RGBA
+channels.letter.r = R
+channels.letter.g = G
+channels.letter.b = B
+channels.letter.a = A
+channels.desc.red = красный
+channels.desc.green = зелёный
+channels.desc.blue = синий
+channels.desc.alpha = альфа
+channels.row.rgb = RGB
+channels.row.red = Красный
+channels.row.green = Зелёный
+channels.row.blue = Синий
+channels.row.alpha = Альфа
+channels.hint = Флажки: сочетание каналов
+channels.no_alpha = У этого изображения нет прозрачности
+channels.toast.rgb = Каналы: RGB
+channels.toast.red = Красный канал
+channels.toast.green = Зелёный канал
+channels.toast.blue = Синий канал
+channels.toast.alpha = Альфа-канал
+channels.toast.mix = Каналы: %ls
+
+# Фильтрация изображения
+filter.auto = Автоматически
+filter.raw = Без сглаживания
+filter.linear = Линейная
+filter.cubic = Бикубическая
+filter.cubic_hq = Бикубическая HQ
+filter.anisotropic = Анизотропная
+filter.toast = Фильтрация: %ls
+
+# Слайд-шоу и воспроизведение анимации
+slide.delay = %d с
+slide.toast.delay = Слайд-шоу: %ls на изображение
+slide.toast.start = Слайд-шоу · %ls на изображение · Esc — выход
+slide.err.two_images = В папке должно быть не менее двух изображений
+slide.toast.paused = Слайд-шоу приостановлено
+slide.toast.playing = Слайд-шоу воспроизводится
+slide.tip.prev = Предыдущее (←)
+slide.tip.play = Воспроизвести (Пробел)
+slide.tip.pause = Пауза (Пробел)
+slide.tip.next = Следующее (→)
+slide.tip.less = Меньше времени на изображение (↓)
+slide.tip.more = Больше времени на изображение (↑)
+slide.tip.shuffle = Случайный порядок
+slide.tip.exit = Выйти из слайд-шоу (Esc)
+slide.anim.frame = Кадр %d / %d
+slide.anim.play = Воспроизведение
+slide.anim.pause = Пауза
+
+# Режим правки: инструменты
+edit.tool.hand = Перемещение вида (M или удерживать Пробел)
+edit.tool.brush = Кисть (B) — правый щелчок: 2-й цвет
+edit.tool.eraser = Ластик (G)
+edit.tool.line = Линия (L) — Shift: углы 45°
+edit.tool.arrow = Стрелка (A)
+edit.tool.rect = Прямоугольник (R) — Shift: квадрат
+edit.tool.ellipse = Эллипс (O) — Shift: круг
+edit.tool.text = Текст (T)
+edit.tool.fill = Заливка (F)
+edit.tool.picker = Пипетка (K)
+edit.tool.crop = Обрезка (C) — Enter: применить
+
+# Режим правки: верхняя панель, цвета, меню «Изменить размер»
+edit.title = Правка
+edit.modified = изменено
+edit.btn.done = Готово
+edit.tip.done = Выйти из режима правки (E / Esc)
+edit.btn.save_as = Сохранить как
+edit.btn.save_as_dirty = Сохранить как •
+edit.tip.save_as = Сохранить как… (Ctrl+S)
+edit.tip.flip_v = Отразить по вертикали
+edit.tip.flip_h = Отразить по горизонтали
+edit.tip.rot_right = Повернуть вправо
+edit.tip.rot_left = Повернуть влево
+edit.tip.resize = Изменить размер
+edit.tip.fill_on = Залитые фигуры (щелчок: контур)
+edit.tip.fill_off = Контурные фигуры (щелчок: заливка)
+edit.tip.font_size = Размер текста ( [ и ] )
+edit.tip.thickness = Толщина ( [ и ] )
+edit.label.font = Шрифт
+edit.label.size = Размер
+edit.tip.undo = Отменить (Ctrl+Z)
+edit.tip.redo = Повторить (Ctrl+Y)
+edit.tip.swap_colors = Поменять основной и фоновый цвета
+edit.tip.palette = Щелчок: основной цвет — правый щелчок: фоновый
+edit.tip.custom_color = Другие цвета…
+edit.resize.percent = %d %%
+edit.resize.long_side = Длинная сторона %d px
+edit.crop.apply = Обрезать
+edit.tip.crop_apply = Применить обрезку (Enter)
+edit.tip.crop_cancel = Отмена (Esc)
+
+# Режим правки: сообщения
+edit.loading = Изображение загружается…
+edit.no_image = Нет изображения для правки
+edit.err.read = Не удалось прочитать изображение
+edit.err.memory = Недостаточно памяти
+edit.err.vram = Недостаточно видеопамяти
+edit.err.too_big = Изображение слишком велико для правки
+edit.ask.title = Сохранить изменения?
+edit.ask.content = Изображение изменено. Если не сохранить его, изменения будут потеряны.
+edit.ask.save = Сохранить как…
+edit.ask.discard = Не сохранять
+
+# Сохранить как
+edit.save.no_image = Нет изображения для сохранения
+edit.save.no_encoder = Нет доступных кодировщиков изображений.
+edit.save.failed = Не удалось сохранить:\n%ls
+edit.save.done = Сохранено: %ls

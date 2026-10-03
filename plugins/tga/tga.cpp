@@ -6,6 +6,7 @@
 // (comme le prévoit le champ « attributs » du pied TGA 2.0 quand il est présent).
 
 #include "cyimg_plugin.h"
+#include "cyimg_plugin_i18n.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -16,6 +17,7 @@
 #include <windows.h>
 
 #include <cstring>
+#include <string>
 #include <vector>
 
 namespace {
@@ -62,8 +64,9 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         if (CYIMG_HOST_HAS(host, set_error)) host->set_error(ctx, msg);
         return CYIMG_E_FAIL;
     };
+    cyimg_tr_begin(host, ctx);
     std::vector<uint8_t> f;
-    if (!ReadAll(path, f)) return fail(L"Lecture du fichier TGA impossible");
+    if (!ReadAll(path, f)) return fail(CYIMG_TR("plugin.tga.err.read", L"Lecture du fichier TGA impossible"));
     const uint8_t* h = f.data();
     const uint8_t idLen = h[0], cmapType = h[1], type = h[2];
     const uint16_t cmapFirst = U16(h + 3), cmapLen = U16(h + 5);
@@ -72,44 +75,44 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     const uint8_t depth = h[16], desc = h[17];
     const bool rle = type >= 9 && type <= 11;
     const int base = rle ? type - 8 : type;  // 1 palette, 2 couleurs, 3 gris
-    if (base < 1 || base > 3 || !W || !H || cmapType > 1) return fail(L"Fichier TGA non reconnu");
+    if (base < 1 || base > 3 || !W || !H || cmapType > 1) return fail(CYIMG_TR("plugin.tga.err.unknown", L"Fichier TGA non reconnu"));
     const bool gray = base == 3;
     if ((base == 1 && (depth != 8 && depth != 16)) || (base == 2 && depth != 15 && depth != 16 && depth != 24 && depth != 32) ||
         (base == 3 && depth != 8 && depth != 16))
-        return fail(L"Profondeur de couleur TGA non gérée");
+        return fail(CYIMG_TR("plugin.tga.err.depth", L"Profondeur de couleur TGA non gérée"));
 
     size_t pos = 18 + size_t(idLen);
     // Palette
     std::vector<uint8_t> palette;  // BGRA par entrée
     if (cmapType == 1) {
         const int eb = (cmapBits + 7) / 8;
-        if (eb < 2 || eb > 4 || pos + size_t(cmapLen) * eb > f.size()) return fail(L"Palette TGA invalide");
+        if (eb < 2 || eb > 4 || pos + size_t(cmapLen) * eb > f.size()) return fail(CYIMG_TR("plugin.tga.err.palette", L"Palette TGA invalide"));
         palette.resize(size_t(cmapFirst + cmapLen) * 4, 0);
         for (uint32_t i = 0; i < cmapLen; ++i) ToBgra(&f[pos + size_t(i) * eb], eb, false, &palette[size_t(cmapFirst + i) * 4]);
         pos += size_t(cmapLen) * eb;
     }
-    if (base == 1 && palette.empty()) return fail(L"Palette TGA absente");
+    if (base == 1 && palette.empty()) return fail(CYIMG_TR("plugin.tga.err.no_palette", L"Palette TGA absente"));
 
     // Pixels (décompression RLE éventuelle) dans l'ordre du fichier
     const int bpp = (depth + 7) / 8;
     const size_t count = size_t(W) * H;
     std::vector<uint8_t> raw(count * size_t(bpp));
     if (!rle) {
-        if (pos + raw.size() > f.size()) return fail(L"Fichier TGA tronqué");
+        if (pos + raw.size() > f.size()) return fail(CYIMG_TR("plugin.tga.err.truncated", L"Fichier TGA tronqué"));
         memcpy(raw.data(), &f[pos], raw.size());
     } else {
         size_t px = 0;
         while (px < count) {
-            if (pos >= f.size()) return fail(L"Fichier TGA tronqué");
+            if (pos >= f.size()) return fail(CYIMG_TR("plugin.tga.err.truncated", L"Fichier TGA tronqué"));
             const uint8_t c = f[pos++];
             const size_t n = size_t(c & 0x7F) + 1;
-            if (px + n > count) return fail(L"Données RLE TGA invalides");
+            if (px + n > count) return fail(CYIMG_TR("plugin.tga.err.rle", L"Données RLE TGA invalides"));
             if (c & 0x80) {  // paquet répété
-                if (pos + size_t(bpp) > f.size()) return fail(L"Fichier TGA tronqué");
+                if (pos + size_t(bpp) > f.size()) return fail(CYIMG_TR("plugin.tga.err.truncated", L"Fichier TGA tronqué"));
                 for (size_t i = 0; i < n; ++i) memcpy(&raw[(px + i) * size_t(bpp)], &f[pos], size_t(bpp));
                 pos += size_t(bpp);
             } else {         // paquet brut
-                if (pos + n * size_t(bpp) > f.size()) return fail(L"Fichier TGA tronqué");
+                if (pos + n * size_t(bpp) > f.size()) return fail(CYIMG_TR("plugin.tga.err.truncated", L"Fichier TGA tronqué"));
                 memcpy(&raw[px * size_t(bpp)], &f[pos], n * size_t(bpp));
                 pos += n * size_t(bpp);
             }
@@ -169,9 +172,12 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         }
     }
     wchar_t fmt[64];
-    swprintf_s(fmt, L"TGA %u bits%ls%ls", unsigned(depth), rle ? L", RLE" : L"", base == 1 ? L", palette" : L"");
+    const std::wstring pal = std::wstring(L", ") + CYIMG_TR("plugin.tga.palette", L"palette");
+    swprintf_s(fmt, CYIMG_TR("plugin.tga.format", L"TGA %u bits%ls%ls"), unsigned(depth), rle ? L", RLE" : L"",
+               base == 1 ? pal.c_str() : L"");
     host->set_format(ctx, fmt);
-    if (forceOpaque) host->set_info(ctx, L"Alpha", L"ignoré (canal vide)");
+    if (forceOpaque)
+        host->set_info(ctx, CYIMG_TR("plugin.tga.info.alpha", L"Alpha"), CYIMG_TR("plugin.tga.alpha.ignored", L"ignoré (canal vide)"));
     return CYIMG_OK;
 }
 

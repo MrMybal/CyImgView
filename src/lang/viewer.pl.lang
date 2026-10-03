@@ -1,0 +1,130 @@
+# CyImgView — viewer (Polski)
+@code = pl
+@name = Polski
+
+# Liczby i jednostki
+viewer.decimal = ,
+viewer.unit.bytes = %llu B
+viewer.unit.kb = %.1f KB
+viewer.unit.mb = %.1f MB
+viewer.unit.gb = %.2f GB
+viewer.zoom.pct1 = %.1f%%
+viewer.zoom.pct0 = %.0f%%
+
+# Błędy, komunikaty na środku, powiadomienia
+viewer.err.direct2d = Direct2D jest niedostępny.
+viewer.msg.open_failed = Nie można otworzyć tego pliku
+viewer.msg.drop = Upuść obraz tutaj
+viewer.msg.drop_sub = lub naciśnij Ctrl+O, aby otworzyć plik
+viewer.toast.device_lost = Zresetowano sterownik grafiki: zmiany utracone
+viewer.toast.fit = Dopasowano
+viewer.toast.not_found = Nie znaleziono pliku
+viewer.toast.no_images = Brak obrazów w tym folderze
+viewer.toast.first = Pierwszy obraz
+viewer.toast.last = Ostatni obraz
+viewer.toast.shuffle_on = Kolejność losowa
+viewer.toast.shuffle_off = Kolejność folderu
+
+# Okno dialogowe „Otwórz”
+viewer.dlg.images = Obrazy
+viewer.dlg.all_files = Wszystkie pliki
+viewer.dlg.open_title = Otwórz obraz
+
+# Etykietki paska narzędzi
+viewer.btn.open = Otwórz (Ctrl+O)
+viewer.btn.save_as = Zapisz jako / konwertuj (Ctrl+S)
+viewer.btn.edit = Edytuj (E)
+viewer.btn.zoom_out = Pomniejsz (-)
+viewer.btn.zoom_in = Powiększ (+)
+viewer.btn.fit = Dopasuj do okna (0)
+viewer.btn.actual = Rzeczywisty rozmiar (1)
+viewer.btn.rotate = Obróć (R)
+viewer.btn.channels = Kanały: pokaż lub połącz kanały (C)
+viewer.btn.strip = Pasek miniatur (T)
+viewer.btn.info = Informacje (I)
+viewer.btn.help = Skróty klawiszowe (H)
+viewer.btn.slideshow = Pokaz slajdów na pełnym ekranie (D)
+viewer.btn.settings = Ustawienia (P)
+viewer.btn.fullscreen = Pełny ekran (F)
+viewer.btn.update = Dostępna nowa wersja (Ctrl+U)
+viewer.update.badge = Aktualizacja %ls
+
+# Wiersz stanu
+viewer.status.raw = wywoływanie RAW…
+viewer.status.frame = klatka %d/%d
+viewer.status.paused = (wstrzymano)
+viewer.status.channels = kanały %ls
+
+# Panel Informacje
+viewer.info.title = Informacje
+viewer.info.file = Plik
+viewer.info.folder = Folder
+viewer.info.size = Rozmiar
+viewer.info.modified = Zmodyfikowano
+viewer.info.dimensions = Wymiary
+viewer.info.dims = %d × %d  (%.1f Mpx)
+viewer.info.format = Format
+viewer.info.decode = Dekodowanie
+
+# Panel Skróty klawiszowe (k = klawisz, d = opis)
+viewer.help.title = Skróty klawiszowe
+viewer.help.plugins = Załadowane wtyczki (%d)
+viewer.help.no_plugins = Brak (folder „plugins” jest pusty)
+viewer.help.k.nav = ← → / Spacja / Backspace
+viewer.help.d.nav = Poprzedni / następny obraz
+viewer.help.d.filter = Surowe piksele / filtrowanie (wybór filtru w Ustawieniach)
+viewer.help.d.slideshow = Pokaz slajdów na pełnym ekranie (↑ ↓: czas na obraz, Spacja: pauza)
+viewer.help.k.copy = Ctrl+C / prawy przycisk
+viewer.help.d.copy = Kopiuj obraz (Ctrl+Shift+C: ścieżkę)
+viewer.help.k.channels = Przycisk RGB / C / Ctrl+2…6
+viewer.help.d.channels = Kanały: pojedynczy kanał (czerwony, zielony, niebieski, alfa)
+viewer.help.k.anim = Spacja / , / .
+viewer.help.d.anim = Animacja: odtwórz-pauza / poprzednia-następna klatka
+viewer.help.k.home_end = Home / End
+viewer.help.d.home_end = Pierwszy / ostatni obraz
+viewer.help.k.zoom = Kółko myszy / + / -
+viewer.help.d.zoom = Powiększenie (względem kursora myszy)
+viewer.help.k.drag = Przeciąganie
+viewer.help.d.drag = Przesuwanie powiększonego obrazu
+viewer.help.k.dblclick = Dwukrotne kliknięcie / Z
+viewer.help.d.dblclick = Przełącz dopasowanie ↔ rzeczywisty rozmiar
+viewer.help.d.fit = Dopasuj do okna / 100%
+viewer.help.k.rotate = R / Shift+R
+viewer.help.d.rotate = Obróć w prawo / w lewo
+viewer.help.k.fullscreen = F / F11 / Enter
+viewer.help.d.fullscreen = Pełny ekran
+viewer.help.d.strip = Pokaż / ukryj pasek miniatur
+viewer.help.d.info = Panel informacji
+viewer.help.d.open = Otwórz plik (lub przeciągnij i upuść)
+viewer.help.d.save_as = Zapisz jako / konwertuj format
+viewer.help.d.update = Sprawdź aktualizacje
+viewer.help.d.settings = Ustawienia (jedno okno, pasek miniatur, aktualizacje)
+viewer.help.d.edit = Tryb edycji (pędzel, kształty, tekst, kadrowanie…)
+viewer.help.d.reload = Wczytaj folder ponownie
+viewer.help.k.mouse_side = Boczne przyciski myszy
+viewer.help.d.mouse_side = Poprzedni / następny obraz
+viewer.help.k.esc = Esc
+viewer.help.d.esc = Zamknij panel / zakończ
+
+# Panel Ustawienia (klucze settings.language* znajdują się w core.*.lang)
+settings.title = Ustawienia
+settings.single_window = Otwieraj pliki w istniejącym oknie
+settings.single_window.desc = W przeciwnym razie każdy otwarty plik tworzy nowe okno.
+settings.strip = Pokaż pasek miniatur
+settings.strip.desc = Miniatury obrazów z folderu u dołu ekranu (klawisz T).
+settings.auto_update = Automatycznie sprawdzaj aktualizacje
+settings.auto_update.desc = Najwyżej raz dziennie, z wydań CyImgView na GitHubie.
+settings.shuffle = Pokaz slajdów: kolejność losowa
+settings.shuffle.desc = W przeciwnym razie obrazy są wyświetlane w kolejności folderu (klawisz D).
+settings.filter = Filtrowanie obrazu
+settings.filter.desc.auto = Ostry przy 100%, wygładzony przy pomniejszeniu, wyraźne piksele powyżej 300%.
+settings.filter.desc.raw = Bez wygładzania: pixel art, inspekcja (klawisz N).
+settings.filter.desc.linear = Proste, szybkie wygładzanie.
+settings.filter.desc.cubic = Dwusześcienne: ostrzejsze niż liniowe.
+settings.filter.desc.cubic_hq = Najlepsze pomniejszanie, nieco wolniejsze.
+settings.filter.desc.anisotropic = Łagodne pomniejszanie, mniej aliasingu.
+settings.slide_delay = Pokaz slajdów: czas na obraz
+settings.slide_delay.desc = Można go też zmieniać podczas pokazu klawiszami ↑ i ↓.
+settings.update.install = Zainstaluj aktualizację %ls
+settings.update.check = Sprawdź aktualizacje
+settings.ini_path = ustawienia: %ls

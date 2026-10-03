@@ -1,5 +1,7 @@
 #include "save.h"
 
+#include "i18n.h"
+
 #include <shobjidl.h>
 #include <wincodec.h>
 
@@ -110,7 +112,7 @@ bool ShowSaveDialog(HWND owner, const std::vector<SaveFormat>& formats, const st
     // garde l'extension d'origine (.jpg plutôt que .jpeg) si elle appartient au format proposé
     dlg->SetDefaultExtension(HasExt(formats[def], preferredExt) ? preferredExt.c_str() : formats[def].exts[0].c_str());
     dlg->SetFileName(baseName.c_str());
-    dlg->SetTitle(L"Enregistrer l'image sous");
+    dlg->SetTitle(T("save.title"));
     if (!folder.empty()) {
         ComPtr<IShellItem> fi;
         if (SUCCEEDED(SHCreateItemFromParsingName((folder + L"\\").c_str(), nullptr, IID_PPV_ARGS(&fi))))
@@ -125,12 +127,11 @@ bool ShowSaveDialog(HWND owner, const std::vector<SaveFormat>& formats, const st
     static const int qualities[] = {100, 95, 92, 90, 85, 80, 75, 70, 60, 50};
     ComPtr<IFileDialogCustomize> cust;
     if (SUCCEEDED(dlg.As(&cust))) {
-        cust->StartVisualGroup(kGroup, L"Qualité (JPEG, HEIF, WebP) :");
+        cust->StartVisualGroup(kGroup, T("save.quality"));
         cust->AddComboBox(kCombo);
         for (int i = 0; i < int(ARRAYSIZE(qualities)); ++i) {
-            wchar_t b[32];
-            swprintf_s(b, qualities[i] == 92 ? L"%d %% (recommandé)" : L"%d %%", qualities[i]);
-            cust->AddControlItem(kCombo, DWORD(i), b);
+            const std::wstring b = Tf(qualities[i] == 92 ? "save.quality.recommended" : "save.quality.item", qualities[i]);
+            cust->AddControlItem(kCombo, DWORD(i), b.c_str());
         }
         cust->SetSelectedControlItem(kCombo, 2);
         cust->EndVisualGroup();
@@ -162,7 +163,7 @@ bool SaveImage(const SaveRequest& req, const SaveFormat& fmt, const uint8_t* pix
                uint32_t stride, bool hasAlpha, std::wstring& error) {
     ComPtr<IWICImagingFactory> f;
     if (FAILED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&f)))) {
-        error = L"WIC indisponible";
+        error = T("save.err.no_wic");
         return false;
     }
     const bool keepAlpha = hasAlpha && fmt.alpha;
@@ -191,7 +192,7 @@ bool SaveImage(const SaveRequest& req, const SaveFormat& fmt, const uint8_t* pix
     ComPtr<IWICBitmap> bmp;
     if (FAILED(f->CreateBitmapFromMemory(width, height, GUID_WICPixelFormat32bppPBGRA, srcStride, srcStride * height,
                                          const_cast<BYTE*>(src), &bmp))) {
-        error = L"Mémoire insuffisante";
+        error = T("save.err.memory");
         return false;
     }
 
@@ -204,11 +205,11 @@ bool SaveImage(const SaveRequest& req, const SaveFormat& fmt, const uint8_t* pix
         ComPtr<IWICBitmapFrameEncode> frame;
         ComPtr<IPropertyBag2> props;
         if (FAILED(f->CreateEncoder(fmt.container, nullptr, &enc))) {
-            error = L"Encodeur « " + fmt.name + L" » indisponible";
+            error = Tf("save.err.no_encoder", fmt.name.c_str());
             return false;
         }
         if (FAILED(f->CreateStream(&stream)) || FAILED(stream->InitializeFromFilename(tmp.c_str(), GENERIC_WRITE))) {
-            error = L"Impossible d'écrire dans ce dossier";
+            error = T("save.err.cannot_write");
             return false;
         }
         HRESULT hr = enc->Initialize(stream.Get(), WICBitmapEncoderNoCache);
@@ -248,10 +249,10 @@ bool SaveImage(const SaveRequest& req, const SaveFormat& fmt, const uint8_t* pix
         if (SUCCEEDED(hr)) hr = frame->Commit();
         if (SUCCEEDED(hr)) hr = enc->Commit();
         ok = SUCCEEDED(hr);
-        if (!ok) error = L"Erreur pendant l'encodage";
+        if (!ok) error = T("save.err.encoding");
     }
     if (ok && !MoveFileExW(tmp.c_str(), req.path.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
-        error = L"Impossible de remplacer le fichier (est-il ouvert ailleurs ?)";
+        error = T("save.err.replace");
         ok = false;
     }
     if (!ok) DeleteFileW(tmp.c_str());

@@ -1,0 +1,10 @@
+# CyImgView — gpu (한국어)
+@code = ko
+@name = 한국어
+plugin.gpu.err.no_compiler = d3dcompiler_47.dll을 찾을 수 없음
+plugin.gpu.err.no_warp = Direct3D 11(WARP)을 사용할 수 없음
+plugin.gpu.err.shader = 디코딩 셰이더를 컴파일할 수 없음
+plugin.gpu.err.invalid = 크기 또는 GPU 형식이 잘못됨
+plugin.gpu.err.short_mip = 밉 데이터가 너무 짧음
+plugin.gpu.err.textures = Direct3D 텍스처를 만들 수 없음(메모리 부족?)
+plugin.gpu.err.readback = 결과를 읽을 수 없음

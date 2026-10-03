@@ -1,4 +1,5 @@
 #include "decoder.h"
+#include "i18n.h"
 
 #include <wincodec.h>
 
@@ -26,7 +27,7 @@ bool ReadWholeFile(const std::wstring& path, FileData& out, std::wstring& error)
     HANDLE h = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                            nullptr, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
     if (h == INVALID_HANDLE_VALUE) {
-        error = L"Fichier inaccessible";
+        error = T("decoder.err.file_access");
         return false;
     }
     LARGE_INTEGER sz{};
@@ -44,7 +45,7 @@ bool ReadWholeFile(const std::wstring& path, FileData& out, std::wstring& error)
         }
     }
     CloseHandle(h);
-    if (!ok) error = L"Lecture du fichier impossible";
+    if (!ok) error = T("decoder.err.read");
     return ok;
 }
 
@@ -60,7 +61,7 @@ std::wstring ContainerName(const GUID& g) {
     if (g == GUID_ContainerFormatHeif) return L"HEIF";
     if (g == GUID_ContainerFormatWebp) return L"WebP";
     if (g == GUID_ContainerFormatRaw) return L"RAW";
-    return L"Image";
+    return T("decoder.format.image");
 }
 
 bool PixelFormatHasAlpha(IWICImagingFactory* f, REFWICPixelFormatGUID pf) {
@@ -143,12 +144,12 @@ void ReadPhotoMetadata(IWICMetadataQueryReader* qr, DecodedImage& out) {
         // Beaucoup de modèles répètent déjà la marque ("Canon EOS 5D").
         std::wstring full = (!make.empty() && ToLower(model).find(ToLower(make.substr(0, make.find(L' ')))) == std::wstring::npos)
                                 ? make + L" " + model : model;
-        out.info.emplace_back(L"Appareil", full);
+        out.info.emplace_back(T("decoder.info.camera"), full);
     }
     if (get(L"System.Photo.LensModel", pv)) {
         std::wstring lens = PropString(pv);
         Trim(lens);
-        if (!lens.empty()) out.info.emplace_back(L"Objectif", lens);
+        if (!lens.empty()) out.info.emplace_back(T("decoder.info.lens"), lens);
         PropVariantClear(&pv);
     }
     double v;
@@ -157,14 +158,14 @@ void ReadPhotoMetadata(IWICMetadataQueryReader* qr, DecodedImage& out) {
         if (Rational(pv, v, n, d) && v > 0) {
             if (v < 0.5) swprintf_s(buf, L"1/%.0f s", 1.0 / v);
             else swprintf_s(buf, L"%.1f s", v);
-            out.info.emplace_back(L"Exposition", buf);
+            out.info.emplace_back(T("decoder.info.exposure"), buf);
         }
         PropVariantClear(&pv);
     }
     if (get(L"System.Photo.FNumber", pv)) {
         if (Rational(pv, v, n, d) && v > 0) {
             swprintf_s(buf, L"f/%.1f", v);
-            out.info.emplace_back(L"Ouverture", buf);
+            out.info.emplace_back(T("decoder.info.aperture"), buf);
         }
         PropVariantClear(&pv);
     }
@@ -176,7 +177,7 @@ void ReadPhotoMetadata(IWICMetadataQueryReader* qr, DecodedImage& out) {
     if (get(L"System.Photo.FocalLength", pv)) {
         if (Rational(pv, v, n, d) && v > 0) {
             swprintf_s(buf, L"%.0f mm", v);
-            out.info.emplace_back(L"Focale", buf);
+            out.info.emplace_back(T("decoder.info.focal"), buf);
         }
         PropVariantClear(&pv);
     }
@@ -193,7 +194,7 @@ void ReadPhotoMetadata(IWICMetadataQueryReader* qr, DecodedImage& out) {
         } else {
             s = FormatExifDate(PropString(pv));
         }
-        if (!s.empty()) out.info.emplace_back(L"Date de prise", s);
+        if (!s.empty()) out.info.emplace_back(T("decoder.info.date_taken"), s);
         PropVariantClear(&pv);
     }
 }
@@ -231,12 +232,12 @@ bool DecodeWicDecoder(IWICImagingFactory* f, IWICBitmapDecoder* dec, uint32_t ma
 
     ComPtr<IWICBitmapFrameDecode> frame;
     if (FAILED(dec->GetFrame(0, &frame))) {
-        error = L"Image illisible";
+        error = T("decoder.err.unreadable");
         return false;
     }
     UINT w = 0, h = 0;
     if (FAILED(frame->GetSize(&w, &h)) || !w || !h) {
-        error = L"Dimensions invalides";
+        error = T("decoder.err.dimensions");
         return false;
     }
     out.fullWidth = w;
@@ -309,7 +310,7 @@ bool DecodeWicDecoder(IWICImagingFactory* f, IWICBitmapDecoder* dec, uint32_t ma
     if (FAILED(f->CreateFormatConverter(&cv)) ||
         FAILED(cv->Initialize(src.Get(), GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, nullptr, 0,
                               WICBitmapPaletteTypeMedianCut))) {
-        error = L"Conversion de format impossible";
+        error = T("decoder.err.conversion");
         return false;
     }
     UINT ow = 0, oh = 0;
@@ -317,12 +318,12 @@ bool DecodeWicDecoder(IWICImagingFactory* f, IWICBitmapDecoder* dec, uint32_t ma
     size_t stride = size_t(ow) * 4;
     size_t bytes = stride * oh;
     if (bytes > 0xFFFFFFFFull || !out.pixels.Alloc(bytes)) {
-        error = L"Mémoire insuffisante";
+        error = T("decoder.err.memory");
         return false;
     }
     if (FAILED(cv->CopyPixels(nullptr, UINT(stride), UINT(bytes), out.pixels.Data()))) {
         out.pixels.Free();
-        error = L"Erreur de décodage";
+        error = T("decoder.err.decode");
         return false;
     }
     out.width = ow;
@@ -391,7 +392,7 @@ bool DecodeGifAnimation(IWICImagingFactory* f, IWICBitmapDecoder* dec, UINT coun
         uint8_t* dst;
         if (i == 0) {
             if (!out.pixels.Alloc(bytes)) {
-                error = L"Mémoire insuffisante";
+                error = T("decoder.err.memory");
                 return false;
             }
             dst = out.pixels.Data();
@@ -417,7 +418,7 @@ bool DecodeGifAnimation(IWICImagingFactory* f, IWICBitmapDecoder* dec, UINT coun
     out.height = out.fullHeight = H;
     out.stride = uint32_t(stride);
     out.hasAlpha = true;
-    out.format = L"GIF animé";
+    out.format = T("decoder.format.animated_gif");
     if (out.frames.empty()) out.delays.clear();
     return true;
 }
@@ -430,7 +431,7 @@ bool DecodeWicMemory(IWICImagingFactory* f, const void* data, size_t size, uint3
     if (FAILED(f->CreateStream(&stream)) ||
         FAILED(stream->InitializeFromMemory(static_cast<BYTE*>(const_cast<void*>(data)), DWORD(size))) ||
         FAILED(f->CreateDecoderFromStream(stream.Get(), nullptr, WICDecodeMetadataCacheOnDemand, &dec))) {
-        error = L"Format non reconnu";
+        error = T("decoder.err.unknown_format");
         return false;
     }
     return DecodeWicDecoder(f, dec.Get(), maxSize, out, error);
@@ -508,6 +509,10 @@ void HostSetInfo(CyImgContext* c, const wchar_t* k, const wchar_t* v) {
 
 uint32_t HostQuality(CyImgContext* c) { return c->quality; }
 void HostSetRefinable(CyImgContext* c) { c->refinable = true; }
+const wchar_t* HostTranslate(CyImgContext*, const char* key, const wchar_t* fallback) {
+    return key ? TrOr(key, fallback) : fallback;
+}
+
 void HostSetError(CyImgContext* c, const wchar_t* m) {
     if (m) c->error = m;
 }
@@ -535,7 +540,7 @@ void HostSetFrameDelay(CyImgContext* c, uint32_t index, uint32_t ms) {
 const CyImgHost g_host = {
     CYIMG_API_VERSION, sizeof(CyImgHost), HostTargetSize,     HostIsCancelled, HostAllocBgra,    HostDecodeEncoded,
     HostSetOrientation, HostSetFormat,   HostSetInfo,         HostQuality,     HostSetRefinable, HostSetError,
-    HostAddFrame,       HostSetFrameDelay,
+    HostAddFrame,       HostSetFrameDelay, HostTranslate,
 };
 
 // Vignette demandée mais le plugin a rendu une grande image : on la réduit (le cache de vignettes
@@ -565,7 +570,9 @@ void ShrinkForThumbnail(IWICImagingFactory* f, DecodedImage& img, uint32_t maxSi
 // ---------------------------------------------------------------------------------------------
 
 Decoder::~Decoder() {
-    for (auto& p : m_plugins) FreeLibrary(p.module);
+    // Les plugins ne sont pas déchargés : le processus se termine juste après, et un plugin peut avoir
+    // laissé des threads en attente (pool OpenMP de LibRaw, thread pools des décodeurs) qui
+    // planteraient si leur code disparaissait sous eux.
 }
 
 void Decoder::ReleaseThreadResources() { t_wic.Reset(); }
@@ -633,18 +640,16 @@ void Decoder::Init(const std::wstring& exeDir) {
 
 bool Decoder::IsSupportedExt(const std::wstring& extLower) const { return m_allExts.count(extLower) != 0; }
 
+namespace {
+int GuardedAccept(CyImgAcceptFn fn, const wchar_t* path);  // plus bas
+}  // namespace
+
 bool Decoder::AcceptsFile(const std::wstring& path) const {
     const std::wstring ext = ExtensionOf(path);
     if (!IsSupportedExt(ext)) return false;
     for (auto& p : m_plugins) {  // filtre éventuel du plugin propriétaire de l'extension
         if (!p.accept || std::find(p.exts.begin(), p.exts.end(), ext) == p.exts.end()) continue;
-        int ok = 0;
-        try {
-            ok = p.accept(path.c_str());
-        } catch (...) {
-            ok = 0;
-        }
-        return ok != 0;
+        return GuardedAccept(p.accept, path.c_str()) != 0;
     }
     return true;
 }
@@ -660,6 +665,61 @@ std::wstring Decoder::DialogPattern() const {
     return s;
 }
 
+namespace {
+
+// Filet de sécurité : une erreur d'accès mémoire dans un plugin (fichier corrompu, bug d'une
+// bibliothèque tierce) fait échouer ce fichier au lieu de fermer la visionneuse. Pas d'objet C++
+// à détruire dans cette fonction (contrainte de __try).
+constexpr int kPluginCrashed = -1000;
+
+int CrashFilter(EXCEPTION_POINTERS* ep, DWORD* code, void** addr) {
+    *code = ep->ExceptionRecord->ExceptionCode;
+    *addr = ep->ExceptionRecord->ExceptionAddress;
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
+int GuardedDecode(const CyImgPlugin* api, CyImgContext* ctx, const wchar_t* path, DWORD* code, void** addr) {
+    __try {
+        return api->decode(&g_host, ctx, path);
+    } __except (CrashFilter(GetExceptionInformation(), code, addr)) {
+        if (*code == EXCEPTION_STACK_OVERFLOW) _resetstkoflw();
+        return kPluginCrashed;
+    }
+}
+
+// « raw.dll+0x1A2B3 (C0000005) » : où le plugin a planté, pour le signaler.
+std::wstring CrashLocation(DWORD code, void* addr) {
+    HMODULE mod = nullptr;
+    wchar_t name[MAX_PATH] = L"?";
+    if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                           static_cast<LPCWSTR>(addr), &mod)) {
+        wchar_t full[MAX_PATH];
+        if (GetModuleFileNameW(mod, full, MAX_PATH)) wcscpy_s(name, FileNameOf(full).c_str());
+    }
+    wchar_t buf[MAX_PATH + 64];
+    swprintf_s(buf, L"%ls+0x%llX, %08lX", name,
+               static_cast<unsigned long long>(static_cast<const char*>(addr) - reinterpret_cast<const char*>(mod)), code);
+    return buf;
+}
+
+int GuardedAccept(CyImgAcceptFn fn, const wchar_t* path) {
+    __try {
+        return fn(path);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        return 0;  // fichier masqué plutôt que visionneuse fermée
+    }
+}
+
+int GuardedProbe(int (*fn)(const uint8_t*, size_t), const uint8_t* data, size_t size) {
+    __try {
+        return fn(data, size);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        return 0;
+    }
+}
+
+}  // namespace
+
 bool Decoder::TryPlugin(const Plugin& p, const std::wstring& path, uint32_t maxSize, bool best,
                         const std::atomic<bool>* cancel, ImagePtr& out, std::wstring& error) const {
     auto img = std::make_shared<DecodedImage>();
@@ -669,16 +729,19 @@ bool Decoder::TryPlugin(const Plugin& p, const std::wstring& path, uint32_t maxS
     ctx.quality = best ? 1 : 0;
     ctx.cancel = cancel;
     ctx.out = img.get();
-    int r = CYIMG_E_FAIL;
-    try {
-        r = p.api->decode(&g_host, &ctx, path.c_str());
-    } catch (...) {
-        r = CYIMG_E_FAIL;
+    DWORD crashCode = 0;
+    void* crashAddr = nullptr;
+    const int r = GuardedDecode(p.api, &ctx, path.c_str(), &crashCode, &crashAddr);
+    if (r == kPluginCrashed) {
+        const std::wstring where = CrashLocation(crashCode, crashAddr);
+        Trace((L"plugin planté : " + path + L" @ " + where).c_str());
+        error = Tf("decoder.err.plugin_crashed", p.api->name ? p.api->name : L"?", where.c_str());
+        return false;
     }
     if (r != CYIMG_OK || !ctx.produced || !img->pixels.Data()) {
-        if (r == CYIMG_E_CANCELLED) error = L"Annulé";
+        if (r == CYIMG_E_CANCELLED) error = T("decoder.err.cancelled");
         else if (!ctx.error.empty()) error = ctx.error;
-        else if (error.empty()) error = std::wstring(L"Le plugin « ") + (p.api->name ? p.api->name : L"?") + L" » n'a pas pu décoder ce fichier";
+        else if (error.empty()) error = Tf("decoder.err.plugin_failed", p.api->name ? p.api->name : L"?");
         return false;
     }
     ShrinkForThumbnail(ctx.wic, *img, maxSize);
@@ -698,7 +761,7 @@ ImagePtr Decoder::Decode(const std::wstring& path, uint32_t maxSize, bool best, 
     double t0 = NowSeconds();
     IWICImagingFactory* f = ThreadWic();
     if (!f) {
-        error = L"WIC indisponible";
+        error = T("decoder.err.no_wic");
         return nullptr;
     }
     std::wstring ext = ExtensionOf(path);
@@ -736,11 +799,11 @@ ImagePtr Decoder::Decode(const std::wstring& path, uint32_t maxSize, bool best, 
     size_t hsz = std::min<size_t>(fdata.size, 512);
     for (auto& p : m_plugins) {
         if (!p.api->probe || std::find(tried.begin(), tried.end(), &p) != tried.end()) continue;
-        if (!p.api->probe(fdata.data.get(), hsz)) continue;
+        if (!GuardedProbe(p.api->probe, fdata.data.get(), hsz)) continue;
         fdata = FileData();  // libère la mémoire avant de laisser la main au plugin
         if (TryPlugin(p, path, maxSize, best, cancel, out, error)) return finish(out);
         break;
     }
-    if (error.empty()) error = L"Format non reconnu";
+    if (error.empty()) error = T("decoder.err.unknown_format");
     return nullptr;
 }

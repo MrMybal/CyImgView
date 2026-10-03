@@ -1,0 +1,113 @@
+# CyImgView — core2 (Русский)
+@code = ru
+@name = Русский
+
+# Окно обновления
+update.toast.no_repo = Обновления: репозиторий GitHub не настроен
+update.toast.checking = Проверка обновлений…
+update.toast.available = Доступно обновление %ls
+update.toast.up_to_date = Установлена последняя версия CyImgView (%ls)
+update.err.check = Не удалось проверить обновления:\n%ls
+update.no_notes = (нет описания выпуска)
+update.size_mb = %.1f МБ
+update.btn.install = Установить и перезапустить\nЗагрузка %ls и перезапуск CyImgView
+update.available = Доступна версия CyImgView %ls
+update.installed_version = Установленная версия: %ls
+update.btn.release_page = Открыть выпуск на GitHub
+update.btn.skip = Пропустить эту версию
+update.title = Обновление CyImgView
+update.notes.hide = Скрыть список изменений
+update.notes.show = Показать список изменений
+update.installing = Установка…
+update.progress = %.1f МБ из %.1f МБ
+update.updating_to = Обновление до CyImgView %ls
+update.connecting = Подключение к GitHub…
+update.err.failed = Не удалось выполнить обновление:\n%ls\n\nФайлы не изменены.
+update.done_restart = Обновление установлено. Перезапустите CyImgView, чтобы его применить.
+
+# Сохранить как
+save.title = Сохранить изображение как
+save.quality = Качество (JPEG, HEIF, WebP):
+save.quality.item = %d %%
+save.quality.recommended = %d %% (рекомендуется)
+save.err.no_wic = WIC недоступен
+save.err.memory = Недостаточно памяти
+save.err.no_encoder = Кодировщик «%ls» недоступен
+save.err.cannot_write = Нет доступа на запись в эту папку
+save.err.encoding = Ошибка при кодировании
+save.err.replace = Не удалось заменить файл (возможно, он открыт в другой программе)
+
+# Декодирование
+decoder.err.file_access = Файл недоступен
+decoder.err.read = Не удалось прочитать файл
+decoder.err.unreadable = Изображение не читается
+decoder.err.dimensions = Недопустимые размеры
+decoder.err.conversion = Ошибка преобразования формата
+decoder.err.memory = Недостаточно памяти
+decoder.err.decode = Ошибка декодирования
+decoder.err.unknown_format = Неизвестный формат
+decoder.err.cancelled = Отменено
+decoder.err.plugin_failed = Плагину «%ls» не удалось декодировать этот файл
+decoder.err.no_wic = WIC недоступен
+decoder.format.image = Изображение
+decoder.format.animated_gif = Анимированный GIF
+decoder.info.camera = Камера
+decoder.info.lens = Объектив
+decoder.info.exposure = Выдержка
+decoder.info.aperture = Диафрагма
+decoder.info.focal = Фокусное расстояние
+decoder.info.date_taken = Дата съёмки
+
+# Загрузка и установка обновлений
+updater.err.bad_url = недопустимый адрес
+updater.err.no_winhttp = WinHTTP недоступен
+updater.err.connect = не удалось подключиться
+updater.err.no_github = нет подключения к GitHub
+updater.err.no_release = нет опубликованных выпусков (HTTP 404)
+updater.err.http = ответ HTTP %lu
+updater.err.interrupted = загрузка прервана
+updater.err.cancelled = отменено
+updater.err.bad_archive = недопустимый архив обновления
+updater.err.suspicious = подозрительный архив (путь за пределами папки)
+updater.err.no_repo = репозиторий обновлений не настроен
+updater.err.bad_response = не удалось разобрать ответ GitHub
+updater.err.no_version = у выпуска нет номера версии
+updater.err.no_zip = выпуск %ls не содержит архива .zip
+updater.err.bad_download_url = неожиданный адрес загрузки
+updater.err.temp_file = не удалось создать временный файл
+updater.err.disk_full = ошибка записи (диск заполнен?)
+updater.err.incomplete = загрузка не завершена
+updater.err.checksum = контрольная сумма SHA-256 не совпадает: файл повреждён или изменён
+updater.err.unreadable = архив не читается
+updater.err.no_exe = архив не содержит CyImgView.exe
+updater.err.read_only = нет доступа на запись в папку приложения (%ls)
+updater.err.write = ошибка записи: %ls
+updater.err.replace = ошибка замены: %ls
+
+# Установщик / удаление
+setup.shortcut.desc = Быстрый просмотр изображений
+setup.progid.name = Изображение (CyImgView)
+setup.app.desc = Быстрый просмотр изображений (фото, RAW, текстуры Unreal)
+setup.err.read_installer = не удалось прочитать установщик
+setup.err.incomplete = установщик неполный (отсутствует архив)
+setup.err.temp_write = не удалось записать временный файл
+setup.err.uninstaller = не удалось создать программу удаления
+setup.install.title = Установка CyImgView %ls
+setup.install.content = Папка: %ls\n\nПрава администратора не требуются.
+setup.install.installed_version = Установленная версия: %ls
+setup.install.install = Установить
+setup.install.update = Обновить
+setup.install.details = Ярлык в меню «Пуск», «Открыть с помощью» для изображений, RAW-фото и текстур Unreal
+setup.install.desktop = Создать ярлык на рабочем столе
+setup.install.failed = Ошибка установки
+setup.done.title = CyImgView установлен
+setup.done.content = Программа доступна в меню «Пуск». Обновления будут устанавливаться автоматически.
+setup.done.launch = Запустить CyImgView
+setup.done.default = Сделать CyImgView средством просмотра по умолчанию\nОткрывает параметры Windows «Приложения по умолчанию»
+setup.uninstall.title = Удалить CyImgView?
+setup.uninstall.content = Программа и её ярлыки будут удалены из %ls.
+setup.uninstall.btn = Удалить
+setup.uninstall.remove_settings = Также удалить мои настройки
+setup.uninstall.done = CyImgView удалён.
+setup.uninstall.partial = CyImgView удалён, но некоторые файлы удалить не удалось:\n%ls
+decoder.err.plugin_crashed = Сбой плагина «%ls» на этом файле (%ls)

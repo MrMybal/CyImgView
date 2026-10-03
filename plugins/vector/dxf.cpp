@@ -671,7 +671,7 @@ struct Builder {
 
 int DecodeDxf(const Call& c, const std::vector<uint8_t>& data) {
     std::vector<Group> g;
-    if (!ParseGroups(data, g)) return c.Fail(L"DXF illisible (groupes code/valeur invalides)");
+    if (!ParseGroups(data, g)) return c.Fail(CYIMG_TR("plugin.vector.dxf.err.groups", L"DXF illisible (groupes code/valeur invalides)"));
     if (c.Cancelled()) return CYIMG_E_CANCELLED;
 
     // Découpage en sections et entités
@@ -764,16 +764,16 @@ int DecodeDxf(const Call& c, const std::vector<uint8_t>& data) {
         }
         while (i < g.size() && !(g[i].code == 0 && g[i].v == "ENDSEC")) ++i;
     }
-    if (entities.empty()) return c.Fail(L"DXF sans entité dans l'espace objet");
+    if (entities.empty()) return c.Fail(CYIMG_TR("plugin.vector.dxf.err.no_entity", L"DXF sans entité dans l'espace objet"));
     utf8 = version >= "AC1021";  // AutoCAD 2007+ : UTF-8
     if (c.Cancelled()) return CYIMG_E_CANCELLED;
 
     IDWriteFactory* dw = DWriteFactory();
-    if (!dw || !D2DFactory()) return c.Fail(L"Direct2D / DirectWrite indisponible");
+    if (!dw || !D2DFactory()) return c.Fail(CYIMG_TR("plugin.vector.err.d2d_dwrite", L"Direct2D / DirectWrite indisponible"));
     ComPtr<IDWriteTextFormat> fmt;
     if (FAILED(dw->CreateTextFormat(L"Arial", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
                                     DWRITE_FONT_STRETCH_NORMAL, 100.f, L"fr-fr", &fmt)))
-        return c.Fail(L"Police de caractères indisponible");
+        return c.Fail(CYIMG_TR("plugin.vector.err.font", L"Police de caractères indisponible"));
     fmt->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 
     Scene sc;
@@ -783,7 +783,7 @@ int DecodeDxf(const Call& c, const std::vector<uint8_t>& data) {
         if (sc.overflow || c.Cancelled()) break;
     }
     if (c.Cancelled()) return CYIMG_E_CANCELLED;
-    if (!(sc.maxx >= sc.minx) || !(sc.maxy >= sc.miny)) return c.Fail(L"DXF sans géométrie 2D affichable");
+    if (!(sc.maxx >= sc.minx) || !(sc.maxy >= sc.miny)) return c.Fail(CYIMG_TR("plugin.vector.dxf.err.no_geometry", L"DXF sans géométrie 2D affichable"));
 
     // Taille : plus grand côté 4096 px (2048 au moins), marge de 2 %
     double ew = sc.maxx - sc.minx, eh = sc.maxy - sc.miny;
@@ -800,7 +800,7 @@ int DecodeDxf(const Call& c, const std::vector<uint8_t>& data) {
     auto px = [&](double x, double y) { return D2D1::Point2F(float(ox + (x - minx) * s), float(oy + (maxy - y) * s)); };
 
     WicTarget t;
-    if (!t.Create(rw, rh)) return c.Fail(L"Création de la surface de rendu impossible");
+    if (!t.Create(rw, rh)) return c.Fail(CYIMG_TR("plugin.vector.err.surface", L"Création de la surface de rendu impossible"));
     ID2D1RenderTarget* rt = t.rt.Get();
     rt->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
     const float stroke = std::max(1.0f, float(std::max(rw, rh)) / 2048.f);
@@ -855,16 +855,16 @@ int DecodeDxf(const Call& c, const std::vector<uint8_t>& data) {
     }
     rt->SetTransform(D2D1::Matrix3x2F::Identity());
     const HRESULT hr = rt->EndDraw();
-    if (FAILED(hr)) return c.Fail(Fmt(L"Rendu DXF impossible (erreur 0x%08X)", unsigned(hr)).c_str());
+    if (FAILED(hr)) return c.Fail(Fmt(CYIMG_TR("plugin.vector.dxf.err.render", L"Rendu DXF impossible (erreur 0x%08X)"), unsigned(hr)).c_str());
     const int r = t.Deliver(c, true);
     if (r != CYIMG_OK) return r;
 
     c.host->set_format(c.ctx, L"DXF (AutoCAD)");
-    if (!version.empty()) c.Info(L"Version DXF", Decode(version, false));
-    c.Info(L"Entités", Fmt(L"%zu", entities.size()));
-    c.Info(L"Blocs", Fmt(L"%zu", blocks.size()));
-    c.Info(L"Étendue", Fmt(L"%g × %g unités", sc.maxx - sc.minx, sc.maxy - sc.miny));
-    if (sc.overflow) c.Info(L"Avertissement", L"dessin tronqué (trop d'éléments)");
+    if (!version.empty()) c.Info(CYIMG_TR("plugin.vector.info.dxf_version", L"Version DXF"), Decode(version, false));
+    c.Info(CYIMG_TR("plugin.vector.info.entities", L"Entités"), Fmt(L"%zu", entities.size()));
+    c.Info(CYIMG_TR("plugin.vector.info.blocks", L"Blocs"), Fmt(L"%zu", blocks.size()));
+    c.Info(CYIMG_TR("plugin.vector.info.extent", L"Étendue"), Fmt(CYIMG_TR("plugin.vector.dxf.extent_value", L"%g × %g unités"), sc.maxx - sc.minx, sc.maxy - sc.miny));
+    if (sc.overflow) c.Info(CYIMG_TR("plugin.vector.info.warning", L"Avertissement"), CYIMG_TR("plugin.vector.dxf.truncated", L"dessin tronqué (trop d'éléments)"));
     return CYIMG_OK;
 }
 

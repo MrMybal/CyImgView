@@ -2,6 +2,7 @@
 
 #include "viewer.h"
 #include "viewer_util.h"
+#include "i18n.h"
 
 #include <d2d1effects.h>
 #include <shlobj.h>
@@ -87,7 +88,7 @@ void Viewer::CopyToClipboard() {
     if (m_edit.active) {
         if (m_edit.textActive) CommitText();
         if (!ReadCanvas(px, stride)) {
-            ShowToast(L"Lecture de l'image impossible");
+            ShowToast(T("clip.err.read"));
             return;
         }
         w = m_edit.w;
@@ -95,14 +96,14 @@ void Viewer::CopyToClipboard() {
         alpha = m_edit.hasAlpha;
     } else {
         if (!m_cur) {
-            ShowToast(Shown() ? L"Image en cours de chargement…" : L"Aucune image à copier");
+            ShowToast(T(Shown() ? "clip.loading" : "clip.none"));
             return;
         }
         bool flip;
         int rot;
         FlipRot(flip, rot);
         if (!OrientPixels(CurPixels(), m_cur->width, m_cur->height, m_cur->stride, flip, rot, px, w, h, stride)) {
-            ShowToast(L"Mémoire insuffisante");
+            ShowToast(T("clip.err.memory"));
             return;
         }
         alpha = m_cur->hasAlpha;
@@ -129,7 +130,7 @@ void Viewer::CopyToClipboard() {
     const size_t total = sizeof(BITMAPV5HEADER) + rowBytes * h;
     HGLOBAL dib = GlobalAlloc(GMEM_MOVEABLE, total);
     if (!dib) {
-        ShowToast(L"Mémoire insuffisante");
+        ShowToast(T("clip.err.memory"));
         return;
     }
     auto* hdr = static_cast<BITMAPV5HEADER*>(GlobalLock(dib));
@@ -157,7 +158,7 @@ void Viewer::CopyToClipboard() {
 
     if (!OpenClipboard(m_hwnd)) {
         GlobalFree(dib);
-        ShowToast(L"Presse-papier occupé, réessayez");
+        ShowToast(T("clip.busy"));
         return;
     }
     EmptyClipboard();
@@ -165,7 +166,7 @@ void Viewer::CopyToClipboard() {
     if (!ok) GlobalFree(dib);
     if (!png.empty()) SetClipboardBlob(RegisterClipboardFormatW(L"PNG"), png.data(), png.size());
     CloseClipboard();
-    ShowToast(ok ? L"Image copiée" : L"Copie impossible");
+    ShowToast(T(ok ? "clip.copied" : "clip.failed"));
 }
 
 void Viewer::CopyPathToClipboard() {
@@ -174,7 +175,7 @@ void Viewer::CopyPathToClipboard() {
     EmptyClipboard();
     SetClipboardBlob(CF_UNICODETEXT, cur->path.c_str(), (cur->path.size() + 1) * sizeof(wchar_t));
     CloseClipboard();
-    ShowToast(L"Chemin copié");
+    ShowToast(T("clip.path_copied"));
 }
 
 void Viewer::RevealInExplorer() {
@@ -194,37 +195,40 @@ void Viewer::ShowContextMenu(POINT client) {
     const bool has = m_cur != nullptr;
     const bool file = Current() != nullptr;
     HMENU menu = CreatePopupMenu();
-    auto add = [&](UINT id, const wchar_t* text, bool enabled = true, bool checked = false) {
-        AppendMenuW(menu, MF_STRING | (enabled ? 0 : MF_GRAYED) | (checked ? MF_CHECKED : 0), id, text);
+    auto add = [&](UINT id, const char* key, bool enabled = true, bool checked = false) {
+        AppendMenuW(menu, MF_STRING | (enabled ? 0 : MF_GRAYED) | (checked ? MF_CHECKED : 0), id, T(key));
     };
-    add(kMenuCopy, L"Copier l'image\tCtrl+C", has);
-    add(kMenuCopyPath, L"Copier le chemin du fichier\tCtrl+Maj+C", file);
+    add(kMenuCopy, "menu.copy", has);
+    add(kMenuCopyPath, "menu.copy_path", file);
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
-    add(kMenuOpen, L"Ouvrir…\tCtrl+O");
-    add(kMenuSaveAs, L"Enregistrer sous…\tCtrl+S", has);
-    add(kMenuEdit, L"Modifier\tE", has);
-    add(kMenuReveal, L"Afficher dans l'Explorateur", file);
+    add(kMenuOpen, "menu.open");
+    add(kMenuSaveAs, "menu.save_as", has);
+    add(kMenuEdit, "menu.edit", has);
+    add(kMenuReveal, "menu.reveal", file);
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     HMENU channels = CreatePopupMenu();
     for (int c = 0; c <= 4; ++c) {
-        static const wchar_t* labels[] = {L"RVB (toutes les couleurs)\tCtrl+2", L"Rouge\tCtrl+3", L"Vert\tCtrl+4",
-                                          L"Bleu\tCtrl+5", L"Alpha (transparence)\tCtrl+6"};
+        static const char* labels[] = {"menu.channel.rgb", "menu.channel.red", "menu.channel.green", "menu.channel.blue",
+                                       "menu.channel.alpha"};
         const bool enabled = has && (c != 4 || m_cur->hasAlpha);
-        AppendMenuW(channels, MF_STRING | (enabled ? 0 : MF_GRAYED), kMenuChannel0 + c, labels[c]);
+        AppendMenuW(channels, MF_STRING | (enabled ? 0 : MF_GRAYED), kMenuChannel0 + c, T(labels[c]));
     }
-    CheckMenuRadioItem(channels, kMenuChannel0, kMenuChannel0 + 4, kMenuChannel0 + m_channel, MF_BYCOMMAND);
-    AppendMenuW(menu, MF_POPUP | (has ? 0 : MF_GRAYED), reinterpret_cast<UINT_PTR>(channels), L"Canal affiché\tC");
+    int solo = ChannelFull(m_chanMask) ? 0 : -1;  // ligne cochée seulement si un canal seul est affiché
+    for (int i = 0; i < 4; ++i)
+        if (m_chanMask == (1u << i)) solo = i + 1;
+    if (solo >= 0) CheckMenuRadioItem(channels, kMenuChannel0, kMenuChannel0 + 4, kMenuChannel0 + solo, MF_BYCOMMAND);
+    AppendMenuW(menu, MF_POPUP | (has ? 0 : MF_GRAYED), reinterpret_cast<UINT_PTR>(channels), T("menu.channels"));
     HMENU filters = CreatePopupMenu();
-    for (int f = 0; f <= 5; ++f) AppendMenuW(filters, MF_STRING, kMenuFilter0 + f, f == 1 ? L"Pixels bruts\tN" : FilterName(f));
+    for (int f = 0; f <= 5; ++f) AppendMenuW(filters, MF_STRING, kMenuFilter0 + f, f == 1 ? T("menu.filter.raw") : FilterName(f));
     CheckMenuRadioItem(filters, kMenuFilter0, kMenuFilter0 + 5, kMenuFilter0 + m_filter, MF_BYCOMMAND);
-    AppendMenuW(menu, MF_POPUP, reinterpret_cast<UINT_PTR>(filters), L"Filtrage");
-    if (Animated()) add(kMenuPlay, m_playing ? L"Pause\tEspace" : L"Lecture\tEspace");
-    add(kMenuRotate, L"Pivoter\tR", has);
-    add(kMenuSlideshow, m_slideshow ? L"Quitter le diaporama\tÉchap" : L"Diaporama\tD", m_files.size() > 1);
-    add(kMenuFull, L"Plein écran\tF", true, m_fullscreen);
-    add(kMenuInfo, L"Informations\tI", true, m_showInfo);
+    AppendMenuW(menu, MF_POPUP, reinterpret_cast<UINT_PTR>(filters), T("menu.filter"));
+    if (Animated()) add(kMenuPlay, m_playing ? "menu.pause" : "menu.play");
+    add(kMenuRotate, "menu.rotate", has);
+    add(kMenuSlideshow, m_slideshow ? "menu.slideshow_stop" : "menu.slideshow", m_files.size() > 1);
+    add(kMenuFull, "menu.fullscreen", true, m_fullscreen);
+    add(kMenuInfo, "menu.info", true, m_showInfo);
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
-    add(kMenuSettings, L"Paramètres\tP");
+    add(kMenuSettings, "menu.settings");
 
     POINT sp = client;
     ClientToScreen(m_hwnd, &sp);
@@ -253,33 +257,85 @@ void Viewer::ShowContextMenu(POINT client) {
 }
 
 // =============================================================================================
-// Canaux : affiche R, V, B ou l'alpha seul en niveaux de gris (comme la palette Couches de Photoshop)
+// Canaux (comme la palette Couches de Photoshop). Masque de bits : 1 rouge, 2 vert, 4 bleu, 8 alpha.
+// - un seul canal coché : affiché en niveaux de gris ;
+// - plusieurs couleurs cochées : affichées en couleur, les autres à zéro ;
+// - alpha décoché sur une image transparente : les couleurs sont montrées opaques (on voit ce qui est
+//   caché sous les zones transparentes) ; alpha coché avec des couleurs : transparence appliquée.
 
-const wchar_t* Viewer::ChannelName(int ch) {
-    static const wchar_t* names[] = {L"RVB", L"R", L"V", L"B", L"A"};
-    return names[std::clamp(ch, 0, 4)];
+namespace {
+constexpr uint32_t kMaskAll = 15;
+int ColorCount(uint32_t m) { return int((m & 1) + ((m >> 1) & 1) + ((m >> 2) & 1)); }
+}  // namespace
+
+bool Viewer::ChannelFull(uint32_t mask) const {
+    const bool alpha = m_cur && m_cur->hasAlpha;
+    return (mask & 7) == 7 && ((mask & 8) || !alpha);
 }
 
+bool Viewer::ChannelKeepsAlpha(uint32_t mask) const {
+    return m_cur && m_cur->hasAlpha && (mask & 8) && (mask & 7);
+}
+
+std::wstring Viewer::ChannelLabel(uint32_t mask) const {
+    if (ChannelFull(mask)) return T(m_cur && m_cur->hasAlpha ? "channels.rgba" : "channels.rgb");
+    static const char* letters[] = {"channels.letter.r", "channels.letter.g", "channels.letter.b", "channels.letter.a"};
+    std::wstring s;
+    for (int i = 0; i < 4; ++i)
+        if (mask & (1u << i)) s += T(letters[i]);
+    return s;
+}
+
+std::wstring Viewer::ChannelDescription(uint32_t mask) const {
+    static const char* names[] = {"channels.desc.red", "channels.desc.green", "channels.desc.blue", "channels.desc.alpha"};
+    std::wstring s;
+    for (int i = 0; i < 4; ++i) {
+        if (!(mask & (1u << i))) continue;
+        if (!s.empty()) s += L" + ";
+        s += T(names[i]);
+    }
+    return s;
+}
+
+// Affiche un canal seul (0 = toutes les couleurs, 1..4 = R, V, B, alpha).
 void Viewer::SetChannel(int ch) {
     ch = std::clamp(ch, 0, 4);
     if (ch == 4 && m_cur && !m_cur->hasAlpha) {
-        ShowToast(L"Cette image n'a pas de transparence");
+        ShowToast(T("channels.no_alpha"));
         return;
     }
-    m_channel = ch;
-    static const wchar_t* toast[] = {L"Canaux : RVB", L"Canal rouge", L"Canal vert", L"Canal bleu", L"Canal alpha"};
-    ShowToast(toast[ch]);
+    m_chanMask = ch == 0 ? kMaskAll : 1u << (ch - 1);
+    static const char* toast[] = {"channels.toast.rgb", "channels.toast.red", "channels.toast.green",
+                                  "channels.toast.blue", "channels.toast.alpha"};
+    ShowToast(T(toast[ch]));
+    Invalidate();
+}
+
+// Case à cocher : ajoute ou retire un canal de l'affichage (bit 0..3).
+void Viewer::ToggleChannel(int bit) {
+    if (bit == 3 && m_cur && !m_cur->hasAlpha) {
+        ShowToast(T("channels.no_alpha"));
+        return;
+    }
+    uint32_t m = m_chanMask ^ (1u << bit);
+    if (!m_cur || !m_cur->hasAlpha) m &= 7;
+    if (m == 0) return;  // au moins un canal reste affiché
+    m_chanMask = m;
+    ShowToast(ChannelFull(m) ? std::wstring(T("channels.toast.rgb")) : Tf("channels.toast.mix", ChannelDescription(m).c_str()));
     Invalidate();
 }
 
 void Viewer::CycleChannel(int delta) {
     const int n = m_cur && m_cur->hasAlpha ? 5 : 4;
-    SetChannel(((m_channel + delta) % n + n) % n);
+    int cur = 0;  // canal seul actuel, ou 0 pour un mélange
+    for (int i = 0; i < 4; ++i)
+        if (m_chanMask == (1u << i)) cur = i + 1;
+    SetChannel(((cur + delta) % n + n) % n);
 }
 
-void Viewer::DrawTile(ID2D1Bitmap* bmp, const D2D1_RECT_F& dst, D2D1_INTERPOLATION_MODE mode, int channel) {
-    if (channel < 0) channel = m_edit.active ? 0 : m_channel;
-    if (channel == 0) {
+void Viewer::DrawTile(ID2D1Bitmap* bmp, const D2D1_RECT_F& dst, D2D1_INTERPOLATION_MODE mode, int maskArg) {
+    const uint32_t mask = maskArg < 0 ? (m_edit.active ? kMaskAll : m_chanMask) : uint32_t(maskArg);
+    if (ChannelFull(mask) || (mask & 15) == 0) {
         m_dc->DrawBitmap(bmp, dst, 1.0f, mode, nullptr, nullptr);
         return;
     }
@@ -288,12 +344,21 @@ void Viewer::DrawTile(ID2D1Bitmap* bmp, const D2D1_RECT_F& dst, D2D1_INTERPOLATI
         return;
     }
     // Lignes de la matrice = canal d'entrée (R, V, B, A, constante), colonnes = sortie (R, V, B, A).
-    // L'effet travaille en alpha « droit » : on voit la vraie valeur du canal, opaque.
+    // L'effet travaille en alpha « droit » : on voit la vraie valeur des canaux.
     D2D1_MATRIX_5X4_F m{};
     float* f = &m._11;
-    const int in = channel - 1;  // 0..3
-    f[in * 4 + 0] = f[in * 4 + 1] = f[in * 4 + 2] = 1.0f;
-    m._54 = 1.0f;
+    const int colors = ColorCount(mask);
+    if (colors <= 1) {  // un seul canal : niveaux de gris
+        int in = 3;
+        for (int i = 0; i < 3; ++i)
+            if (mask & (1u << i)) in = i;
+        f[in * 4 + 0] = f[in * 4 + 1] = f[in * 4 + 2] = 1.0f;
+    } else {  // plusieurs couleurs : en couleur, les canaux décochés à zéro
+        for (int i = 0; i < 3; ++i)
+            if (mask & (1u << i)) f[i * 4 + i] = 1.0f;
+    }
+    if (ChannelKeepsAlpha(mask)) m._44 = 1.0f;  // transparence conservée
+    else m._54 = 1.0f;                          // opaque
     m_channelFx->SetValue(D2D1_COLORMATRIX_PROP_COLOR_MATRIX, m);
     m_channelFx->SetInput(0, bmp);
 
@@ -350,27 +415,44 @@ void Viewer::UpdateChannelPreview() {
     m_chanPreviewRot = orient;
 }
 
-// Panneau « Couches » (comme Photoshop) : un aperçu par canal, clic pour l'afficher.
+// Panneau « Couches » (comme Photoshop) : un aperçu par canal. Clic sur une ligne : ce canal seul ;
+// case à cocher : combiner plusieurs canaux.
 void Viewer::DrawChannelPanel(float cw, float ch) {
     if (!m_cur) return;
     const float s = m_scale;
     const bool alpha = m_cur->hasAlpha;
     const int n = alpha ? 5 : 4;
-    const float rowH = 70 * s, pad = 12 * s, width = 250 * s, top = 58 * s;
-    float height = pad * 2 + 30 * s + rowH * n;
+    const float rowH = 70 * s, pad = 12 * s, width = 270 * s, top = 58 * s;
+    float height = pad * 2 + 30 * s + rowH * n + 26 * s;
     height = std::min(height, ch - top - 12 * s);
     D2D1_RECT_F p = D2D1::RectF(cw - width - 12 * s, top, cw - 12 * s, top + height);
     FillRound(p, 8 * s, kPanel, 0.95f);
-    Text(L"Couches", m_tfTitle.Get(), D2D1::RectF(p.left + pad, p.top + pad - 4 * s, p.right - pad, p.top + pad + 22 * s), kWhite, 1);
-    static const wchar_t* names[] = {L"RVB", L"Rouge", L"Vert", L"Bleu", L"Alpha"};
+    Text(T("channels.title"), m_tfTitle.Get(), D2D1::RectF(p.left + pad, p.top + pad - 4 * s, p.right - pad, p.top + pad + 22 * s), kWhite, 1);
+    static const char* names[] = {"channels.row.rgb", "channels.row.red", "channels.row.green", "channels.row.blue",
+                                  "channels.row.alpha"};
     static const wchar_t* keys[] = {L"Ctrl+2", L"Ctrl+3", L"Ctrl+4", L"Ctrl+5", L"Ctrl+6"};
     m_rt->PushAxisAlignedClip(p, D2D1_ANTIALIAS_MODE_ALIASED);
     float y = p.top + pad + 30 * s;
     for (int c = 0; c < n; ++c, y += rowH) {
         const D2D1_RECT_F row = D2D1::RectF(p.left + pad / 2, y, p.right - pad / 2, y + rowH - 4 * s);
-        if (c == m_channel) FillRound(row, 6 * s, kAccent, 0.25f);
+        const bool on = c == 0 ? ChannelFull(m_chanMask) : (m_chanMask & (1u << (c - 1))) != 0;
+        // Case à cocher (lignes R, V, B, A) : à gauche, centrée verticalement
+        const float cb = 18 * s, cbx = row.left + 6 * s, cby = (row.top + row.bottom) / 2 - cb / 2;
+        const D2D1_RECT_F box = D2D1::RectF(row.left + 32 * s, row.top + 5 * s, row.left + 32 * s + 88 * s, row.bottom - 5 * s);
+        if (c == 0 ? on : (on && ColorCount(m_chanMask) + ((m_chanMask >> 3) & 1) == 1))
+            FillRound(row, 6 * s, kAccent, 0.25f);  // canal seul affiché (ou composite complet)
+        else if (on) FillRound(row, 6 * s, kAccent, 0.12f);
         else if (m_mouseInside && Contains(row, m_mouse)) FillRound(row, 6 * s, kWhite, 0.07f);
-        const D2D1_RECT_F box = D2D1::RectF(row.left + 6 * s, row.top + 5 * s, row.left + 6 * s + 92 * s, row.bottom - 5 * s);
+        if (c > 0) {
+            const D2D1_RECT_F r = D2D1::RectF(cbx, cby, cbx + cb, cby + cb);
+            const bool hov = m_mouseInside && Contains(D2D1::RectF(r.left - 4 * s, r.top - 4 * s, r.right + 4 * s, r.bottom + 4 * s), m_mouse);
+            if (on) FillRound(r, 4 * s, kAccent, 1);
+            SetColor(on ? kAccent : kWhite, on ? 1.0f : (hov ? 0.9f : 0.55f));
+            m_rt->DrawRoundedRectangle(D2D1::RoundedRect(r, 4 * s, 4 * s), m_brush.Get(), 1.5f * s);
+            if (on) Text(L"", m_tfIcon.Get(), r, 0x0B1A2A, 1);  // coche
+            // zone de clic un peu plus grande que la case
+            m_channelRows.push_back({10 + c, D2D1::RectF(row.left, row.top, box.left - 2 * s, row.bottom)});
+        }
         if (m_chanPreview) {
             const D2D1_SIZE_U sz = m_chanPreview->GetPixelSize();
             const float k = std::min((box.right - box.left) / sz.width, (box.bottom - box.top) / sz.height);
@@ -378,13 +460,14 @@ void Viewer::DrawChannelPanel(float cw, float ch) {
             const float l = std::round((box.left + box.right - w) / 2), t = std::round((box.top + box.bottom - h) / 2);
             const D2D1_RECT_F r = D2D1::RectF(l, t, l + w, t + h);
             if (c == 0 && alpha && m_checker) m_rt->FillRectangle(r, m_checker.Get());
-            DrawTile(m_chanPreview.Get(), r, D2D1_INTERPOLATION_MODE_LINEAR, c);
+            DrawTile(m_chanPreview.Get(), r, D2D1_INTERPOLATION_MODE_LINEAR, c == 0 ? int(kMaskAll) : 1 << (c - 1));
         }
         const float tx = box.right + 12 * s, mid = (row.top + row.bottom) / 2;
-        Text(names[c], m_tfTitle.Get(), D2D1::RectF(tx, mid - 21 * s, row.right - 6 * s, mid + 1 * s), c == m_channel ? kAccent : kWhite, 1);
+        Text(T(names[c]), m_tfTitle.Get(), D2D1::RectF(tx, mid - 21 * s, row.right - 6 * s, mid + 1 * s), on ? kAccent : kWhite, 1);
         Text(keys[c], m_tfSmall.Get(), D2D1::RectF(tx, mid + 1 * s, row.right - 6 * s, mid + 21 * s), kGrey, 1);
         m_channelRows.push_back({c, row});
     }
+    Text(T("channels.hint"), m_tfSmall.Get(), D2D1::RectF(p.left + pad, y + 2 * s, p.right - pad, y + 22 * s), kGrey, 0.8f);
     m_rt->PopAxisAlignedClip();
     m_channelRows.push_back({-1, p});  // le reste du panneau absorbe les clics
 }
@@ -468,7 +551,7 @@ void Viewer::StepFrame(int delta) {
     m_playing = false;
     KillTimer(m_hwnd, kTimerAnim);
     m_frame = size_t((int64_t(m_frame) + delta + int64_t(n)) % int64_t(n));
-    ShowToast(L"Image " + std::to_wstring(m_frame + 1) + L" / " + std::to_wstring(n));
+    ShowToast(Tf("slide.anim.frame", int(m_frame + 1), int(n)));
     Invalidate();
 }
 
@@ -478,7 +561,7 @@ void Viewer::TogglePlay() {
     m_playing = !m_playing;
     if (m_playing) m_frameDue = NowSeconds() + FrameDelay(*m_cur, m_frame) / 1000.0;
     ScheduleFrame();
-    ShowToast(m_playing ? L"Lecture" : L"Pause");
+    ShowToast(T(m_playing ? "slide.anim.play" : "slide.anim.pause"));
     Invalidate();
 }
 
@@ -512,8 +595,9 @@ ID2D1Bitmap* Viewer::Logo() {
 // Filtrage
 
 const wchar_t* Viewer::FilterName(int f) {
-    static const wchar_t* names[] = {L"Automatique", L"Pixels bruts", L"Linéaire", L"Cubique", L"Cubique HQ", L"Anisotrope"};
-    return names[std::clamp(f, 0, 5)];
+    static const char* names[] = {"filter.auto", "filter.raw", "filter.linear", "filter.cubic", "filter.cubic_hq",
+                                  "filter.anisotropic"};
+    return T(names[std::clamp(f, 0, 5)]);
 }
 
 // Automatique : pixel exact à 100 %, bicubique haute qualité en réduction, cubique en agrandissement
@@ -538,6 +622,6 @@ void Viewer::SetFilter(int f) {
     if (f == 1 && m_filter != 1) m_filterBeforeRaw = m_filter;
     m_filter = f;
     SaveSetting(L"view", L"filter", m_filter);
-    ShowToast(std::wstring(L"Filtrage : ") + FilterName(f));
+    ShowToast(Tf("filter.toast", FilterName(f)));
     Invalidate();
 }

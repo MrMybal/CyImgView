@@ -1,0 +1,10 @@
+# CyImgView — gpu (日本語)
+@code = ja
+@name = 日本語
+plugin.gpu.err.no_compiler = d3dcompiler_47.dll が見つかりません
+plugin.gpu.err.no_warp = Direct3D 11 (WARP) を使用できません
+plugin.gpu.err.shader = デコード用シェーダーをコンパイルできません
+plugin.gpu.err.invalid = サイズまたは GPU フォーマットが無効です
+plugin.gpu.err.short_mip = ミップのデータが不足しています
+plugin.gpu.err.textures = Direct3D テクスチャを作成できません (メモリ不足?)
+plugin.gpu.err.readback = 結果を読み取れません

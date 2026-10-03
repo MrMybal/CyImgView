@@ -113,7 +113,7 @@ int WicTarget::Deliver(const Call& c, bool forceOpaque) {
     BYTE* p = nullptr;
     if (FAILED(bitmap->Lock(&r, WICBitmapLockRead, &lock)) || FAILED(lock->GetStride(&stride)) ||
         FAILED(lock->GetDataPointer(&size, &p)) || !p)
-        return c.Fail(L"Lecture du rendu impossible");
+        return c.Fail(CYIMG_TR("plugin.vector.err.read_render", L"Lecture du rendu impossible"));
     return DeliverPixels(c, p, stride, w, h, forceOpaque);
 }
 
@@ -208,6 +208,7 @@ bool ExtIs(const wchar_t* path, const wchar_t* ext) {
 }
 
 int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
+    cyimg_tr_begin(host, ctx);
     const Call c{host, ctx};
     // En-tête seul d'abord : un PDF est relu par Windows.Data.Pdf, inutile de le charger ici.
     uint8_t head[1024];
@@ -215,27 +216,27 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     {
         HANDLE h = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
                                OPEN_EXISTING, 0, nullptr);
-        if (h == INVALID_HANDLE_VALUE) return c.Fail(L"Ouverture du fichier impossible");
+        if (h == INVALID_HANDLE_VALUE) return c.Fail(CYIMG_TR("plugin.vector.err.open", L"Ouverture du fichier impossible"));
         if (!ReadFile(h, head, sizeof(head), &got, nullptr)) got = 0;
         CloseHandle(h);
     }
-    if (!got) return c.Fail(L"Fichier vide ou illisible");
+    if (!got) return c.Fail(CYIMG_TR("plugin.vector.err.empty", L"Fichier vide ou illisible"));
     const bool ai = ExtIs(path, L"ai");
     const bool meta = IsEmf(head, got) || IsWmf(head, got);  // un EMF peut embarquer un PDF (commentaire)
     if (!meta && IsPdfHeader(head, got)) return DecodePdf(c, path, ai);
     if (IsPostScript(head, got)) {
-        return c.Fail(ai ? L"Illustrator ancien (PostScript) non supporté : réenregistrez-le avec la compatibilité PDF"
-                         : L"Fichier PostScript non supporté");
+        return c.Fail(ai ? CYIMG_TR("plugin.vector.err.ai_postscript", L"Illustrator ancien (PostScript) non supporté : réenregistrez-le avec la compatibilité PDF")
+                         : CYIMG_TR("plugin.vector.err.postscript", L"Fichier PostScript non supporté"));
     }
-    if (got >= 18 && !memcmp(head, "AutoCAD Binary DXF", 18)) return c.Fail(L"DXF binaire non supporté (seul le DXF ASCII l'est)");
-    if (ai) return c.Fail(L"Fichier Illustrator non reconnu (ni PDF, ni PostScript)");
+    if (got >= 18 && !memcmp(head, "AutoCAD Binary DXF", 18)) return c.Fail(CYIMG_TR("plugin.vector.err.dxf_binary", L"DXF binaire non supporté (seul le DXF ASCII l'est)"));
+    if (ai) return c.Fail(CYIMG_TR("plugin.vector.err.ai_unrecognized", L"Fichier Illustrator non reconnu (ni PDF, ni PostScript)"));
 
     std::vector<uint8_t> data;
-    if (!ReadAll(path, data)) return c.Fail(L"Lecture du fichier impossible (trop gros ?)");
+    if (!ReadAll(path, data)) return c.Fail(CYIMG_TR("plugin.vector.err.read", L"Lecture du fichier impossible (trop gros ?)"));
     bool gz = false;
     if (IsGzip(data)) {
         std::vector<uint8_t> raw;
-        if (!Gunzip(data, raw)) return c.Fail(L"Données compressées (gzip) invalides");
+        if (!Gunzip(data, raw)) return c.Fail(CYIMG_TR("plugin.vector.err.gzip", L"Données compressées (gzip) invalides"));
         data.swap(raw);
         gz = true;
     }
@@ -244,9 +245,9 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     if (IsEmf(p, n) || IsWmf(p, n)) return DecodeMetafile(c, data, gz);
     if (LooksLikeSvg(p, n)) return DecodeSvg(c, data, gz);
     if (LooksLikeDxf(p, n)) return DecodeDxf(c, data);
-    if (ExtIs(path, L"dxf")) return c.Fail(L"Fichier DXF non reconnu (section manquante)");
-    if (ExtIs(path, L"svg") || ExtIs(path, L"svgz")) return c.Fail(L"Fichier SVG non reconnu (élément <svg> absent)");
-    return c.Fail(L"Format vectoriel non reconnu");
+    if (ExtIs(path, L"dxf")) return c.Fail(CYIMG_TR("plugin.vector.err.dxf_unrecognized", L"Fichier DXF non reconnu (section manquante)"));
+    if (ExtIs(path, L"svg") || ExtIs(path, L"svgz")) return c.Fail(CYIMG_TR("plugin.vector.err.svg_unrecognized", L"Fichier SVG non reconnu (élément <svg> absent)"));
+    return c.Fail(CYIMG_TR("plugin.vector.err.unrecognized", L"Format vectoriel non reconnu"));
 }
 
 int Probe(const uint8_t* p, size_t n) {

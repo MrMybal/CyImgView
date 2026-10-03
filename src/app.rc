@@ -2,6 +2,7 @@
 #include "version.h"
 
 1 ICON "app.ico"
+#include "lang.rc"  // textes de l'interface, toutes langues (généré par CMake)
 2 RCDATA "logo.png"  // logo affiché dans l'interface (accueil, aide)
 
 VS_VERSION_INFO VERSIONINFO

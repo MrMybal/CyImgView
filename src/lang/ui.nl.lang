@@ -1,0 +1,152 @@
+# CyImgView — ui (Nederlands)
+@code = nl
+@name = Nederlands
+
+# Contextmenu (rechtsklikken): tekst\tsneltoets
+menu.copy = Afbeelding kopiëren\tCtrl+C
+menu.copy_path = Bestandspad kopiëren\tCtrl+Shift+C
+menu.open = Openen…\tCtrl+O
+menu.save_as = Opslaan als…\tCtrl+S
+menu.edit = Bewerken\tE
+menu.reveal = Weergeven in Verkenner
+menu.channels = Weergegeven kanaal\tC
+menu.channel.rgb = RGB (alle kleuren)\tCtrl+2
+menu.channel.red = Rood\tCtrl+3
+menu.channel.green = Groen\tCtrl+4
+menu.channel.blue = Blauw\tCtrl+5
+menu.channel.alpha = Alfa (transparantie)\tCtrl+6
+menu.filter = Filtering
+menu.filter.raw = Ruwe pixels\tN
+menu.play = Afspelen\tSpatiebalk
+menu.pause = Pauzeren\tSpatiebalk
+menu.rotate = Draaien\tR
+menu.slideshow = Diavoorstelling\tD
+menu.slideshow_stop = Diavoorstelling afsluiten\tEsc
+menu.fullscreen = Volledig scherm\tF
+menu.info = Informatie\tI
+menu.settings = Instellingen\tP
+
+# Klembord
+clip.err.read = Kan de afbeelding niet lezen
+clip.loading = Afbeelding wordt geladen…
+clip.none = Geen afbeelding om te kopiëren
+clip.err.memory = Onvoldoende geheugen
+clip.busy = Klembord bezet, probeer het opnieuw
+clip.copied = Afbeelding gekopieerd
+clip.failed = Kopiëren mislukt
+clip.path_copied = Pad gekopieerd
+
+# Deelvenster Kanalen
+channels.title = Kanalen
+channels.rgb = RGB
+channels.rgba = RGBA
+channels.letter.r = R
+channels.letter.g = G
+channels.letter.b = B
+channels.letter.a = A
+channels.desc.red = rood
+channels.desc.green = groen
+channels.desc.blue = blauw
+channels.desc.alpha = alfa
+channels.row.rgb = RGB
+channels.row.red = Rood
+channels.row.green = Groen
+channels.row.blue = Blauw
+channels.row.alpha = Alfa
+channels.hint = Selectievakjes: kanalen combineren
+channels.no_alpha = Deze afbeelding heeft geen transparantie
+channels.toast.rgb = Kanalen: RGB
+channels.toast.red = Rood kanaal
+channels.toast.green = Groen kanaal
+channels.toast.blue = Blauw kanaal
+channels.toast.alpha = Alfakanaal
+channels.toast.mix = Kanalen: %ls
+
+# Afbeeldingsfiltering
+filter.auto = Automatisch
+filter.raw = Ruwe pixels
+filter.linear = Lineair
+filter.cubic = Bicubisch
+filter.cubic_hq = Bicubisch HQ
+filter.anisotropic = Anisotroop
+filter.toast = Filtering: %ls
+
+# Diavoorstelling en animaties afspelen
+slide.delay = %d s
+slide.toast.delay = Diavoorstelling: %ls per afbeelding
+slide.toast.start = Diavoorstelling · %ls per afbeelding · Esc om af te sluiten
+slide.err.two_images = De map moet minstens twee afbeeldingen bevatten
+slide.toast.paused = Diavoorstelling gepauzeerd
+slide.toast.playing = Diavoorstelling wordt afgespeeld
+slide.tip.prev = Vorige (←)
+slide.tip.play = Afspelen (Spatiebalk)
+slide.tip.pause = Pauzeren (Spatiebalk)
+slide.tip.next = Volgende (→)
+slide.tip.less = Minder tijd per afbeelding (↓)
+slide.tip.more = Meer tijd per afbeelding (↑)
+slide.tip.shuffle = Willekeurige volgorde
+slide.tip.exit = Diavoorstelling afsluiten (Esc)
+slide.anim.frame = Frame %d / %d
+slide.anim.play = Afspelen
+slide.anim.pause = Gepauzeerd
+
+# Bewerkingsmodus: gereedschappen
+edit.tool.hand = Weergave verschuiven (M, of Spatiebalk ingedrukt houden)
+edit.tool.brush = Penseel (B) — rechtsklikken: 2e kleur
+edit.tool.eraser = Gum (G)
+edit.tool.line = Lijn (L) — Shift: hoeken van 45°
+edit.tool.arrow = Pijl (A)
+edit.tool.rect = Rechthoek (R) — Shift: vierkant
+edit.tool.ellipse = Ellips (O) — Shift: cirkel
+edit.tool.text = Tekst (T)
+edit.tool.fill = Opvullen (F)
+edit.tool.picker = Pipet (K)
+edit.tool.crop = Bijsnijden (C) — Enter om toe te passen
+
+# Bewerkingsmodus: bovenbalk, kleuren, menu Formaat wijzigen
+edit.title = Bewerken
+edit.modified = gewijzigd
+edit.btn.done = Gereed
+edit.tip.done = Bewerkingsmodus afsluiten (E / Esc)
+edit.btn.save_as = Opslaan als
+edit.btn.save_as_dirty = Opslaan als •
+edit.tip.save_as = Opslaan als… (Ctrl+S)
+edit.tip.flip_v = Verticaal spiegelen
+edit.tip.flip_h = Horizontaal spiegelen
+edit.tip.rot_right = Rechtsom draaien
+edit.tip.rot_left = Linksom draaien
+edit.tip.resize = Formaat wijzigen
+edit.tip.fill_on = Gevulde vormen (klik: omtrek)
+edit.tip.fill_off = Omtrekvormen (klik: gevuld)
+edit.tip.font_size = Tekstgrootte ( [ en ] )
+edit.tip.thickness = Dikte ( [ en ] )
+edit.label.font = Lettertype
+edit.label.size = Grootte
+edit.tip.undo = Ongedaan maken (Ctrl+Z)
+edit.tip.redo = Opnieuw (Ctrl+Y)
+edit.tip.swap_colors = Primaire / secundaire kleur verwisselen
+edit.tip.palette = Klik: primaire kleur — rechtsklikken: secundaire
+edit.tip.custom_color = Meer kleuren…
+edit.resize.percent = %d%%
+edit.resize.long_side = Lange zijde %d px
+edit.crop.apply = Bijsnijden
+edit.tip.crop_apply = Bijsnijden toepassen (Enter)
+edit.tip.crop_cancel = Annuleren (Esc)
+
+# Bewerkingsmodus: meldingen
+edit.loading = Afbeelding wordt geladen…
+edit.no_image = Geen afbeelding om te bewerken
+edit.err.read = Kan de afbeelding niet lezen
+edit.err.memory = Onvoldoende geheugen
+edit.err.vram = Onvoldoende videogeheugen
+edit.err.too_big = Afbeelding te groot om te bewerken
+edit.ask.title = Wijzigingen opslaan?
+edit.ask.content = De afbeelding is gewijzigd. Uw wijzigingen gaan verloren als u ze niet opslaat.
+edit.ask.save = Opslaan als…
+edit.ask.discard = Niet opslaan
+
+# Opslaan als
+edit.save.no_image = Geen afbeelding om op te slaan
+edit.save.no_encoder = Er is geen afbeeldingsencoder beschikbaar.
+edit.save.failed = Opslaan mislukt:\n%ls
+edit.save.done = Opgeslagen: %ls

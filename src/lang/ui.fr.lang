@@ -1,0 +1,152 @@
+# CyImgView — interface : menu contextuel, couches, filtrage, diaporama, presse-papier, édition (français, langue source)
+@code = fr
+@name = Français
+
+# Menu contextuel (clic droit) : texte\traccourci
+menu.copy = Copier l'image\tCtrl+C
+menu.copy_path = Copier le chemin du fichier\tCtrl+Maj+C
+menu.open = Ouvrir…\tCtrl+O
+menu.save_as = Enregistrer sous…\tCtrl+S
+menu.edit = Modifier\tE
+menu.reveal = Afficher dans l'Explorateur
+menu.channels = Canal affiché\tC
+menu.channel.rgb = RVB (toutes les couleurs)\tCtrl+2
+menu.channel.red = Rouge\tCtrl+3
+menu.channel.green = Vert\tCtrl+4
+menu.channel.blue = Bleu\tCtrl+5
+menu.channel.alpha = Alpha (transparence)\tCtrl+6
+menu.filter = Filtrage
+menu.filter.raw = Pixels bruts\tN
+menu.play = Lecture\tEspace
+menu.pause = Pause\tEspace
+menu.rotate = Pivoter\tR
+menu.slideshow = Diaporama\tD
+menu.slideshow_stop = Quitter le diaporama\tÉchap
+menu.fullscreen = Plein écran\tF
+menu.info = Informations\tI
+menu.settings = Paramètres\tP
+
+# Presse-papier
+clip.err.read = Lecture de l'image impossible
+clip.loading = Image en cours de chargement…
+clip.none = Aucune image à copier
+clip.err.memory = Mémoire insuffisante
+clip.busy = Presse-papier occupé, réessayez
+clip.copied = Image copiée
+clip.failed = Copie impossible
+clip.path_copied = Chemin copié
+
+# Canaux (panneau Couches)
+channels.title = Couches
+channels.rgb = RVB
+channels.rgba = RVBA
+channels.letter.r = R
+channels.letter.g = V
+channels.letter.b = B
+channels.letter.a = A
+channels.desc.red = rouge
+channels.desc.green = vert
+channels.desc.blue = bleu
+channels.desc.alpha = alpha
+channels.row.rgb = RVB
+channels.row.red = Rouge
+channels.row.green = Vert
+channels.row.blue = Bleu
+channels.row.alpha = Alpha
+channels.hint = Cases : combiner plusieurs canaux
+channels.no_alpha = Cette image n'a pas de transparence
+channels.toast.rgb = Canaux : RVB
+channels.toast.red = Canal rouge
+channels.toast.green = Canal vert
+channels.toast.blue = Canal bleu
+channels.toast.alpha = Canal alpha
+channels.toast.mix = Canaux : %ls
+
+# Filtrage de l'image
+filter.auto = Automatique
+filter.raw = Pixels bruts
+filter.linear = Linéaire
+filter.cubic = Cubique
+filter.cubic_hq = Cubique HQ
+filter.anisotropic = Anisotrope
+filter.toast = Filtrage : %ls
+
+# Diaporama et lecture des animations
+slide.delay = %d s
+slide.toast.delay = Diaporama : %ls par image
+slide.toast.start = Diaporama · %ls par image · Échap pour quitter
+slide.err.two_images = Il faut au moins deux images dans le dossier
+slide.toast.paused = Diaporama en pause
+slide.toast.playing = Lecture du diaporama
+slide.tip.prev = Précédente (←)
+slide.tip.play = Lecture (Espace)
+slide.tip.pause = Pause (Espace)
+slide.tip.next = Suivante (→)
+slide.tip.less = Moins de temps par image (↓)
+slide.tip.more = Plus de temps par image (↑)
+slide.tip.shuffle = Ordre aléatoire
+slide.tip.exit = Quitter le diaporama (Échap)
+slide.anim.frame = Image %d / %d
+slide.anim.play = Lecture
+slide.anim.pause = Pause
+
+# Mode édition : outils
+edit.tool.hand = Déplacer la vue (M, ou Espace maintenu)
+edit.tool.brush = Pinceau (B) — clic droit : 2e couleur
+edit.tool.eraser = Gomme (G)
+edit.tool.line = Ligne (L) — Maj : angles de 45°
+edit.tool.arrow = Flèche (A)
+edit.tool.rect = Rectangle (R) — Maj : carré
+edit.tool.ellipse = Ellipse (O) — Maj : cercle
+edit.tool.text = Texte (T)
+edit.tool.fill = Remplissage (F)
+edit.tool.picker = Pipette (K)
+edit.tool.crop = Recadrer (C) — Entrée pour valider
+
+# Mode édition : barre du haut, couleurs, menu Redimensionner
+edit.title = Édition
+edit.modified = modifiée
+edit.btn.done = Terminer
+edit.tip.done = Quitter le mode édition (E / Échap)
+edit.btn.save_as = Enregistrer sous
+edit.btn.save_as_dirty = Enregistrer sous •
+edit.tip.save_as = Enregistrer sous… (Ctrl+S)
+edit.tip.flip_v = Miroir vertical
+edit.tip.flip_h = Miroir horizontal
+edit.tip.rot_right = Pivoter à droite
+edit.tip.rot_left = Pivoter à gauche
+edit.tip.resize = Redimensionner
+edit.tip.fill_on = Formes pleines (cliquer : contour)
+edit.tip.fill_off = Formes en contour (cliquer : pleines)
+edit.tip.font_size = Taille du texte ( [ et ] )
+edit.tip.thickness = Épaisseur ( [ et ] )
+edit.label.font = Police
+edit.label.size = Taille
+edit.tip.undo = Annuler (Ctrl+Z)
+edit.tip.redo = Rétablir (Ctrl+Y)
+edit.tip.swap_colors = Inverser couleur principale / secondaire
+edit.tip.palette = Clic : couleur principale — clic droit : secondaire
+edit.tip.custom_color = Autre couleur…
+edit.resize.percent = %d %%
+edit.resize.long_side = Grand côté %d px
+edit.crop.apply = Recadrer
+edit.tip.crop_apply = Valider le recadrage (Entrée)
+edit.tip.crop_cancel = Annuler (Échap)
+
+# Mode édition : messages
+edit.loading = Image en cours de chargement…
+edit.no_image = Aucune image à modifier
+edit.err.read = Lecture de l'image impossible
+edit.err.memory = Mémoire insuffisante
+edit.err.vram = Mémoire vidéo insuffisante
+edit.err.too_big = Image trop grande pour l'édition
+edit.ask.title = Enregistrer les modifications ?
+edit.ask.content = L'image a été modifiée. Les changements seront perdus si vous ne les enregistrez pas.
+edit.ask.save = Enregistrer sous…
+edit.ask.discard = Ne pas enregistrer
+
+# Enregistrer sous
+edit.save.no_image = Aucune image à enregistrer
+edit.save.no_encoder = Aucun encodeur d'image n'est disponible.
+edit.save.failed = L'enregistrement a échoué :\n%ls
+edit.save.done = Enregistré : %ls

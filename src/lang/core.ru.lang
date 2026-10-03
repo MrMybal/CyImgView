@@ -1,0 +1,6 @@
+# CyImgView — core (Русский)
+@code = ru
+@name = Русский
+settings.language = Язык интерфейса
+settings.language.desc = «Автоматически» — язык, выбранный в Windows.
+settings.language.auto = Автоматически (%ls)

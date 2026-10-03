@@ -8,7 +8,7 @@
 // Le composite transparent est « matté » sur blanc par Photoshop : le matting est retiré.
 // Sans composite, la miniature JPEG des ressources (1036, ou 1033 en BGR) est affichée.
 
-#include "cyimg_plugin.h"
+#include "cyimg_plugin_i18n.h"
 #include "inflate.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -85,14 +85,14 @@ struct Psd {
 const wchar_t* ModeName(uint32_t m) {
     switch (m) {
     case kBitmap: return L"Bitmap";
-    case kGray: return L"Niveaux de gris";
-    case kIndexed: return L"Couleurs indexées";
-    case kRgb: return L"RVB";
-    case kCmyk: return L"CMJN";
-    case kMulti: return L"Multicouche";
-    case kDuotone: return L"Bichromie";
+    case kGray: return CYIMG_TR("plugin.psd.mode.gray", L"Niveaux de gris");
+    case kIndexed: return CYIMG_TR("plugin.psd.mode.indexed", L"Couleurs indexées");
+    case kRgb: return CYIMG_TR("plugin.psd.mode.rgb", L"RVB");
+    case kCmyk: return CYIMG_TR("plugin.psd.mode.cmyk", L"CMJN");
+    case kMulti: return CYIMG_TR("plugin.psd.mode.multi", L"Multicouche");
+    case kDuotone: return CYIMG_TR("plugin.psd.mode.duotone", L"Bichromie");
     case kLab: return L"Lab";
-    default: return L"inconnu";
+    default: return CYIMG_TR("plugin.psd.mode.unknown", L"inconnu");
     }
 }
 
@@ -232,17 +232,17 @@ public:
     // Prépare la lecture des canaux 0..maxChannel. Lève Fail si les données sont absentes ou tronquées.
     void Init(uint32_t maxChannel) {
         size_t pos = m_d.imageData;
-        if (pos + 2 > m_size) throw Fail{L"composite absent"};
+        if (pos + 2 > m_size) throw Fail{CYIMG_TR("plugin.psd.err.no_composite", L"composite absent")};
         m_comp = Be16(m_f + pos);
         pos += 2;
         const uint64_t rows = uint64_t(maxChannel + 1) * m_d.h;
         if (m_comp == 0) {
-            if (rows * m_rowBytes > m_size - pos) throw Fail{L"composite tronqué"};
+            if (rows * m_rowBytes > m_size - pos) throw Fail{CYIMG_TR("plugin.psd.err.composite_truncated", L"composite tronqué")};
             m_base = pos;
         } else if (m_comp == 1) {
             const size_t cw = m_d.psb ? 4 : 2;
             const uint64_t table = uint64_t(m_d.channels) * m_d.h * cw;
-            if (table > m_size - pos) throw Fail{L"composite tronqué"};
+            if (table > m_size - pos) throw Fail{CYIMG_TR("plugin.psd.err.composite_truncated", L"composite tronqué")};
             m_offsets.resize(size_t(rows) + 1);
             uint64_t off = pos + table;
             for (size_t i = 0; i < rows; ++i) {
@@ -250,16 +250,16 @@ public:
                 off += cw == 4 ? Be32(m_f + pos + i * 4) : Be16(m_f + pos + i * 2);
             }
             m_offsets[size_t(rows)] = off;
-            if (off > m_size) throw Fail{L"composite tronqué"};
+            if (off > m_size) throw Fail{CYIMG_TR("plugin.psd.err.composite_truncated", L"composite tronqué")};
         } else if (m_comp == 2 || m_comp == 3) {
             const uint64_t raw = uint64_t(m_d.channels) * m_d.h * m_rowBytes;
             // deflate ne dépasse pas un rapport ~1032:1 : écarte les en-têtes incohérents avant d'allouer
-            if (raw > (uint64_t(1) << 40) || raw / 1032 > m_size - pos) throw Fail{L"données ZIP tronquées"};
+            if (raw > (uint64_t(1) << 40) || raw / 1032 > m_size - pos) throw Fail{CYIMG_TR("plugin.psd.err.zip_truncated", L"données ZIP tronquées")};
             m_zip.resize(size_t(raw));
-            if (!ZlibDecompress(m_f + pos, m_size - pos, m_zip.data(), m_zip.size())) throw Fail{L"données ZIP invalides ou tronquées"};
+            if (!ZlibDecompress(m_f + pos, m_size - pos, m_zip.data(), m_zip.size())) throw Fail{CYIMG_TR("plugin.psd.err.zip_invalid", L"données ZIP invalides ou tronquées")};
             if (m_comp == 3) Unpredict();
         } else {
-            throw Fail{L"compression du composite inconnue"};
+            throw Fail{CYIMG_TR("plugin.psd.err.composite_comp", L"compression du composite inconnue")};
         }
     }
 
@@ -386,19 +386,20 @@ int DecodeThumb(const CyImgHost* host, CyImgContext* ctx, const Psd& d) {
 }
 
 int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
+    cyimg_tr_begin(host, ctx);
     auto fail = [&](const wchar_t* msg) {
         if (CYIMG_HOST_HAS(host, set_error)) host->set_error(ctx, msg);
         return CYIMG_E_FAIL;
     };
     MappedFile mf;
-    if (!mf.Open(path)) return fail(L"Lecture du fichier Photoshop impossible");
+    if (!mf.Open(path)) return fail(CYIMG_TR("plugin.psd.err.read", L"Lecture du fichier Photoshop impossible"));
     const uint8_t* f = mf.data;
     const size_t size = mf.size;
-    if (size < 26 + 12 || memcmp(f, "8BPS", 4) != 0) return fail(L"Fichier Photoshop non reconnu");
+    if (size < 26 + 12 || memcmp(f, "8BPS", 4) != 0) return fail(CYIMG_TR("plugin.psd.err.unrecognized", L"Fichier Photoshop non reconnu"));
 
     Psd d;
     const uint16_t version = Be16(f + 4);
-    if (version != 1 && version != 2) return fail(L"Version de fichier Photoshop inconnue");
+    if (version != 1 && version != 2) return fail(CYIMG_TR("plugin.psd.err.version", L"Version de fichier Photoshop inconnue"));
     d.psb = version == 2;
     d.channels = Be16(f + 12);
     d.h = Be32(f + 14);
@@ -407,13 +408,13 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     d.mode = Be16(f + 24);
     const uint32_t maxDim = d.psb ? 300000 : 30000;
     if (!d.channels || d.channels > 56 || !d.w || !d.h || d.w > maxDim || d.h > maxDim)
-        return fail(L"En-tête Photoshop invalide");
-    if (d.depth != 1 && d.depth != 8 && d.depth != 16 && d.depth != 32) return fail(L"Profondeur Photoshop non gérée");
+        return fail(CYIMG_TR("plugin.psd.err.header", L"En-tête Photoshop invalide"));
+    if (d.depth != 1 && d.depth != 8 && d.depth != 16 && d.depth != 32) return fail(CYIMG_TR("plugin.psd.err.depth", L"Profondeur Photoshop non gérée"));
     if (d.mode != kBitmap && d.mode != kGray && d.mode != kIndexed && d.mode != kRgb && d.mode != kCmyk &&
         d.mode != kMulti && d.mode != kDuotone && d.mode != kLab)
-        return fail(L"Mode colorimétrique Photoshop non géré");
-    if ((d.mode == kBitmap) != (d.depth == 1)) return fail(L"Profondeur incompatible avec le mode colorimétrique");
-    if (d.mode == kLab && d.depth == 32) return fail(L"Lab 32 bits non géré");
+        return fail(CYIMG_TR("plugin.psd.err.mode", L"Mode colorimétrique Photoshop non géré"));
+    if ((d.mode == kBitmap) != (d.depth == 1)) return fail(CYIMG_TR("plugin.psd.err.depth_mode", L"Profondeur incompatible avec le mode colorimétrique"));
+    if (d.mode == kLab && d.depth == 32) return fail(CYIMG_TR("plugin.psd.err.lab32", L"Lab 32 bits non géré"));
 
     host->set_format(ctx, d.psb ? L"Photoshop PSB" : L"Photoshop PSD");
 
@@ -421,14 +422,14 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     size_t pos = 26;
     const size_t cmLen = Be32(f + pos);
     pos += 4;
-    if (cmLen > size - pos) return fail(L"Fichier Photoshop tronqué");
+    if (cmLen > size - pos) return fail(CYIMG_TR("plugin.psd.err.truncated", L"Fichier Photoshop tronqué"));
     d.colorData = f + pos;
     d.colorLen = cmLen;
     pos += cmLen;
-    if (pos + 4 > size) return fail(L"Fichier Photoshop tronqué");
+    if (pos + 4 > size) return fail(CYIMG_TR("plugin.psd.err.truncated", L"Fichier Photoshop tronqué"));
     const size_t resLen = Be32(f + pos);
     pos += 4;
-    if (resLen > size - pos) return fail(L"Fichier Photoshop tronqué");
+    if (resLen > size - pos) return fail(CYIMG_TR("plugin.psd.err.truncated", L"Fichier Photoshop tronqué"));
     ParseResources(f + pos, resLen, d);
     pos += resLen;
     size_t lmEnd = size;
@@ -436,22 +437,24 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     d.imageData = lmEnd;
     d.mergedAlpha |= d.layerCount < 0;
 
-    wchar_t buf[96];
-    host->set_info(ctx, L"Mode", ModeName(d.mode));
-    swprintf_s(buf, L"%u bit%ls/canal", d.depth, d.depth > 1 ? L"s" : L"");
-    host->set_info(ctx, L"Profondeur", buf);
+    wchar_t buf[256];
+    host->set_info(ctx, CYIMG_TR("plugin.psd.info.mode", L"Mode"), ModeName(d.mode));
+    swprintf_s(buf, d.depth > 1 ? CYIMG_TR("plugin.psd.depth_many", L"%u bits/canal") : CYIMG_TR("plugin.psd.depth_one", L"%u bit/canal"),
+               d.depth);
+    host->set_info(ctx, CYIMG_TR("plugin.psd.info.depth", L"Profondeur"), buf);
     swprintf_s(buf, L"%u × %u", d.w, d.h);
-    host->set_info(ctx, L"Dimensions", buf);
+    host->set_info(ctx, CYIMG_TR("plugin.psd.info.dimensions", L"Dimensions"), buf);
     swprintf_s(buf, L"%d", d.layerCount < 0 ? -d.layerCount : d.layerCount);
-    host->set_info(ctx, L"Calques", buf);
+    host->set_info(ctx, CYIMG_TR("plugin.psd.info.layers", L"Calques"), buf);
 
     const uint32_t target = host->target_size(ctx);
     auto useThumb = [&](const wchar_t* why) -> int {
         if (!d.thumb) return CYIMG_E_FAIL;
         const int rc = DecodeThumb(host, ctx, d);
         if (rc == CYIMG_OK) {
-            swprintf_s(buf, L"miniature intégrée (%u × %u%ls%ls)", d.thumbW, d.thumbH, why ? L", " : L"", why ? why : L"");
-            host->set_info(ctx, L"Aperçu", buf);
+            if (why) swprintf_s(buf, CYIMG_TR("plugin.psd.thumb_why", L"miniature intégrée (%u × %u, %ls)"), d.thumbW, d.thumbH, why);
+            else swprintf_s(buf, CYIMG_TR("plugin.psd.thumb", L"miniature intégrée (%u × %u)"), d.thumbW, d.thumbH);
+            host->set_info(ctx, CYIMG_TR("plugin.psd.info.preview", L"Aperçu"), buf);
         }
         return rc;
     };
@@ -460,30 +463,31 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     if (target && d.thumb && std::max(d.thumbW, d.thumbH) >= target && useThumb(nullptr) == CYIMG_OK) return CYIMG_OK;
 
     if (!d.layersOk || d.hasRealMerged == 0) {
-        const wchar_t* why = d.layersOk ? L"composite absent" : L"fichier tronqué";
+        const wchar_t* why = d.layersOk ? CYIMG_TR("plugin.psd.err.no_composite", L"composite absent") : CYIMG_TR("plugin.psd.why.truncated", L"fichier tronqué");
         if (useThumb(why) == CYIMG_OK) return CYIMG_OK;
-        return fail(d.layersOk ? L"Composite absent (fichier enregistré sans « Compatibilité maximale ») et aucune miniature"
-                               : L"Fichier Photoshop tronqué");
+        return fail(d.layersOk ? CYIMG_TR("plugin.psd.err.no_composite_thumb", L"Composite absent (fichier enregistré sans « Compatibilité maximale ») et aucune miniature")
+                               : CYIMG_TR("plugin.psd.err.truncated", L"Fichier Photoshop tronqué"));
     }
 
     const uint32_t nColor = ColorChannels(d.mode, d.channels);
-    if (d.channels < nColor) return fail(L"Nombre de canaux insuffisant pour le mode colorimétrique");
+    if (d.channels < nColor) return fail(CYIMG_TR("plugin.psd.err.channels", L"Nombre de canaux insuffisant pour le mode colorimétrique"));
     const bool hasAlphaCh = d.mergedAlpha && d.channels > nColor;
     const uint32_t nUsed = nColor + (hasAlphaCh ? 1 : 0);
-    if (d.mode == kIndexed && d.colorLen < 768) return fail(L"Palette Photoshop absente");
+    if (d.mode == kIndexed && d.colorLen < 768) return fail(CYIMG_TR("plugin.psd.err.palette", L"Palette Photoshop absente"));
 
     // Facteur de réduction : vignette (≥ 2× la cible, l'hôte affine) et limite 65535 px de l'hôte
     uint32_t fct = 1;
     if (target) fct = std::max<uint32_t>(1, std::max(d.w, d.h) / (target * 2));
     while ((d.w + fct - 1) / fct > 65535 || (d.h + fct - 1) / fct > 65535) ++fct;
     const uint32_t ow = (d.w + fct - 1) / fct, oh = (d.h + fct - 1) / fct;
-    if (!target && fct > 1) host->set_info(ctx, L"Affichage", L"réduit (dimensions supérieures à 65535 px)");
+    if (!target && fct > 1) host->set_info(ctx, CYIMG_TR("plugin.psd.info.display", L"Affichage"), CYIMG_TR("plugin.psd.display_reduced", L"réduit (dimensions supérieures à 65535 px)"));
 
     try {
         ImageData img(f, size, d);
         img.Init(nUsed - 1);
-        static const wchar_t* comps[] = {L"aucune", L"RLE", L"ZIP", L"ZIP avec prédiction"};
-        host->set_info(ctx, L"Compression", comps[img.Compression()]);
+        const wchar_t* const comps[] = {CYIMG_TR("plugin.psd.comp.none", L"aucune"), L"RLE", L"ZIP",
+                                        CYIMG_TR("plugin.psd.comp.zip_pred", L"ZIP avec prédiction")};
+        host->set_info(ctx, CYIMG_TR("plugin.psd.info.compression", L"Compression"), comps[img.Compression()]);
 
         // Lignes traitées en parallèle : échantillonnage des canaux utiles (8 bits) puis BGRA (alpha droit)
         const Luts& lut = GetLuts();
@@ -597,7 +601,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
             for (auto& th : threads) th.join();
         }
         if (cancelled) return CYIMG_E_CANCELLED;
-        if (oom) return fail(L"Mémoire insuffisante pour décoder le fichier Photoshop");
+        if (oom) return fail(CYIMG_TR("plugin.psd.err.memory", L"Mémoire insuffisante pour décoder le fichier Photoshop"));
 
         // Prémultiplication ; matting retiré : c = (c' - (1-a)·255) / a, donc c·a = c' - 255 + a
         if (outAlpha) {
@@ -614,18 +618,18 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
                 }
             }
         }
-        if (hasAlphaCh) host->set_info(ctx, L"Transparence", L"oui");
+        if (hasAlphaCh) host->set_info(ctx, CYIMG_TR("plugin.psd.info.transparency", L"Transparence"), CYIMG_TR("plugin.psd.yes", L"oui"));
         if (d.channels > nUsed) {
             swprintf_s(buf, L"%u", d.channels - nUsed);
-            host->set_info(ctx, L"Couches alpha", buf);
+            host->set_info(ctx, CYIMG_TR("plugin.psd.info.alpha_channels", L"Couches alpha"), buf);
         }
         return CYIMG_OK;
     } catch (const Fail& e) {
         if (useThumb(e.msg) == CYIMG_OK) return CYIMG_OK;
-        swprintf_s(buf, L"Photoshop : %ls", e.msg);
+        swprintf_s(buf, CYIMG_TR("plugin.psd.err.prefix", L"Photoshop : %ls"), e.msg);
         return fail(buf);
     } catch (const std::bad_alloc&) {
-        return fail(L"Mémoire insuffisante pour décoder le fichier Photoshop");
+        return fail(CYIMG_TR("plugin.psd.err.memory", L"Mémoire insuffisante pour décoder le fichier Photoshop"));
     }
 }
 

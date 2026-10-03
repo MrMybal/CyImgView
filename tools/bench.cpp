@@ -3,6 +3,7 @@
 // « best » force aussi la version complète (développement RAW) même si l'aperçu suffit.
 #include "../src/decoder.h"
 #include "../src/folder.h"
+#include "../src/i18n.h"
 #include "../src/save.h"
 #include "../src/updater.h"
 #include "../src/version.h"
@@ -49,7 +50,25 @@ static int Convert(Decoder& dec, const std::wstring& in, const std::wstring& out
     return 0;
 }
 
+// Plantage non rattrapé (ex. dans un thread d'une bibliothèque) : affiche le module et le décalage,
+// pour retrouver la fonction fautive avec un fichier .map.
+static LONG WINAPI ReportCrash(EXCEPTION_POINTERS* ep) {
+    const DWORD code = ep->ExceptionRecord->ExceptionCode;
+    if (code != EXCEPTION_ACCESS_VIOLATION && code != EXCEPTION_STACK_OVERFLOW && code != EXCEPTION_ILLEGAL_INSTRUCTION) return EXCEPTION_CONTINUE_SEARCH;
+    void* addr = ep->ExceptionRecord->ExceptionAddress;
+    HMODULE mod = nullptr;
+    wchar_t name[MAX_PATH] = L"?";
+    if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                           static_cast<LPCWSTR>(addr), &mod))
+        GetModuleFileNameW(mod, name, MAX_PATH);
+    fwprintf(stderr, L"\nPLANTAGE %08lX dans %ls +0x%llX (thread %lu)\n", ep->ExceptionRecord->ExceptionCode, name,
+             static_cast<unsigned long long>(static_cast<char*>(addr) - reinterpret_cast<char*>(mod)), GetCurrentThreadId());
+    fflush(stderr);
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
 int wmain(int argc, wchar_t** argv) {
+    AddVectoredExceptionHandler(1, ReportCrash);  // voit aussi les erreurs rattrapées plus tard
     if (argc < 2) {
         fwprintf(stderr, L"usage: cyimg_bench <fichier|dossier> [taille_vignette] [best]\n"
                          L"       cyimg_bench convert <source> <destination> [qualité]\n");
@@ -58,6 +77,7 @@ int wmain(int argc, wchar_t** argv) {
     CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     wchar_t exe[MAX_PATH];
     GetModuleFileNameW(nullptr, exe, MAX_PATH);
+    i18n::Init(ParentOf(exe), L"");  // messages du décodeur dans la langue de Windows
     Decoder dec;
     dec.Init(ParentOf(exe));
     if (!wcscmp(argv[1], L"update-check") && argc > 2) {  // test : update-check propriétaire/dépôt [version]

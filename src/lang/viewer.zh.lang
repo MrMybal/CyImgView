@@ -1,0 +1,130 @@
+# CyImgView — viewer (简体中文)
+@code = zh
+@name = 简体中文
+
+# 数字和单位
+viewer.decimal = .
+viewer.unit.bytes = %llu 字节
+viewer.unit.kb = %.1f KB
+viewer.unit.mb = %.1f MB
+viewer.unit.gb = %.2f GB
+viewer.zoom.pct1 = %.1f%%
+viewer.zoom.pct0 = %.0f%%
+
+# 错误、居中消息、通知
+viewer.err.direct2d = Direct2D 不可用。
+viewer.msg.open_failed = 无法打开此文件
+viewer.msg.drop = 将图像拖放到此处
+viewer.msg.drop_sub = 或按 Ctrl+O 打开文件
+viewer.toast.device_lost = 显卡驱动程序已重置：更改已丢失
+viewer.toast.fit = 适应窗口
+viewer.toast.not_found = 找不到文件
+viewer.toast.no_images = 此文件夹中没有图像
+viewer.toast.first = 第一张图像
+viewer.toast.last = 最后一张图像
+viewer.toast.shuffle_on = 随机顺序
+viewer.toast.shuffle_off = 文件夹顺序
+
+# “打开”对话框
+viewer.dlg.images = 图像
+viewer.dlg.all_files = 所有文件
+viewer.dlg.open_title = 打开图像
+
+# 工具栏提示
+viewer.btn.open = 打开 (Ctrl+O)
+viewer.btn.save_as = 另存为 / 转换 (Ctrl+S)
+viewer.btn.edit = 编辑 (E)
+viewer.btn.zoom_out = 缩小 (-)
+viewer.btn.zoom_in = 放大 (+)
+viewer.btn.fit = 适应窗口 (0)
+viewer.btn.actual = 实际大小 (1)
+viewer.btn.rotate = 旋转 (R)
+viewer.btn.channels = 通道：显示或组合通道 (C)
+viewer.btn.strip = 缩略图栏 (T)
+viewer.btn.info = 信息 (I)
+viewer.btn.help = 快捷键 (H)
+viewer.btn.slideshow = 全屏幻灯片放映 (D)
+viewer.btn.settings = 设置 (P)
+viewer.btn.fullscreen = 全屏 (F)
+viewer.btn.update = 有新版本可用 (Ctrl+U)
+viewer.update.badge = 更新 %ls
+
+# 状态栏
+viewer.status.raw = 正在处理 RAW…
+viewer.status.frame = 帧 %d/%d
+viewer.status.paused = （已暂停）
+viewer.status.channels = 通道 %ls
+
+# 信息面板
+viewer.info.title = 信息
+viewer.info.file = 文件
+viewer.info.folder = 文件夹
+viewer.info.size = 大小
+viewer.info.modified = 修改时间
+viewer.info.dimensions = 尺寸
+viewer.info.dims = %d × %d  (%.1f MP)
+viewer.info.format = 格式
+viewer.info.decode = 解码
+
+# 快捷键面板（k = 按键，d = 说明）
+viewer.help.title = 快捷键
+viewer.help.plugins = 已加载的插件 (%d)
+viewer.help.no_plugins = 无（“plugins”文件夹为空）
+viewer.help.k.nav = ← → / 空格 / Backspace
+viewer.help.d.nav = 上一张 / 下一张图像
+viewer.help.d.filter = 原始像素 / 过滤（在设置中选择过滤方式）
+viewer.help.d.slideshow = 全屏幻灯片放映（↑ ↓：每张时长，空格：暂停）
+viewer.help.k.copy = Ctrl+C / 右键
+viewer.help.d.copy = 复制图像（Ctrl+Shift+C：复制路径）
+viewer.help.k.channels = RGB 按钮 / C / Ctrl+2…6
+viewer.help.d.channels = 通道：单个通道（红、绿、蓝、Alpha）
+viewer.help.k.anim = 空格 / , / .
+viewer.help.d.anim = 动画：播放-暂停 / 上一帧-下一帧
+viewer.help.k.home_end = Home / End
+viewer.help.d.home_end = 第一张 / 最后一张图像
+viewer.help.k.zoom = 滚轮 / + / -
+viewer.help.d.zoom = 缩放（以鼠标为中心）
+viewer.help.k.drag = 拖动
+viewer.help.d.drag = 平移放大后的图像
+viewer.help.k.dblclick = 双击 / Z
+viewer.help.d.dblclick = 切换 适应窗口 ↔ 实际大小
+viewer.help.d.fit = 适应窗口 / 100%
+viewer.help.k.rotate = R / Shift+R
+viewer.help.d.rotate = 向右 / 向左旋转
+viewer.help.k.fullscreen = F / F11 / Enter
+viewer.help.d.fullscreen = 全屏
+viewer.help.d.strip = 显示 / 隐藏缩略图栏
+viewer.help.d.info = 信息面板
+viewer.help.d.open = 打开文件（或拖放）
+viewer.help.d.save_as = 另存为 / 转换格式
+viewer.help.d.update = 检查更新
+viewer.help.d.settings = 设置（单一窗口、缩略图栏、更新）
+viewer.help.d.edit = 编辑模式（画笔、形状、文本、裁剪…）
+viewer.help.d.reload = 重新加载文件夹
+viewer.help.k.mouse_side = 鼠标侧键
+viewer.help.d.mouse_side = 上一张 / 下一张图像
+viewer.help.k.esc = Esc
+viewer.help.d.esc = 关闭面板 / 退出
+
+# 设置面板（settings.language* 键位于 core.*.lang 中）
+settings.title = 设置
+settings.single_window = 在现有窗口中打开文件
+settings.single_window.desc = 否则，每打开一个文件都会新建一个窗口。
+settings.strip = 显示缩略图栏
+settings.strip.desc = 在底部显示文件夹中图像的缩略图（T 键）。
+settings.auto_update = 自动检查更新
+settings.auto_update.desc = 每天最多一次，检查 CyImgView 在 GitHub 上的发行版。
+settings.shuffle = 幻灯片放映：随机顺序
+settings.shuffle.desc = 否则，按文件夹顺序播放图像（D 键）。
+settings.filter = 图像过滤
+settings.filter.desc.auto = 100% 时清晰，缩小时平滑，300% 以上像素锐利。
+settings.filter.desc.raw = 不平滑：像素画、细节检查（N 键）。
+settings.filter.desc.linear = 简单、快速的平滑。
+settings.filter.desc.cubic = 双三次：比线性更清晰。
+settings.filter.desc.cubic_hq = 最佳缩小效果，速度稍慢。
+settings.filter.desc.anisotropic = 柔和缩小，锯齿更少。
+settings.slide_delay = 幻灯片放映：每张时长
+settings.slide_delay.desc = 放映期间也可用 ↑ 和 ↓ 调整。
+settings.update.install = 安装更新 %ls
+settings.update.check = 检查更新
+settings.ini_path = 设置文件：%ls

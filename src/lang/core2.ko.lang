@@ -1,0 +1,113 @@
+# CyImgView — core2 (한국어)
+@code = ko
+@name = 한국어
+
+# 업데이트 창
+update.toast.no_repo = 업데이트: GitHub 리포지토리가 구성되지 않음
+update.toast.checking = 업데이트 확인 중…
+update.toast.available = 업데이트 %ls 사용 가능
+update.toast.up_to_date = CyImgView가 최신 버전입니다(%ls)
+update.err.check = 업데이트를 확인할 수 없습니다.\n%ls
+update.no_notes = (릴리스 정보 없음)
+update.size_mb = %.1f MB
+update.btn.install = 설치 후 다시 시작\n%ls을(를) 다운로드한 후 CyImgView를 다시 시작합니다
+update.available = CyImgView %ls을(를) 사용할 수 있습니다
+update.installed_version = 설치된 버전: %ls
+update.btn.release_page = GitHub에서 릴리스 보기
+update.btn.skip = 이 버전 건너뛰기
+update.title = CyImgView 업데이트
+update.notes.hide = 새로운 기능 숨기기
+update.notes.show = 새로운 기능 보기
+update.installing = 설치 중…
+update.progress = %.1f MB / %.1f MB
+update.updating_to = CyImgView %ls(으)로 업데이트 중
+update.connecting = GitHub에 연결 중…
+update.err.failed = 업데이트하지 못했습니다.\n%ls\n\n변경된 파일은 없습니다.
+update.done_restart = 업데이트가 설치되었습니다. 적용하려면 CyImgView를 다시 시작하세요.
+
+# 다른 이름으로 저장
+save.title = 다른 이름으로 이미지 저장
+save.quality = 품질(JPEG, HEIF, WebP):
+save.quality.item = %d%%
+save.quality.recommended = %d%%(권장)
+save.err.no_wic = WIC를 사용할 수 없음
+save.err.memory = 메모리 부족
+save.err.no_encoder = "%ls" 인코더를 사용할 수 없음
+save.err.cannot_write = 이 폴더에 쓸 수 없습니다
+save.err.encoding = 인코딩 중 오류 발생
+save.err.replace = 파일을 바꿀 수 없습니다(다른 곳에서 열려 있습니까?)
+
+# 디코딩
+decoder.err.file_access = 파일에 액세스할 수 없음
+decoder.err.read = 파일을 읽을 수 없음
+decoder.err.unreadable = 이미지를 읽을 수 없음
+decoder.err.dimensions = 잘못된 크기
+decoder.err.conversion = 형식 변환 실패
+decoder.err.memory = 메모리 부족
+decoder.err.decode = 디코딩 오류
+decoder.err.unknown_format = 인식할 수 없는 형식
+decoder.err.cancelled = 취소됨
+decoder.err.plugin_failed = "%ls" 플러그인이 이 파일을 디코딩하지 못했습니다
+decoder.err.no_wic = WIC를 사용할 수 없음
+decoder.format.image = 이미지
+decoder.format.animated_gif = 애니메이션 GIF
+decoder.info.camera = 카메라
+decoder.info.lens = 렌즈
+decoder.info.exposure = 노출 시간
+decoder.info.aperture = 조리개
+decoder.info.focal = 초점 거리
+decoder.info.date_taken = 촬영 날짜
+
+# 업데이트 다운로드 및 설치
+updater.err.bad_url = 잘못된 주소
+updater.err.no_winhttp = WinHTTP를 사용할 수 없음
+updater.err.connect = 연결 실패
+updater.err.no_github = GitHub에 연결할 수 없음
+updater.err.no_release = 게시된 릴리스 없음(HTTP 404)
+updater.err.http = HTTP 응답 %lu
+updater.err.interrupted = 다운로드 중단됨
+updater.err.cancelled = 취소됨
+updater.err.bad_archive = 잘못된 업데이트 압축 파일
+updater.err.suspicious = 의심스러운 압축 파일(폴더 밖의 경로)
+updater.err.no_repo = 업데이트 리포지토리가 구성되지 않음
+updater.err.bad_response = GitHub 응답을 읽을 수 없음
+updater.err.no_version = 릴리스에 버전 번호가 없음
+updater.err.no_zip = 릴리스 %ls에 .zip 압축 파일이 없음
+updater.err.bad_download_url = 예기치 않은 다운로드 주소
+updater.err.temp_file = 임시 파일을 만들 수 없음
+updater.err.disk_full = 쓰기 실패(디스크 공간 부족?)
+updater.err.incomplete = 다운로드가 완료되지 않음
+updater.err.checksum = SHA-256 체크섬 불일치: 파일이 손상되었거나 수정됨
+updater.err.unreadable = 압축 파일을 읽을 수 없음
+updater.err.no_exe = 압축 파일에 CyImgView.exe가 없음
+updater.err.read_only = 앱 폴더에 쓸 수 없음(%ls)
+updater.err.write = 쓰기 실패: %ls
+updater.err.replace = 바꾸기 실패: %ls
+
+# 설치 / 제거 프로그램
+setup.shortcut.desc = 빠른 이미지 뷰어
+setup.progid.name = 이미지(CyImgView)
+setup.app.desc = 빠른 이미지 뷰어(사진, RAW, Unreal 텍스처)
+setup.err.read_installer = 설치 프로그램을 읽을 수 없음
+setup.err.incomplete = 설치 프로그램이 불완전함(압축 파일 없음)
+setup.err.temp_write = 임시 파일에 쓸 수 없음
+setup.err.uninstaller = 제거 프로그램을 만들 수 없음
+setup.install.title = CyImgView %ls 설치
+setup.install.content = 폴더: %ls\n\n관리자 권한이 필요하지 않습니다.
+setup.install.installed_version = 설치된 버전: %ls
+setup.install.install = 설치
+setup.install.update = 업데이트
+setup.install.details = 시작 메뉴 바로 가기, 이미지·RAW 사진·Unreal 텍스처용 "연결 프로그램"
+setup.install.desktop = 바탕 화면 바로 가기 만들기
+setup.install.failed = 설치하지 못했습니다
+setup.done.title = CyImgView가 설치되었습니다
+setup.done.content = 시작 메뉴에서 찾을 수 있습니다. 업데이트는 자동으로 설치됩니다.
+setup.done.launch = CyImgView 실행
+setup.done.default = CyImgView를 기본 이미지 뷰어로 설정\nWindows "기본 앱" 설정을 엽니다
+setup.uninstall.title = CyImgView를 제거하시겠습니까?
+setup.uninstall.content = 프로그램과 바로 가기가 %ls에서 제거됩니다.
+setup.uninstall.btn = 제거
+setup.uninstall.remove_settings = 내 설정도 삭제
+setup.uninstall.done = CyImgView가 제거되었습니다.
+setup.uninstall.partial = CyImgView가 제거되었지만 일부 파일을 삭제하지 못했습니다.\n%ls
+decoder.err.plugin_crashed = "%ls" 플러그인이 이 파일에서 충돌했습니다(%ls)

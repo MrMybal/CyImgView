@@ -2,7 +2,7 @@
 // Déclarations communes aux décodeurs.
 #pragma once
 
-#include "cyimg_plugin.h"
+#include "cyimg_plugin_i18n.h"
 
 #include <cstdint>
 #include <cstring>

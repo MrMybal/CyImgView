@@ -1,6 +1,8 @@
 // Décompresseurs propres au DICOM : deflate de taille inconnue, RLE Lossless, JPEG sans perte (SOF3).
 #include "dicom_codecs.h"
 
+#include "cyimg_plugin_i18n.h"
+
 #include <algorithm>
 #include <cstring>
 
@@ -183,25 +185,25 @@ bool InflateUnknownSize(const uint8_t* src, size_t size, size_t maxOut, std::vec
 bool DecodeDicomRle(const uint8_t* src, size_t size, uint32_t rows, uint32_t cols, uint32_t samples, uint32_t bps,
                     std::vector<uint8_t>& out, std::wstring& why) {
     if (size < 64) {
-        why = L"fragment RLE trop court";
+        why = CYIMG_TR("plugin.dicom.why.rle_short", L"fragment RLE trop court");
         return false;
     }
     auto U32 = [&](size_t i) { return uint32_t(src[i]) | uint32_t(src[i + 1]) << 8 | uint32_t(src[i + 2]) << 16 | uint32_t(src[i + 3]) << 24; };
     const uint32_t nseg = U32(0);
     if (nseg != samples * bps || nseg > 15) {
-        why = L"nombre de segments RLE incohérent";
+        why = CYIMG_TR("plugin.dicom.why.rle_segments", L"nombre de segments RLE incohérent");
         return false;
     }
     const size_t plane = size_t(rows) * cols;
     if (plane * samples * bps / 64 > size + 4096) {  // RLE : au mieux ~64:1
-        why = L"dimensions incohérentes avec les données RLE";
+        why = CYIMG_TR("plugin.dicom.why.rle_size", L"dimensions incohérentes avec les données RLE");
         return false;
     }
     out.assign(plane * samples * bps, 0);
     for (uint32_t s = 0; s < nseg; ++s) {
         const size_t beg = U32(4 + 4 * s), end = s + 1 < nseg ? U32(8 + 4 * s) : size;
         if (beg < 64 || beg > end || end > size) {
-            why = L"segment RLE hors du fragment";
+            why = CYIMG_TR("plugin.dicom.why.rle_segment", L"segment RLE hors du fragment");
             return false;
         }
         // Segment s : échantillon s / bps, octet de poids fort d'abord
@@ -309,7 +311,7 @@ int DecodeSym(BitReader& br, const JHuff& h) {
 bool DecodeLosslessJpeg(const uint8_t* src, size_t size, uint32_t bytesPerSample, std::vector<uint8_t>& out, uint32_t& W,
                         uint32_t& H, uint32_t& NC, uint32_t& P, std::wstring& why) {
     if (size < 4 || src[0] != 0xFF || src[1] != 0xD8) {
-        why = L"flux JPEG invalide";
+        why = CYIMG_TR("plugin.dicom.why.jpeg_invalid", L"flux JPEG invalide");
         return false;
     }
     JHuff tables[4];
@@ -334,7 +336,7 @@ bool DecodeLosslessJpeg(const uint8_t* src, size_t size, uint32_t bytesPerSample
         if (m == 0xD9) break;
         const size_t len = size_t(src[pos + 2]) << 8 | src[pos + 3];
         if (len < 2 || pos + 2 + len > size) {
-            why = L"segment JPEG tronqué";
+            why = CYIMG_TR("plugin.dicom.why.jpeg_segment", L"segment JPEG tronqué");
             return false;
         }
         const uint8_t* s = src + pos + 4;
@@ -347,7 +349,7 @@ bool DecodeLosslessJpeg(const uint8_t* src, size_t size, uint32_t bytesPerSample
                 int total = 0;
                 for (int k = 0; k < 16; ++k) total += s[i + 1 + size_t(k)];
                 if (th > 3 || total > 256 || i + 17 + size_t(total) > sl) {
-                    why = L"table de Huffman invalide";
+                    why = CYIMG_TR("plugin.dicom.why.huffman", L"table de Huffman invalide");
                     return false;
                 }
                 BuildJHuff(tables[th], s + i + 1, s + i + 17, total);
@@ -360,30 +362,32 @@ bool DecodeLosslessJpeg(const uint8_t* src, size_t size, uint32_t bytesPerSample
             W = uint32_t(s[3]) << 8 | s[4];
             NC = s[5];
             if (P < 2 || P > 16 || !W || !H || NC < 1 || NC > 4 || sl < 6 + size_t(NC) * 3 || W > 65535 || H > 65535) {
-                why = L"en-tête JPEG sans perte invalide (hauteur DNL non gérée)";
+                why = CYIMG_TR("plugin.dicom.why.dnl", L"en-tête JPEG sans perte invalide (hauteur DNL non gérée)");
                 return false;
             }
             for (uint32_t c = 0; c < NC; ++c) {
                 comps[c].id = s[6 + c * 3];
                 if (s[7 + c * 3] != 0x11) {
-                    why = L"sous-échantillonnage JPEG sans perte non géré";
+                    why = CYIMG_TR("plugin.dicom.why.subsampling", L"sous-échantillonnage JPEG sans perte non géré");
                     return false;
                 }
             }
             if (size_t(W) * H * NC / 8 > size + 4096) {  // au moins 1 bit par échantillon
-                why = L"dimensions incohérentes avec les données JPEG";
+                why = CYIMG_TR("plugin.dicom.why.jpeg_size2", L"dimensions incohérentes avec les données JPEG");
                 return false;
             }
             planes.assign(size_t(W) * H * NC, 0);
             gotFrame = true;
         } else if (m >= 0xC0 && m <= 0xCF && m != 0xC4 && m != 0xC8 && m != 0xCC) {
-            why = L"ce n'est pas un JPEG sans perte (SOF" + std::to_wstring(m - 0xC0) + L")";
+            wchar_t msg[256];
+            swprintf_s(msg, CYIMG_TR("plugin.dicom.why.not_lossless", L"ce n'est pas un JPEG sans perte (SOF%d)"), int(m - 0xC0));
+            why = msg;
             return false;
         } else if (m == 0xDD) {
             if (sl >= 2) restart = uint32_t(s[0]) << 8 | s[1];
         } else if (m == 0xDA) {
             if (!gotFrame || sl < 1) {
-                why = L"scan JPEG avant l'en-tête";
+                why = CYIMG_TR("plugin.dicom.why.scan_before", L"scan JPEG avant l'en-tête");
                 return false;
             }
             const uint32_t ns = s[0];
@@ -395,13 +399,13 @@ bool DecodeLosslessJpeg(const uint8_t* src, size_t size, uint32_t bytesPerSample
                     if (comps[c].id == s[1 + i * 2]) idx[i] = int(c);
                 td[i] = s[2 + i * 2] >> 4;
                 if (idx[i] < 0 || td[i] > 3 || !tables[td[i]].set) {
-                    why = L"composante ou table JPEG manquante";
+                    why = CYIMG_TR("plugin.dicom.why.component", L"composante ou table JPEG manquante");
                     return false;
                 }
             }
             const int pred = s[1 + ns * 2], pt = s[3 + ns * 2] & 15;
             if (pred < 1 || pred > 7) {
-                why = L"prédicteur JPEG sans perte invalide";
+                why = CYIMG_TR("plugin.dicom.why.predictor", L"prédicteur JPEG sans perte invalide");
                 return false;
             }
             BitReader br{src, size, pos};
@@ -442,7 +446,7 @@ bool DecodeLosslessJpeg(const uint8_t* src, size_t size, uint32_t bytesPerSample
                         }
                         const int t = DecodeSym(br, tables[td[i]]);
                         if (t < 0 || t > 16) {
-                            why = L"données JPEG sans perte corrompues";
+                            why = CYIMG_TR("plugin.dicom.why.corrupt", L"données JPEG sans perte corrompues");
                             return false;
                         }
                         int diff = 0;
@@ -463,7 +467,7 @@ bool DecodeLosslessJpeg(const uint8_t* src, size_t size, uint32_t bytesPerSample
         }
     }
     if (!gotScan) {
-        why = L"aucune donnée JPEG sans perte";
+        why = CYIMG_TR("plugin.dicom.why.no_data", L"aucune donnée JPEG sans perte");
         return false;
     }
     out.resize(planes.size() * bytesPerSample);

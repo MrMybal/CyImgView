@@ -11,6 +11,7 @@
 // parallélisme) et le rendu du DC se fait quand même en pleine résolution (4K : 40 ms contre 33 ms).
 
 #include "cyimg_plugin.h"
+#include "cyimg_plugin_i18n.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -99,7 +100,7 @@ const wchar_t* DescribeColor(const JxlColorEncoding& c) {
     if (c.color_space == JXL_COLOR_SPACE_RGB && c.white_point == JXL_WHITE_POINT_D65) {
         const bool srgbTf = c.transfer_function == JXL_TRANSFER_FUNCTION_SRGB;
         if (c.primaries == JXL_PRIMARIES_SRGB)
-            return srgbTf ? L"sRGB" : c.transfer_function == JXL_TRANSFER_FUNCTION_LINEAR ? L"sRGB linéaire" : L"sRGB (autre courbe)";
+            return srgbTf ? L"sRGB" : c.transfer_function == JXL_TRANSFER_FUNCTION_LINEAR ? CYIMG_TR("plugin.jxl.color.srgb_linear", L"sRGB linéaire") : CYIMG_TR("plugin.jxl.color.srgb_other", L"sRGB (autre courbe)");
         if (c.primaries == JXL_PRIMARIES_P3) return srgbTf ? L"Display P3" : L"P3";
         if (c.primaries == JXL_PRIMARIES_2100) {
             if (c.transfer_function == JXL_TRANSFER_FUNCTION_PQ) return L"Rec. 2100 PQ (HDR)";
@@ -107,7 +108,7 @@ const wchar_t* DescribeColor(const JxlColorEncoding& c) {
             return L"Rec. 2020";
         }
     }
-    if (c.color_space == JXL_COLOR_SPACE_GRAY) return L"Niveaux de gris";
+    if (c.color_space == JXL_COLOR_SPACE_GRAY) return CYIMG_TR("plugin.jxl.color.gray", L"Niveaux de gris");
     return nullptr;
 }
 
@@ -193,8 +194,9 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         return CYIMG_E_FAIL;
     };
     MappedFile f;
-    if (!f.Open(path)) return fail(L"Lecture du fichier JPEG XL impossible");
-    if (JxlSignatureCheck(f.data, f.size) < JXL_SIG_CODESTREAM) return fail(L"Fichier JPEG XL non reconnu");
+    cyimg_tr_begin(host, ctx);
+    if (!f.Open(path)) return fail(CYIMG_TR("plugin.jxl.err.read", L"Lecture du fichier JPEG XL impossible"));
+    if (JxlSignatureCheck(f.data, f.size) < JXL_SIG_CODESTREAM) return fail(CYIMG_TR("plugin.jxl.err.unknown", L"Fichier JPEG XL non reconnu"));
 
     DecoderHolder d;
     if (!d.dec || !d.runner) return CYIMG_E_OUTOFMEMORY;
@@ -207,7 +209,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     if (JxlDecoderSubscribeEvents(dec, events) != JXL_DEC_SUCCESS ||
         JxlDecoderSetParallelRunner(dec, JxlResizableParallelRunner, d.runner) != JXL_DEC_SUCCESS ||
         JxlDecoderSetInput(dec, f.data, f.size) != JXL_DEC_SUCCESS)
-        return fail(L"Initialisation du décodeur JPEG XL impossible");
+        return fail(CYIMG_TR("plugin.jxl.err.init", L"Initialisation du décodeur JPEG XL impossible"));
     // Pas de JxlDecoderCloseInput : un fichier tronqué donne JXL_DEC_NEED_MORE_INPUT, et on peut
     // alors afficher le rendu partiel (JxlDecoderFlushImage).
 
@@ -257,10 +259,10 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         const JxlDecoderStatus st = JxlDecoderProcessInput(dec);
         switch (st) {
         case JXL_DEC_BASIC_INFO: {
-            if (JxlDecoderGetBasicInfo(dec, &info) != JXL_DEC_SUCCESS) return fail(L"En-tête JPEG XL invalide");
+            if (JxlDecoderGetBasicInfo(dec, &info) != JXL_DEC_SUCCESS) return fail(CYIMG_TR("plugin.jxl.err.header", L"En-tête JPEG XL invalide"));
             W = info.xsize, H = info.ysize;
             if (info.orientation >= JXL_ORIENT_TRANSPOSE) W = info.ysize, H = info.xsize;
-            if (!W || !H || uint64_t(W) * H > (1ull << 30)) return fail(L"Dimensions JPEG XL non gérées");
+            if (!W || !H || uint64_t(W) * H > (1ull << 30)) return fail(CYIMG_TR("plugin.jxl.err.dimensions", L"Dimensions JPEG XL non gérées"));
             alpha = info.alpha_bits > 0;
             animated = info.have_animation != 0;
             JxlResizableParallelRunnerSetThreads(d.runner, JxlResizableParallelRunnerSuggestThreads(info.xsize, info.ysize));
@@ -287,7 +289,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
                     if (JxlDecoderGetColorAsICCProfile(dec, JXL_COLOR_PROFILE_TARGET_DATA, icc.data(), iccSize) == JXL_DEC_SUCCESS)
                         direct = false;
                 }
-                if (!colorName) colorName = L"Profil ICC";
+                if (!colorName) colorName = CYIMG_TR("plugin.jxl.color.icc", L"Profil ICC");
             }
             break;
         }
@@ -311,10 +313,10 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
             if (!out) return CYIMG_E_OUTOFMEMORY;
             JxlPixelFormat fmt{4, direct ? JXL_TYPE_UINT8 : JXL_TYPE_UINT16, JXL_NATIVE_ENDIAN, 0};
             if (direct) {
-                if (stride < W * 4) return fail(L"Tampon de sortie invalide");
+                if (stride < W * 4) return fail(CYIMG_TR("plugin.jxl.err.buffer", L"Tampon de sortie invalide"));
                 fmt.align = stride;  // lignes complétées jusqu'au pas de l'hôte
                 if (JxlDecoderSetImageOutBuffer(dec, &fmt, out, size_t(stride) * H) != JXL_DEC_SUCCESS)
-                    return fail(L"Format de sortie JPEG XL refusé");
+                    return fail(CYIMG_TR("plugin.jxl.err.output_format", L"Format de sortie JPEG XL refusé"));
             } else {
                 try {
                     tmp16.assign(size_t(W) * H * 4, 0);
@@ -322,7 +324,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
                     return CYIMG_E_OUTOFMEMORY;
                 }
                 if (JxlDecoderSetImageOutBuffer(dec, &fmt, tmp16.data(), tmp16.size() * 2) != JXL_DEC_SUCCESS)
-                    return fail(L"Format de sortie JPEG XL refusé");
+                    return fail(CYIMG_TR("plugin.jxl.err.output_format", L"Format de sortie JPEG XL refusé"));
             }
             frameOpen = true;
             break;
@@ -343,51 +345,57 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
                 abandonFrame();
                 partial = true;
             } else {
-                return fail(L"Fichier JPEG XL tronqué");
+                return fail(CYIMG_TR("plugin.jxl.err.truncated", L"Fichier JPEG XL tronqué"));
             }
             done = true;
             break;
         case JXL_DEC_ERROR:
         default:
-            if (frames == 0) return fail(L"Fichier JPEG XL invalide ou corrompu");
+            if (frames == 0) return fail(CYIMG_TR("plugin.jxl.err.invalid", L"Fichier JPEG XL invalide ou corrompu"));
             abandonFrame();
             partial = true;  // animation : on garde les trames déjà décodées
             done = true;
             break;
         }
     }
-    if (frames == 0) return fail(L"Aucune image dans le fichier JPEG XL");
+    if (frames == 0) return fail(CYIMG_TR("plugin.jxl.err.no_image", L"Aucune image dans le fichier JPEG XL"));
 
     // --- Informations ---
     host->set_orientation(ctx, 1);  // libjxl applique déjà l'orientation
     const bool jpeg = HasJpegReconstruction(f.data, f.size);
-    host->set_format(ctx, jpeg ? L"JPEG XL (JPEG recompressé)" : L"JPEG XL");
-    host->set_info(ctx, L"Compression", jpeg ? L"JPEG recompressé (reconstructible à l'identique)"
-                                        : !info.uses_original_profile ? L"avec perte (VarDCT/XYB)"
-                                                                       : L"sans perte");
+    host->set_format(ctx, jpeg ? CYIMG_TR("plugin.jxl.format.jpeg", L"JPEG XL (JPEG recompressé)") : L"JPEG XL");
+    host->set_info(ctx, CYIMG_TR("plugin.jxl.info.compression", L"Compression"), jpeg ? CYIMG_TR("plugin.jxl.comp.jpeg", L"JPEG recompressé (reconstructible à l'identique)")
+                            : !info.uses_original_profile ? CYIMG_TR("plugin.jxl.comp.lossy", L"avec perte (VarDCT/XYB)")
+                                                           : CYIMG_TR("plugin.jxl.comp.lossless", L"sans perte"));
     wchar_t buf[96];
     if (info.exponent_bits_per_sample)
-        swprintf_s(buf, L"%u bits flottant par composante", info.bits_per_sample);
+        swprintf_s(buf, CYIMG_TR("plugin.jxl.depth.float", L"%u bits flottant par composante"), info.bits_per_sample);
     else
-        swprintf_s(buf, L"%u bits par composante", info.bits_per_sample);
-    host->set_info(ctx, L"Profondeur", buf);
-    swprintf_s(buf, L"%ls%ls", info.num_color_channels == 1 ? L"niveaux de gris" : L"couleur",
-               alpha ? (info.alpha_premultiplied ? L" + alpha (prémultiplié)" : L" + alpha") : L"");
-    host->set_info(ctx, L"Canaux", buf);
+        swprintf_s(buf, CYIMG_TR("plugin.jxl.depth.int", L"%u bits par composante"), info.bits_per_sample);
+    host->set_info(ctx, CYIMG_TR("plugin.jxl.info.depth", L"Profondeur"), buf);
+    const wchar_t* chans = info.num_color_channels == 1 ? CYIMG_TR("plugin.jxl.chan.gray", L"niveaux de gris") : CYIMG_TR("plugin.jxl.chan.color", L"couleur");
+    if (alpha)
+        swprintf_s(buf, info.alpha_premultiplied ? CYIMG_TR("plugin.jxl.chan.alpha_premul", L"%ls + alpha (prémultiplié)") : CYIMG_TR("plugin.jxl.chan.alpha", L"%ls + alpha"), chans);
+    else
+        wcscpy_s(buf, chans);
+    host->set_info(ctx, CYIMG_TR("plugin.jxl.info.channels", L"Canaux"), buf);
     if (colorName) {
-        swprintf_s(buf, L"%ls%ls", colorName,
-                   !iccConverted ? L" (non converti)" : (!direct || !info.uses_original_profile) && wcscmp(colorName, L"sRGB") != 0
-                                                            ? L" (converti en sRGB)" : L"");
-        host->set_info(ctx, L"Espace couleur", buf);
+        if (!iccConverted)
+            swprintf_s(buf, CYIMG_TR("plugin.jxl.color.not_converted", L"%ls (non converti)"), colorName);
+        else if ((!direct || !info.uses_original_profile) && wcscmp(colorName, L"sRGB") != 0)
+            swprintf_s(buf, CYIMG_TR("plugin.jxl.color.converted", L"%ls (converti en sRGB)"), colorName);
+        else
+            wcscpy_s(buf, colorName);
+        host->set_info(ctx, CYIMG_TR("plugin.jxl.info.colorspace", L"Espace couleur"), buf);
     }
     if (animated) {
         if (info.animation.num_loops)
-            swprintf_s(buf, L"%u trame(s) décodée(s), %u boucle(s)", frames, info.animation.num_loops);
+            swprintf_s(buf, CYIMG_TR("plugin.jxl.anim.loops", L"%u trame(s) décodée(s), %u boucle(s)"), frames, info.animation.num_loops);
         else
-            swprintf_s(buf, L"%u trame(s) décodée(s), en boucle", frames);
-        host->set_info(ctx, L"Animation", buf);
+            swprintf_s(buf, CYIMG_TR("plugin.jxl.anim.infinite", L"%u trame(s) décodée(s), en boucle"), frames);
+        host->set_info(ctx, CYIMG_TR("plugin.jxl.info.animation", L"Animation"), buf);
     }
-    if (partial) host->set_info(ctx, L"Avertissement", L"fichier tronqué ou corrompu : image incomplète");
+    if (partial) host->set_info(ctx, CYIMG_TR("plugin.jxl.info.warning", L"Avertissement"), CYIMG_TR("plugin.jxl.warn.partial", L"fichier tronqué ou corrompu : image incomplète"));
     return CYIMG_OK;
 }
 

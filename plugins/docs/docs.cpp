@@ -75,11 +75,11 @@ int Job::Preview(const uint8_t* data, size_t size, const wchar_t* what) const {
     if (!data || !size) return CYIMG_E_FAIL;
     const int rc = host->decode_encoded(ctx, data, size);
     if (rc != CYIMG_OK) return rc;
-    wchar_t buf[160];
+    wchar_t buf[256];
     uint32_t w = 0, h = 0;
-    if (PngSize(data, size, w, h)) swprintf_s(buf, L"miniature intégrée (%ls, %u × %u)", what, w, h);
-    else swprintf_s(buf, L"miniature intégrée (%ls)", what);
-    Info(L"Aperçu", buf);
+    if (PngSize(data, size, w, h)) swprintf_s(buf, CYIMG_TR("plugin.docs.thumb_size", L"miniature intégrée (%ls, %u × %u)"), what, w, h);
+    else swprintf_s(buf, CYIMG_TR("plugin.docs.thumb", L"miniature intégrée (%ls)"), what);
+    Info(CYIMG_TR("plugin.docs.info.preview", L"Aperçu"), buf);
     return CYIMG_OK;
 }
 
@@ -88,7 +88,7 @@ int Job::Preview(const uint8_t* data, size_t size, const wchar_t* what) const {
 
 int DecodeZipDoc(const Job& job, const uint8_t* f, size_t n, const std::wstring& ext) {
     std::vector<ZipEntryInfo> entries;
-    if (!ZipList(f, n, entries)) return job.Fail(L"Archive zip illisible ou tronquée");
+    if (!ZipList(f, n, entries)) return job.Fail(CYIMG_TR("plugin.docs.err.zip", L"Archive zip illisible ou tronquée"));
     auto lower = [](std::string s) {
         for (char& c : s) c = char(tolower(uint8_t(c)));
         return s;
@@ -116,11 +116,11 @@ int DecodeZipDoc(const Job& job, const uint8_t* f, size_t n, const std::wstring&
             else if (s.starts_with("metadata/thumbnails/")) rank = 1;
             if (rank > bestRank) best = &e, bestRank = rank;
         }
-        if (!best) return job.Fail(L"CorelDRAW : aucun aperçu intégré");
-        if (!extract(best)) return job.Fail(L"CorelDRAW : aperçu intégré illisible");
+        if (!best) return job.Fail(CYIMG_TR("plugin.docs.cdr.err.no_preview", L"CorelDRAW : aucun aperçu intégré"));
+        if (!extract(best)) return job.Fail(CYIMG_TR("plugin.docs.cdr.err.preview_unreadable", L"CorelDRAW : aperçu intégré illisible"));
         const std::wstring what(best->name.begin(), best->name.end());
         return job.Preview(out.data(), out.size(), what.c_str()) == CYIMG_OK ? CYIMG_OK
-                                                                           : job.Fail(L"CorelDRAW : aperçu intégré illisible");
+                                                                           : job.Fail(CYIMG_TR("plugin.docs.cdr.err.preview_unreadable", L"CorelDRAW : aperçu intégré illisible"));
     }
 
     const bool kra = ext == L"kra" || find("maindoc.xml");
@@ -138,9 +138,9 @@ int DecodeZipDoc(const Job& job, const uint8_t* f, size_t n, const std::wstring&
     }
     if (extract(merged) && job.host->decode_encoded(job.ctx, out.data(), out.size()) == CYIMG_OK) return CYIMG_OK;
     for (auto* t : thumbs)
-        if (extract(t) && job.Preview(out.data(), out.size(), L"image fusionnée absente") == CYIMG_OK) return CYIMG_OK;
-    return job.Fail(kra ? L"Krita : image fusionnée (mergedimage.png) absente ou illisible"
-                        : L"OpenRaster : image fusionnée (mergedimage.png) absente ou illisible");
+        if (extract(t) && job.Preview(out.data(), out.size(), CYIMG_TR("plugin.docs.what.no_merged", L"image fusionnée absente")) == CYIMG_OK) return CYIMG_OK;
+    return job.Fail(kra ? CYIMG_TR("plugin.docs.kra.err.no_merged", L"Krita : image fusionnée (mergedimage.png) absente ou illisible")
+                        : CYIMG_TR("plugin.docs.ora.err.no_merged", L"OpenRaster : image fusionnée (mergedimage.png) absente ou illisible"));
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -199,9 +199,9 @@ int DecodeIndd(const Job& job, const uint8_t* f, size_t n) {
         if (img.size() > best.size() && img.size() > 3 && img[0] == 0xFF && img[1] == 0xD8) best.swap(img);
         it = e;
     }
-    if (best.empty()) return job.Fail(L"InDesign : aucune vignette dans les métadonnées XMP");
-    return job.Preview(best.data(), best.size(), L"vignette XMP") == CYIMG_OK ? CYIMG_OK
-                                                                         : job.Fail(L"InDesign : vignette XMP illisible");
+    if (best.empty()) return job.Fail(CYIMG_TR("plugin.docs.indd.err.no_thumb", L"InDesign : aucune vignette dans les métadonnées XMP"));
+    return job.Preview(best.data(), best.size(), CYIMG_TR("plugin.docs.what.xmp_thumb", L"vignette XMP")) == CYIMG_OK ? CYIMG_OK
+                                                                         : job.Fail(CYIMG_TR("plugin.docs.indd.err.thumb_unreadable", L"InDesign : vignette XMP illisible"));
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -230,14 +230,14 @@ static int DecodeDib(const Job& job, const uint8_t* d, size_t n) {
         memcpy(&bmp[2], &total, 4);
         memcpy(&bmp[10], &off, 4);
         memcpy(&bmp[14], b, dibLen);
-        if (job.Preview(bmp.data(), bmp.size(), L"bloc DISP") == CYIMG_OK) return CYIMG_OK;
+        if (job.Preview(bmp.data(), bmp.size(), CYIMG_TR("plugin.docs.what.disp", L"bloc DISP")) == CYIMG_OK) return CYIMG_OK;
     }
     return CYIMG_E_FAIL;
 }
 
 int DecodeCdr(const Job& job, const uint8_t* f, size_t n) {
     job.host->set_format(job.ctx, L"CorelDRAW");
-    if (n < 12 || memcmp(f, "RIFF", 4) != 0) return job.Fail(L"Fichier CorelDRAW non reconnu");
+    if (n < 12 || memcmp(f, "RIFF", 4) != 0) return job.Fail(CYIMG_TR("plugin.docs.cdr.err.unrecognized", L"Fichier CorelDRAW non reconnu"));
     // Parcours récursif des blocs RIFF/LIST à la recherche de DISP
     std::function<int(size_t, size_t, int)> walk = [&](size_t pos, size_t end, int depth) -> int {
         while (pos + 8 <= end) {
@@ -253,7 +253,7 @@ int DecodeCdr(const Job& job, const uint8_t* f, size_t n) {
         return CYIMG_E_FAIL;
     };
     if (walk(12, std::min<size_t>(n, 8 + size_t(Le32(f + 4))), 0) == CYIMG_OK) return CYIMG_OK;
-    return job.Fail(L"CorelDRAW : aucun aperçu intégré (bloc DISP absent)");
+    return job.Fail(CYIMG_TR("plugin.docs.cdr.err.no_disp", L"CorelDRAW : aucun aperçu intégré (bloc DISP absent)"));
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -261,19 +261,20 @@ int DecodeCdr(const Job& job, const uint8_t* f, size_t n) {
 
 int DecodeAffinity(const Job& job, const uint8_t* f, size_t n) {
     size_t off = 0, len = 0;
-    if (!FindLargestPng(f, n, off, len)) return job.Fail(L"Affinity : aucun aperçu PNG intégré");
-    return job.Preview(f + off, len, L"PNG") == CYIMG_OK ? CYIMG_OK : job.Fail(L"Affinity : aperçu intégré illisible");
+    if (!FindLargestPng(f, n, off, len)) return job.Fail(CYIMG_TR("plugin.docs.affinity.err.no_png", L"Affinity : aucun aperçu PNG intégré"));
+    return job.Preview(f + off, len, L"PNG") == CYIMG_OK ? CYIMG_OK : job.Fail(CYIMG_TR("plugin.docs.affinity.err.preview_unreadable", L"Affinity : aperçu intégré illisible"));
 }
 
 // ---------------------------------------------------------------------------------------------
 
 static int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
+    cyimg_tr_begin(host, ctx);
     const Job job{host, ctx};
     std::wstring ext;
     if (const wchar_t* dot = wcsrchr(path, L'.'); dot && !wcschr(dot, L'\\') && !wcschr(dot, L'/'))
         for (const wchar_t* q = dot + 1; *q; ++q) ext += wchar_t(towlower(*q));
     MappedFile mf;
-    if (!mf.Open(path)) return job.Fail(L"Lecture du fichier impossible");
+    if (!mf.Open(path)) return job.Fail(CYIMG_TR("plugin.docs.err.read", L"Lecture du fichier impossible"));
     const uint8_t* f = mf.data;
     const size_t n = mf.size;
     static const uint8_t kInddGuid[16] = {0x06, 0x06, 0xED, 0xF5, 0xD8, 0x1D, 0x46, 0xE5,
@@ -293,12 +294,12 @@ static int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path)
         }
         if (ext == L"indd") return DecodeIndd(job, f, n);
         if (ext == L"clip") return DecodeClip(job, f, n);
-        if (ext == L"cdr") return job.Fail(L"CorelDRAW : version de fichier non gérée (aucun aperçu trouvé)");
-        if (ext == L"xcf") return job.Fail(L"Fichier GIMP non reconnu");
-        if (ext == L"eps" || ext == L"epsf") return job.Fail(L"Fichier EPS non reconnu");
-        return job.Fail(L"Format de fichier non reconnu");
+        if (ext == L"cdr") return job.Fail(CYIMG_TR("plugin.docs.cdr.err.version", L"CorelDRAW : version de fichier non gérée (aucun aperçu trouvé)"));
+        if (ext == L"xcf") return job.Fail(CYIMG_TR("plugin.docs.xcf.err.unrecognized", L"Fichier GIMP non reconnu"));
+        if (ext == L"eps" || ext == L"epsf") return job.Fail(CYIMG_TR("plugin.docs.eps.err.unrecognized", L"Fichier EPS non reconnu"));
+        return job.Fail(CYIMG_TR("plugin.docs.err.unrecognized", L"Format de fichier non reconnu"));
     } catch (const std::bad_alloc&) {
-        return job.Fail(L"Mémoire insuffisante");
+        return job.Fail(CYIMG_TR("plugin.docs.err.memory", L"Mémoire insuffisante"));
     }
 }
 

@@ -1,0 +1,113 @@
+# CyImgView — core2 (日本語)
+@code = ja
+@name = 日本語
+
+# 更新ウィンドウ
+update.toast.no_repo = 更新: GitHub リポジトリが設定されていません
+update.toast.checking = 更新を確認しています…
+update.toast.available = 更新 %ls を利用できます
+update.toast.up_to_date = CyImgView は最新です (%ls)
+update.err.check = 更新を確認できません:\n%ls
+update.no_notes = (リリース ノートはありません)
+update.size_mb = %.1f MB
+update.btn.install = インストールして再起動\n%ls をダウンロードし、CyImgView を再起動します
+update.available = CyImgView %ls を利用できます
+update.installed_version = インストール済みのバージョン: %ls
+update.btn.release_page = GitHub でリリースを表示
+update.btn.skip = このバージョンをスキップ
+update.title = CyImgView の更新
+update.notes.hide = 新機能を隠す
+update.notes.show = 新機能を表示
+update.installing = インストールしています…
+update.progress = %.1f MB / %.1f MB
+update.updating_to = CyImgView %ls に更新しています
+update.connecting = GitHub に接続しています…
+update.err.failed = 更新に失敗しました:\n%ls\n\nファイルは変更されていません。
+update.done_restart = 更新をインストールしました。CyImgView を再起動すると反映されます。
+
+# 名前を付けて保存
+save.title = 名前を付けて画像を保存
+save.quality = 品質 (JPEG、HEIF、WebP):
+save.quality.item = %d%%
+save.quality.recommended = %d%% (推奨)
+save.err.no_wic = WIC を使用できません
+save.err.memory = メモリが不足しています
+save.err.no_encoder = 「%ls」エンコーダーを使用できません
+save.err.cannot_write = このフォルダーに書き込めません
+save.err.encoding = エンコード中にエラーが発生しました
+save.err.replace = ファイルを置き換えられません (他のアプリで開かれていませんか?)
+
+# デコード
+decoder.err.file_access = ファイルにアクセスできません
+decoder.err.read = ファイルを読み込めません
+decoder.err.unreadable = 画像を読み取れません
+decoder.err.dimensions = サイズが無効です
+decoder.err.conversion = フォーマットを変換できません
+decoder.err.memory = メモリが不足しています
+decoder.err.decode = デコード エラー
+decoder.err.unknown_format = 認識できないフォーマットです
+decoder.err.cancelled = キャンセルされました
+decoder.err.plugin_failed = プラグイン「%ls」はこのファイルをデコードできませんでした
+decoder.err.no_wic = WIC を使用できません
+decoder.format.image = 画像
+decoder.format.animated_gif = アニメーション GIF
+decoder.info.camera = カメラ
+decoder.info.lens = レンズ
+decoder.info.exposure = 露出時間
+decoder.info.aperture = 絞り値
+decoder.info.focal = 焦点距離
+decoder.info.date_taken = 撮影日時
+
+# 更新のダウンロードとインストール
+updater.err.bad_url = アドレスが無効です
+updater.err.no_winhttp = WinHTTP を使用できません
+updater.err.connect = 接続できません
+updater.err.no_github = GitHub に接続できません
+updater.err.no_release = 公開されたリリースがありません (HTTP 404)
+updater.err.http = HTTP 応答 %lu
+updater.err.interrupted = ダウンロードが中断されました
+updater.err.cancelled = キャンセルされました
+updater.err.bad_archive = 更新アーカイブが無効です
+updater.err.suspicious = 不審なアーカイブです (フォルダー外のパス)
+updater.err.no_repo = 更新リポジトリが設定されていません
+updater.err.bad_response = GitHub からの応答を読み取れません
+updater.err.no_version = リリースにバージョン番号がありません
+updater.err.no_zip = リリース %ls に .zip アーカイブがありません
+updater.err.bad_download_url = ダウンロード アドレスが想定外です
+updater.err.temp_file = 一時ファイルを作成できません
+updater.err.disk_full = 書き込みに失敗しました (ディスクの空き容量不足?)
+updater.err.incomplete = ダウンロードが完了していません
+updater.err.checksum = SHA-256 チェックサムが一致しません: ファイルが破損または改変されています
+updater.err.unreadable = アーカイブを読み取れません
+updater.err.no_exe = アーカイブに CyImgView.exe が含まれていません
+updater.err.read_only = アプリのフォルダーに書き込めません (%ls)
+updater.err.write = 書き込みに失敗しました: %ls
+updater.err.replace = 置き換えに失敗しました: %ls
+
+# インストーラー / アンインストーラー
+setup.shortcut.desc = 高速画像ビューアー
+setup.progid.name = 画像 (CyImgView)
+setup.app.desc = 高速画像ビューアー (写真、RAW、Unreal テクスチャ)
+setup.err.read_installer = インストーラーを読み込めません
+setup.err.incomplete = インストーラーが不完全です (アーカイブがありません)
+setup.err.temp_write = 一時ファイルに書き込めません
+setup.err.uninstaller = アンインストーラーを作成できません
+setup.install.title = CyImgView %ls のインストール
+setup.install.content = フォルダー: %ls\n\n管理者権限は不要です。
+setup.install.installed_version = インストール済みのバージョン: %ls
+setup.install.install = インストール
+setup.install.update = 更新
+setup.install.details = スタート メニューのショートカット、画像・RAW 写真・Unreal テクスチャの「プログラムから開く」
+setup.install.desktop = デスクトップにショートカットを作成する
+setup.install.failed = インストールに失敗しました
+setup.done.title = CyImgView がインストールされました
+setup.done.content = スタート メニューから起動できます。更新は自動的にインストールされます。
+setup.done.launch = CyImgView を起動
+setup.done.default = CyImgView を既定の画像ビューアーにする\nWindows の「既定のアプリ」設定を開きます
+setup.uninstall.title = CyImgView をアンインストールしますか?
+setup.uninstall.content = プログラムとショートカットを %ls から削除します。
+setup.uninstall.btn = アンインストール
+setup.uninstall.remove_settings = 設定も削除する
+setup.uninstall.done = CyImgView をアンインストールしました。
+setup.uninstall.partial = CyImgView をアンインストールしましたが、一部のファイルを削除できませんでした:\n%ls
+decoder.err.plugin_crashed = プラグイン「%ls」がこのファイルでクラッシュしました (%ls)

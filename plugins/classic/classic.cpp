@@ -218,7 +218,7 @@ int Run(Fmt f, Dec& d) {
         case Fmt::Xpm: return DecodeXpm(d);
         case Fmt::Xbm: return DecodeXbm(d);
         case Fmt::Pict: return DecodePict(d);
-        default: return d.Fail(L"Format d'image non reconnu");
+        default: return d.Fail(CYIMG_TR("plugin.classic.err.unrecognized", L"Format d'image non reconnu"));
     }
 }
 
@@ -256,6 +256,7 @@ struct Mapping {
 };
 
 int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
+    cyimg_tr_begin(host, ctx);
     Dec d;
     d.host = host;
     d.ctx = ctx;
@@ -263,7 +264,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         if (const wchar_t* dot = wcsrchr(path, L'.'); dot && !wcspbrk(dot, L"\\/"))
             for (const wchar_t* c = dot + 1; *c; ++c) d.ext += wchar_t(towlower(*c));
         Mapping m;
-        if (!m.Open(path)) return d.Fail(L"Lecture du fichier impossible (ou fichier vide)");
+        if (!m.Open(path)) return d.Fail(CYIMG_TR("plugin.classic.err.read", L"Lecture du fichier impossible (ou fichier vide)"));
         d.d = m.view;
         d.n = m.size;
         Fmt f = Detect(d.d, d.n);
@@ -271,10 +272,10 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         const int r = Guarded(f, &d);
         return host->is_cancelled(ctx) && r != CYIMG_OK ? CYIMG_E_CANCELLED : r;
     } catch (const std::bad_alloc&) {
-        d.Fail(L"Mémoire insuffisante");
+        d.Fail(CYIMG_TR("plugin.classic.err.memory", L"Mémoire insuffisante"));
         return CYIMG_E_OUTOFMEMORY;
     } catch (...) {
-        return d.Fail(L"Erreur interne lors du décodage");
+        return d.Fail(CYIMG_TR("plugin.classic.err.internal", L"Erreur interne lors du décodage"));
     }
 }
 

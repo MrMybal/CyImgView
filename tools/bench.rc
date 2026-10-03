@@ -1,0 +1,2 @@
+// Banc d'essai : textes de toutes les langues (messages du décodeur)
+#include "lang.rc"

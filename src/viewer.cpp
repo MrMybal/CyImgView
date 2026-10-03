@@ -1,4 +1,5 @@
 #include "viewer.h"
+#include "i18n.h"
 #include "version.h"
 #include "viewer_util.h"
 
@@ -33,34 +34,34 @@ void OrientationToFlipRot(uint32_t o, bool& flip, int& rot) {
     rot = r[o];
 }
 
-std::wstring FormatBytes(uint64_t b) {
-    wchar_t buf[32];
-    if (b < 1024) swprintf_s(buf, L"%llu o", b);
-    else if (b < 1024 * 1024) swprintf_s(buf, L"%.1f Ko", b / 1024.0);
-    else if (b < 1024ull * 1024 * 1024) swprintf_s(buf, L"%.1f Mo", b / (1024.0 * 1024.0));
-    else swprintf_s(buf, L"%.2f Go", b / (1024.0 * 1024.0 * 1024.0));
-    std::wstring s = buf;
-    std::replace(s.begin(), s.end(), L'.', L',');
+// Remplace le point décimal (printf) par le séparateur de la langue (virgule en français)
+std::wstring LocalDecimal(std::wstring s) {
+    const wchar_t* sep = T("viewer.decimal");
+    if (sep[0] && !sep[1]) std::replace(s.begin(), s.end(), L'.', sep[0]);
     return s;
 }
 
+std::wstring FormatBytes(uint64_t b) {
+    if (b < 1024) return Tf("viewer.unit.bytes", b);
+    if (b < 1024 * 1024) return LocalDecimal(Tf("viewer.unit.kb", b / 1024.0));
+    if (b < 1024ull * 1024 * 1024) return LocalDecimal(Tf("viewer.unit.mb", b / (1024.0 * 1024.0)));
+    return LocalDecimal(Tf("viewer.unit.gb", b / (1024.0 * 1024.0 * 1024.0)));
+}
+
+// Date et heure au format régional de Windows
 std::wstring FormatDate(const FILETIME& ft) {
     FILETIME local;
     SYSTEMTIME st;
     if (!FileTimeToLocalFileTime(&ft, &local) || !FileTimeToSystemTime(&local, &st)) return {};
-    wchar_t buf[64];
-    swprintf_s(buf, L"%02u/%02u/%04u %02u:%02u", st.wDay, st.wMonth, st.wYear, st.wHour, st.wMinute);
-    return buf;
+    wchar_t date[64] = {}, time[32] = {};
+    GetDateFormatEx(LOCALE_NAME_USER_DEFAULT, DATE_SHORTDATE, &st, nullptr, date, ARRAYSIZE(date), nullptr);
+    GetTimeFormatEx(LOCALE_NAME_USER_DEFAULT, TIME_NOSECONDS, &st, nullptr, time, ARRAYSIZE(time));
+    return std::wstring(date) + L" " + time;
 }
 
 std::wstring Percent(double z) {
-    wchar_t buf[32];
     double p = z * 100.0;
-    if (p < 10) swprintf_s(buf, L"%.1f %%", p);
-    else swprintf_s(buf, L"%.0f %%", p);
-    std::wstring s = buf;
-    std::replace(s.begin(), s.end(), L'.', L',');
-    return s;
+    return LocalDecimal(p < 10 ? Tf("viewer.zoom.pct1", p) : Tf("viewer.zoom.pct0", p));
 }
 
 
@@ -132,7 +133,7 @@ bool Viewer::Create(HINSTANCE inst, int show, const std::wstring& initialPath) {
                                  reinterpret_cast<void**>(m_factory.GetAddressOf()))) ||
         FAILED(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
                                    reinterpret_cast<IUnknown**>(m_dwrite.GetAddressOf())))) {
-        MessageBoxW(nullptr, L"Direct2D est indisponible.", L"CyImgView", MB_ICONERROR);
+        MessageBoxW(nullptr, T("viewer.err.direct2d"), L"CyImgView", MB_ICONERROR);
         return false;
     }
 
@@ -391,7 +392,7 @@ void Viewer::DiscardDeviceResources() {
         m_edit.canvas.Reset();
         m_edit.undo.clear();
         m_edit.redo.clear();
-        ShowToast(L"Pilote graphique réinitialisé : modifications perdues");
+        ShowToast(T("viewer.toast.device_lost"));
     }
     m_gpu.clear();
     m_preuploadsLeft = 2;
@@ -659,7 +660,7 @@ void Viewer::DrawImage(float cw, float ch, bool animating) {
     const float s = m_scale;
     if (!img) {
         if (!m_error.empty()) {
-            DrawCenteredMessage(cw, ch, L"\uE783", L"Impossible d'ouvrir ce fichier", m_error);
+            DrawCenteredMessage(cw, ch, L"\uE783", T("viewer.msg.open_failed"), m_error);
         } else if (m_loading) {
             if (NowSeconds() - m_loadStart > 0.12) DrawSpinner(cw / 2, ch / 2, 18 * s, 1.0f);
         } else if (m_files.empty()) {
@@ -667,10 +668,9 @@ void Viewer::DrawImage(float cw, float ch, bool animating) {
                 const float r = 50 * s, cy = ch / 2 - 80 * s;
                 m_dc->DrawBitmap(logo, D2D1::RectF(cw / 2 - r, cy - r, cw / 2 + r, cy + r), 0.95f,
                                  D2D1_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC, nullptr, nullptr);
-                DrawCenteredMessage(cw, ch, L"", L"Glissez une image ici", L"ou appuyez sur Ctrl+O pour ouvrir un fichier");
+                DrawCenteredMessage(cw, ch, L"", T("viewer.msg.drop"), T("viewer.msg.drop_sub"));
             } else {
-                DrawCenteredMessage(cw, ch, L"\uE8B9", L"Glissez une image ici",
-                                    L"ou appuyez sur Ctrl+O pour ouvrir un fichier");
+                DrawCenteredMessage(cw, ch, L"\uE8B9", T("viewer.msg.drop"), T("viewer.msg.drop_sub"));
             }
         }
         return;
@@ -704,7 +704,7 @@ void Viewer::DrawImage(float cw, float ch, bool animating) {
     }
     const float tx = float(left + dw * z / 2.0), ty = float(top + dh * z / 2.0);
 
-    if (img->hasAlpha && m_checker && m_channel == 0) {
+    if (img->hasAlpha && m_checker && (ChannelFull(m_chanMask) || ChannelKeepsAlpha(m_chanMask))) {
         m_rt->FillRectangle(D2D1::RectF(float(left), float(top), float(left + dw * z), float(top + dh * z)), m_checker.Get());
     }
 
@@ -783,24 +783,25 @@ void Viewer::DrawHud(float cw, float ch) {
 
         // Boutons, alignés à droite
         struct Def { Btn id; const wchar_t* glyph; const wchar_t* tip; };
+        m_chanLabel = ChannelLabel(m_chanMask);  // texte du bouton Couches (doit survivre au tableau)
         const Def defs[] = {
-            {Btn::Open, L"\uE8E5", L"Ouvrir (Ctrl+O)"},
-            {Btn::SaveAs, L"\uE74E", L"Enregistrer sous / convertir (Ctrl+S)"},
-            {Btn::Edit, L"\uE70F", L"Modifier (E)"},
+            {Btn::Open, L"\uE8E5", T("viewer.btn.open")},
+            {Btn::SaveAs, L"\uE74E", T("viewer.btn.save_as")},
+            {Btn::Edit, L"\uE70F", T("viewer.btn.edit")},
             {Btn::None, nullptr, nullptr},
-            {Btn::ZoomOut, L"\uE71F", L"Zoom arrière (-)"},
-            {Btn::ZoomIn, L"\uE8A3", L"Zoom avant (+)"},
-            {Btn::Fit, L"\uE9A6", L"Ajuster à la fenêtre (0)"},
-            {Btn::Actual, L"1:1", L"Taille réelle (1)"},
-            {Btn::Rotate, L"\uE7AD", L"Pivoter (R)"},
-            {m_cur ? Btn::Channel : Btn::None, ChannelName(m_channel), L"Couches : afficher un canal seul (C)"},
+            {Btn::ZoomOut, L"\uE71F", T("viewer.btn.zoom_out")},
+            {Btn::ZoomIn, L"\uE8A3", T("viewer.btn.zoom_in")},
+            {Btn::Fit, L"\uE9A6", T("viewer.btn.fit")},
+            {Btn::Actual, L"1:1", T("viewer.btn.actual")},
+            {Btn::Rotate, L"\uE7AD", T("viewer.btn.rotate")},
+            {m_cur ? Btn::Channel : Btn::None, m_chanLabel.c_str(), T("viewer.btn.channels")},
             {Btn::None, nullptr, nullptr},
-            {Btn::Strip, L"\uECA5", L"Pellicule (T)"},
-            {Btn::Info, L"\uE946", L"Informations (I)"},
-            {Btn::Help, L"\uE897", L"Raccourcis (H)"},
-            {Btn::Slideshow, L"\uE786", L"Diaporama plein écran (D)"},
-            {Btn::Settings, L"\uE713", L"Param\u00E8tres (P)"},
-            {Btn::Full, m_fullscreen ? L"\uE73F" : L"\uE740", L"Plein écran (F)"},
+            {Btn::Strip, L"\uECA5", T("viewer.btn.strip")},
+            {Btn::Info, L"\uE946", T("viewer.btn.info")},
+            {Btn::Help, L"\uE897", T("viewer.btn.help")},
+            {Btn::Slideshow, L"\uE786", T("viewer.btn.slideshow")},
+            {Btn::Settings, L"\uE713", T("viewer.btn.settings")},
+            {Btn::Full, m_fullscreen ? L"\uE73F" : L"\uE740", T("viewer.btn.fullscreen")},
         };
         const float bs = 36 * s, gap = 2 * s, sep = 10 * s;
         float x = cw - 10 * s;
@@ -817,9 +818,9 @@ void Viewer::DrawHud(float cw, float ch) {
         D2D1_RECT_F updRect{};
         std::wstring updLabel;
         if (m_updateAvailable) {
-            updLabel = L"Mise à jour " + m_release.version;
+            updLabel = Tf("viewer.update.badge", m_release.version.c_str());
             updRect = D2D1::RectF(x - 8 * s - 178 * s, 12 * s, x - 8 * s, 12 * s + 28 * s);
-            m_buttons.push_back({Btn::Update, updRect, nullptr, L"Nouvelle version disponible (Ctrl+U)"});
+            m_buttons.push_back({Btn::Update, updRect, nullptr, T("viewer.btn.update")});
             x = updRect.left;
         }
         const float titleRight = x - 12 * s;
@@ -832,7 +833,7 @@ void Viewer::DrawHud(float cw, float ch) {
             if (b.id == Btn::Update) continue;
             bool active = (b.id == Btn::Strip && m_showStrip) || (b.id == Btn::Info && m_showInfo) ||
                           (b.id == Btn::Help && m_showHelp) || (b.id == Btn::Fit && m_fit) ||
-                          (b.id == Btn::Settings && m_showSettings) || (b.id == Btn::Channel && (m_channel != 0 || m_showChannels));
+                          (b.id == Btn::Settings && m_showSettings) || (b.id == Btn::Channel && (!ChannelFull(m_chanMask) || m_showChannels));
             if (b.id == hovered) FillRound(b.rc, 5 * s, kWhite, 0.14f * a);
             else if (active) FillRound(b.rc, 5 * s, kWhite, 0.07f * a);
             uint32_t col = active ? kAccent : kWhite;
@@ -849,14 +850,11 @@ void Viewer::DrawHud(float cw, float ch) {
             sub += L"   ·   " + FormatBytes(cur->size);
             if (m_cur && !m_cur->format.empty()) sub += L"   ·   " + m_cur->format;
             if (Shown()) sub += L"   ·   " + Percent(m_zoomT);
-            if (m_cur && m_cur->refinable) sub += L"   ·   développement RAW…";
+            if (m_cur && m_cur->refinable) sub += std::wstring(L"   ·   ") + T("viewer.status.raw");
             if (Animated() && m_animImg == m_cur)
-                sub += L"   ·   image " + std::to_wstring(m_frame + 1) + L"/" + std::to_wstring(m_cur->FrameCount()) +
-                       (m_playing ? L"" : L"  (pause)");
-            if (m_channel != 0 && m_cur) {
-                static const wchar_t* names[] = {L"", L"rouge", L"vert", L"bleu", L"alpha"};
-                sub += std::wstring(L"   ·   canal ") + names[m_channel];
-            }
+                sub += L"   ·   " + Tf("viewer.status.frame", m_frame + 1, int(m_cur->FrameCount())) +
+                       (m_playing ? std::wstring() : std::wstring(L"  ") + T("viewer.status.paused"));
+            if (m_cur && !ChannelFull(m_chanMask)) sub += L"   ·   " + Tf("viewer.status.channels", ChannelDescription(m_chanMask).c_str());
             Text(sub, m_tfSub.Get(), D2D1::RectF(16 * s, 28 * s, titleRight, 46 * s), kGrey, a);
         }
 
@@ -930,21 +928,18 @@ void Viewer::DrawInfoPanel(float cw, float ch) {
     std::vector<std::pair<std::wstring, std::wstring>> rows;
     const FileEntry* cur = Current();
     if (!cur) return;
-    rows.emplace_back(L"Fichier", cur->name);
-    rows.emplace_back(L"Dossier", m_folder);
-    rows.emplace_back(L"Taille", FormatBytes(cur->size));
-    rows.emplace_back(L"Modifié", FormatDate(cur->modified));
+    rows.emplace_back(T("viewer.info.file"), cur->name);
+    rows.emplace_back(T("viewer.info.folder"), m_folder);
+    rows.emplace_back(T("viewer.info.size"), FormatBytes(cur->size));
+    rows.emplace_back(T("viewer.info.modified"), FormatDate(cur->modified));
     if (m_cur) {
         float w, h;
         LogicalSize(w, h);
         wchar_t buf[96];
-        swprintf_s(buf, L"%d × %d  (%.1f Mpx)", int(w), int(h), w * h / 1e6);
-        std::wstring dims = buf;
-        std::replace(dims.begin(), dims.end(), L'.', L',');
-        rows.emplace_back(L"Dimensions", dims);
-        rows.emplace_back(L"Format", m_cur->format);
+        rows.emplace_back(T("viewer.info.dimensions"), LocalDecimal(Tf("viewer.info.dims", int(w), int(h), w * h / 1e6)));
+        rows.emplace_back(T("viewer.info.format"), m_cur->format);
         swprintf_s(buf, L"%.0f ms", m_cur->decodeMs);
-        rows.emplace_back(L"Décodage", buf);
+        rows.emplace_back(T("viewer.info.decode"), buf);
         if (!m_cur->info.empty()) rows.emplace_back(L"", L"");
         for (auto& kv : m_cur->info) rows.push_back(kv);
     }
@@ -955,7 +950,7 @@ void Viewer::DrawInfoPanel(float cw, float ch) {
     height = std::min(height, ch - top - 12 * s);
     D2D1_RECT_F p = D2D1::RectF(cw - width - 12 * s, top, cw - 12 * s, top + height);
     FillRound(p, 8 * s, kPanel, 0.93f);
-    Text(L"Informations", m_tfTitle.Get(), D2D1::RectF(p.left + pad, p.top + pad - 4 * s, p.right - pad, p.top + pad + 22 * s), kWhite, 1);
+    Text(T("viewer.info.title"), m_tfTitle.Get(), D2D1::RectF(p.left + pad, p.top + pad - 4 * s, p.right - pad, p.top + pad + 22 * s), kWhite, 1);
     float y = p.top + pad + 30 * s;
     m_rt->PushAxisAlignedClip(p, D2D1_ANTIALIAS_MODE_ALIASED);
     for (auto& [k, v] : rows) {
@@ -969,30 +964,36 @@ void Viewer::DrawInfoPanel(float cw, float ch) {
 
 void Viewer::DrawHelp(float cw, float ch) {
     const float s = m_scale;
-    static const std::pair<const wchar_t*, const wchar_t*> keys[] = {
-        {L"← → / Espace / Retour", L"Image précédente / suivante"},
-        {L"N", L"Pixels bruts / filtrage (choix du filtrage dans les paramètres)"},
-        {L"D", L"Diaporama plein écran (↑ ↓ : durée par image, Espace : pause)"},
-        {L"Ctrl+C / clic droit", L"Copier l'image (Ctrl+Maj+C : le chemin)"},
-        {L"Bouton RVB / C / Ctrl+2…6", L"Couches : canal seul (rouge, vert, bleu, alpha)"},
-        {L"Espace / , / .", L"Animation : lecture-pause / image précédente-suivante"},
-        {L"Début / Fin", L"Première / dernière image"},
-        {L"Molette / + / -", L"Zoom (centré sur la souris)"},
-        {L"Glisser", L"Déplacer l'image zoomée"},
-        {L"Double-clic / Z", L"Basculer ajusté ↔ taille réelle"},
-        {L"0 / 1", L"Ajuster à la fenêtre / 100 %"},
-        {L"R / Maj+R", L"Pivoter à droite / à gauche"},
-        {L"F / F11 / Entrée", L"Plein écran"},
-        {L"T", L"Afficher / masquer la pellicule"},
-        {L"I", L"Panneau d'informations"},
-        {L"Ctrl+O", L"Ouvrir un fichier (ou glisser-déposer)"},
-        {L"Ctrl+S", L"Enregistrer sous / convertir le format"},
-        {L"Ctrl+U", L"Rechercher une mise à jour"},
-        {L"P", L"Paramètres (fenêtre unique, pellicule, mises à jour)"},
-        {L"E", L"Mode édition (pinceau, formes, texte, recadrage…)"},
-        {L"F5", L"Recharger le dossier"},
-        {L"Boutons latéraux souris", L"Image précédente / suivante"},
-        {L"Échap", L"Fermer le panneau / quitter"},
+    // Libellé de la touche : clé de traduction (touches nommées) ou texte fixe (lettres, Ctrl+...)
+    struct HelpRow {
+        const char* keyName;
+        const wchar_t* keyFixed;
+        const char* desc;
+    };
+    static const HelpRow keys[] = {
+        {"viewer.help.k.nav", nullptr, "viewer.help.d.nav"},
+        {nullptr, L"N", "viewer.help.d.filter"},
+        {nullptr, L"D", "viewer.help.d.slideshow"},
+        {"viewer.help.k.copy", nullptr, "viewer.help.d.copy"},
+        {"viewer.help.k.channels", nullptr, "viewer.help.d.channels"},
+        {"viewer.help.k.anim", nullptr, "viewer.help.d.anim"},
+        {"viewer.help.k.home_end", nullptr, "viewer.help.d.home_end"},
+        {"viewer.help.k.zoom", nullptr, "viewer.help.d.zoom"},
+        {"viewer.help.k.drag", nullptr, "viewer.help.d.drag"},
+        {"viewer.help.k.dblclick", nullptr, "viewer.help.d.dblclick"},
+        {nullptr, L"0 / 1", "viewer.help.d.fit"},
+        {"viewer.help.k.rotate", nullptr, "viewer.help.d.rotate"},
+        {"viewer.help.k.fullscreen", nullptr, "viewer.help.d.fullscreen"},
+        {nullptr, L"T", "viewer.help.d.strip"},
+        {nullptr, L"I", "viewer.help.d.info"},
+        {nullptr, L"Ctrl+O", "viewer.help.d.open"},
+        {nullptr, L"Ctrl+S", "viewer.help.d.save_as"},
+        {nullptr, L"Ctrl+U", "viewer.help.d.update"},
+        {nullptr, L"P", "viewer.help.d.settings"},
+        {nullptr, L"E", "viewer.help.d.edit"},
+        {nullptr, L"F5", "viewer.help.d.reload"},
+        {"viewer.help.k.mouse_side", nullptr, "viewer.help.d.mouse_side"},
+        {"viewer.help.k.esc", nullptr, "viewer.help.d.esc"},
     };
     const auto& plugins = m_decoder.Plugins();
     // Deux colonnes de raccourcis, puis les plugins sur deux colonnes : tient dans un écran 1080p
@@ -1012,26 +1013,31 @@ void Viewer::DrawHelp(float cw, float ch) {
                          D2D1_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC, nullptr, nullptr);
         titleX += ls + 10 * s;
     }
-    Text(L"Raccourcis   ·   CyImgView " CYIMG_VERSION_WSTR, m_tfTitle.Get(), D2D1::RectF(titleX, p.top + pad - 6 * s, p.right - pad, p.top + pad + 22 * s), kWhite, 1);
+    Text(std::wstring(T("viewer.help.title")) + L"   ·   CyImgView " CYIMG_VERSION_WSTR, m_tfTitle.Get(), D2D1::RectF(titleX, p.top + pad - 6 * s, p.right - pad, p.top + pad + 22 * s), kWhite, 1);
     const float top = p.top + pad + 36 * s;
     const float half = (w - 2 * pad) / 2, col = std::min(200 * s, half * 0.42f);
     for (size_t i = 0; i < ARRAYSIZE(keys); ++i) {
         const float x = p.left + pad + (i < keyRows ? 0 : half + 12 * s), y = top + rowH * float(i % keyRows);
-        Text(keys[i].first, m_tfSmall.Get(), D2D1::RectF(x, y, x + col - 8 * s, y + rowH), kAccent, 1);
-        Text(keys[i].second, m_tfSmall.Get(), D2D1::RectF(x + col, y, x + half - 12 * s, y + rowH), kWhite, 0.95f);
+        std::wstring keyText = keys[i].keyName ? T(keys[i].keyName) : keys[i].keyFixed;
+        if (keyText.rfind(L"Ctrl", 0) == 0) keyText = T("viewer.key.ctrl") + keyText.substr(4);  // « Strg » en allemand
+        Text(keyText, m_tfSmall.Get(), D2D1::RectF(x, y, x + col - 8 * s, y + rowH), kAccent, 1);
+        Text(T(keys[i].desc), m_tfSmall.Get(), D2D1::RectF(x + col, y, x + half - 12 * s, y + rowH), kWhite, 0.95f);
     }
     float y = top + rowH * keyRows + 12 * s;
-    Text(L"Plugins chargés (" + std::to_wstring(plugins.size()) + L")", m_tfTitle.Get(), D2D1::RectF(p.left + pad, y, p.right - pad, y + 24 * s), kWhite, 1);
+    Text(Tf("viewer.help.plugins", int(plugins.size())), m_tfTitle.Get(), D2D1::RectF(p.left + pad, y, p.right - pad, y + 24 * s), kWhite, 1);
     y += 28 * s;
     if (plugins.empty()) {
-        Text(L"Aucun (dossier « plugins » vide)", m_tfSmall.Get(), D2D1::RectF(p.left + pad, y, p.right - pad, y + rowH), kGrey, 1);
+        Text(T("viewer.help.no_plugins"), m_tfSmall.Get(), D2D1::RectF(p.left + pad, y, p.right - pad, y + rowH), kGrey, 1);
     }
     for (size_t i = 0; i < plugins.size(); ++i) {
         const auto& pl = plugins[i];
         const float x = p.left + pad + (i < plugRows ? 0 : half + 12 * s), yy = y + rowH * float(i % plugRows);
         std::wstring exts = pl.extensions;
         std::replace(exts.begin(), exts.end(), L';', L' ');
-        Text(pl.name, m_tfSmall.Get(), D2D1::RectF(x, yy, x + col - 8 * s, yy + rowH), kAccent, 1);
+        // Nom affiché traduit si une clé « pluginname.<fichier> » existe (plugins livrés avec CyImgView)
+        std::string nameKey = "pluginname.";
+        for (wchar_t c : FileNameOf(pl.file).substr(0, FileNameOf(pl.file).find_last_of(L'.'))) nameKey += char(towlower(c));
+        Text(TrOr(nameKey.c_str(), pl.name.c_str()), m_tfSmall.Get(), D2D1::RectF(x, yy, x + col - 8 * s, yy + rowH), kAccent, 1);
         Text(exts, m_tfSmall.Get(), D2D1::RectF(x + col, yy, x + half - 12 * s, yy + rowH), kGrey, 1);
     }
     m_rt->PopAxisAlignedClip();
@@ -1168,7 +1174,7 @@ void Viewer::ToggleActualFit(POINT anchor) {
         }
     } else {
         ApplyFit(true);
-        ShowToast(L"Ajusté");
+        ShowToast(T("viewer.toast.fit"));
     }
 }
 
@@ -1222,7 +1228,7 @@ void Viewer::OpenPath(std::wstring path) {
 
     WIN32_FILE_ATTRIBUTE_DATA fa;
     if (!GetFileAttributesExW(path.c_str(), GetFileExInfoStandard, &fa)) {
-        ShowToast(L"Fichier introuvable");
+        ShowToast(T("viewer.toast.not_found"));
         return;
     }
     std::wstring folder;
@@ -1264,7 +1270,7 @@ void Viewer::OpenPath(std::wstring path) {
     m_thumbReqLo = m_thumbReqHi = m_thumbReqIndex = -1;
     if (m_files.empty()) {
         UpdateTitle();
-        ShowToast(L"Aucune image dans ce dossier");
+        ShowToast(T("viewer.toast.no_images"));
         Invalidate();
         return;
     }
@@ -1276,9 +1282,9 @@ void Viewer::OpenDialog() {
     ComPtr<IFileOpenDialog> dlg;
     if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dlg)))) return;
     std::wstring pattern = m_decoder.DialogPattern();
-    COMDLG_FILTERSPEC spec[] = {{L"Images", pattern.c_str()}, {L"Tous les fichiers", L"*.*"}};
+    COMDLG_FILTERSPEC spec[] = {{T("viewer.dlg.images"), pattern.c_str()}, {T("viewer.dlg.all_files"), L"*.*"}};
     dlg->SetFileTypes(2, spec);
-    dlg->SetTitle(L"Ouvrir une image");
+    dlg->SetTitle(T("viewer.dlg.open_title"));
     if (!m_folder.empty()) {
         ComPtr<IShellItem> folder;
         if (SUCCEEDED(SHCreateItemFromParsingName((m_folder + L"\\").c_str(), nullptr, IID_PPV_ARGS(&folder))))
@@ -1325,11 +1331,11 @@ void Viewer::Navigate(int delta) {
     if (m_files.empty()) return;
     int target = m_index + delta;
     if (target < 0) {
-        ShowToast(L"Première image");
+        ShowToast(T("viewer.toast.first"));
         return;
     }
     if (target >= int(m_files.size())) {
-        ShowToast(L"Dernière image");
+        ShowToast(T("viewer.toast.last"));
         return;
     }
     m_lastDir = delta > 0 ? 1 : -1;
@@ -1583,7 +1589,7 @@ void Viewer::OnButton(Btn b) {
     case Btn::Next: Navigate(1); break;
     case Btn::ZoomOut: ZoomStep(1 / 1.25, c); break;
     case Btn::ZoomIn: ZoomStep(1.25, c); break;
-    case Btn::Fit: ApplyFit(true); ShowToast(L"Ajusté"); break;
+    case Btn::Fit: ApplyFit(true); ShowToast(T("viewer.toast.fit")); break;
     case Btn::Actual: ZoomTo(1.0, c, true); break;
     case Btn::Rotate: Rotate(1); break;
     case Btn::Strip: m_showStrip = !m_showStrip; m_thumbReqLo = -1; RequestThumbs(); break;
@@ -1609,7 +1615,7 @@ void Viewer::OnButton(Btn b) {
     case Btn::SlideShuffle:
         m_slideShuffle = !m_slideShuffle;
         SaveSetting(L"slideshow", L"shuffle", m_slideShuffle);
-        ShowToast(m_slideShuffle ? L"Ordre aléatoire" : L"Ordre du dossier");
+        ShowToast(T(m_slideShuffle ? "viewer.toast.shuffle_on" : "viewer.toast.shuffle_off"));
         break;
     case Btn::SlideExit: StopSlideshow(); break;
     case Btn::Channel:
@@ -1654,7 +1660,7 @@ void Viewer::OnKey(WPARAM vk) {
     case VK_END: GoTo(int(m_files.size()) - 1); break;
     case VK_UP: ZoomStep(1.25, c); break;
     case VK_DOWN: ZoomStep(1 / 1.25, c); break;
-    case '0': case VK_NUMPAD0: case VK_MULTIPLY: if (Shown()) { ApplyFit(true); ShowToast(L"Ajusté"); } break;
+    case '0': case VK_NUMPAD0: case VK_MULTIPLY: if (Shown()) { ApplyFit(true); ShowToast(T("viewer.toast.fit")); } break;
     case '1': case VK_NUMPAD1: case VK_DIVIDE: if (!ctrl && Shown()) ZoomTo(1.0, c, true); break;
     case 'Z': ToggleActualFit(c); break;
     case 'F': case VK_F11: case VK_RETURN: ToggleFullscreen(); break;
@@ -1870,7 +1876,8 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
         if (!m_edit.active) {  // panneau Couches : choix du canal affiché
             for (const ChannelRow& r : m_channelRows) {
                 if (Contains(r.rc, p)) {
-                    if (r.ch >= 0) SetChannel(r.ch);  // -1 : fond du panneau
+                    if (r.ch >= 10) ToggleChannel(r.ch - 11);  // case à cocher (11..14 = R, V, B, A)
+                    else if (r.ch >= 0) SetChannel(r.ch);      // ligne : ce canal seul ; -1 : fond du panneau
                     return 0;
                 }
             }

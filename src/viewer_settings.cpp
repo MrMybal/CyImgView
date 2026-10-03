@@ -3,6 +3,7 @@
 #include "version.h"
 #include "viewer.h"
 #include "viewer_util.h"
+#include "i18n.h"
 
 #include <shlobj.h>
 
@@ -10,7 +11,7 @@ using namespace ui;
 
 namespace {
 
-enum SettingId { kSingleWindow = 1, kStrip, kAutoUpdate, kCheckNow, kSlideShuffle, kSlideLess, kSlideMore, kFilterPrev, kFilterNext };
+enum SettingId { kSingleWindow = 1, kStrip, kAutoUpdate, kCheckNow, kSlideShuffle, kSlideLess, kSlideMore, kFilterPrev, kFilterNext, kLangPrev, kLangNext };
 
 }  // namespace
 
@@ -75,6 +76,23 @@ void Viewer::OnSettingClicked(int id) {
         m_slideShuffle = !m_slideShuffle;
         SaveSetting(L"slideshow", L"shuffle", m_slideShuffle);
         break;
+    case kLangPrev:
+    case kLangNext: {
+        // Liste : Automatique, puis les langues disponibles
+        auto langs = i18n::Languages();
+        wchar_t cur[32] = {};
+        GetPrivateProfileStringW(L"settings", L"language", L"", cur, ARRAYSIZE(cur), m_iniPath.c_str());
+        int idx = 0;
+        for (size_t i = 0; i < langs.size(); ++i)
+            if (langs[i].code == cur) idx = int(i) + 1;
+        const int n = int(langs.size()) + 1;
+        idx = (idx + (id == kLangNext ? 1 : n - 1)) % n;
+        const std::wstring code = idx == 0 ? std::wstring() : langs[size_t(idx - 1)].code;
+        if (!m_iniPath.empty()) WritePrivateProfileStringW(L"settings", L"language", code.c_str(), m_iniPath.c_str());
+        i18n::SetLanguage(code);
+        UpdateTitle();
+        break;
+    }
     case kFilterPrev: SetFilter((m_filter + 5) % 6); break;
     case kFilterNext: SetFilter((m_filter + 1) % 6); break;
     case kSlideLess: ChangeSlideDelay(-1); break;
@@ -94,28 +112,25 @@ void Viewer::DrawSettings(float cw, float ch) {
     m_settingRows.clear();
     struct Row {
         int id;
-        const wchar_t* title;
-        const wchar_t* desc;
+        const char* title;  // clés de traduction
+        const char* desc;
         bool value;
     };
     const Row rows[] = {
-        {kSingleWindow, L"Ouvrir les fichiers dans la fenêtre existante",
-         L"Sinon, chaque fichier ouvert crée une nouvelle fenêtre.", m_singleInstance},
-        {kStrip, L"Afficher la pellicule", L"Vignettes des images du dossier en bas de l'écran (touche T).", m_showStrip},
-        {kAutoUpdate, L"Rechercher les mises à jour automatiquement",
-         L"Au plus une fois par jour, sur les releases GitHub de CyImgView.", m_autoUpdate},
-        {kSlideShuffle, L"Diaporama : ordre aléatoire", L"Sinon, les images défilent dans l'ordre du dossier (touche D).",
-         m_slideShuffle},
+        {kSingleWindow, "settings.single_window", "settings.single_window.desc", m_singleInstance},
+        {kStrip, "settings.strip", "settings.strip.desc", m_showStrip},
+        {kAutoUpdate, "settings.auto_update", "settings.auto_update.desc", m_autoUpdate},
+        {kSlideShuffle, "settings.shuffle", "settings.shuffle.desc", m_slideShuffle},
     };
     const float w = std::min(580 * s, cw - 24 * s), pad = 18 * s, rowH = 62 * s;
-    const float h = pad * 2 + 34 * s + rowH * (ARRAYSIZE(rows) + 2) + 52 * s + 26 * s;
+    const float h = pad * 2 + 34 * s + rowH * (ARRAYSIZE(rows) + 3) + 52 * s + 26 * s;
     m_settingsPanel = D2D1::RectF(cw - w - 12 * s, 58 * s, cw - 12 * s, std::min(ch - 12 * s, 58 * s + h));
     const D2D1_RECT_F& p = m_settingsPanel;
     FillRound(p, 8 * s, kPanel, 0.97f);
     SetColor(kWhite, 0.08f);
     m_rt->DrawRoundedRectangle(D2D1::RoundedRect(p, 8 * s, 8 * s), m_brush.Get(), 1);
     m_rt->PushAxisAlignedClip(p, D2D1_ANTIALIAS_MODE_ALIASED);
-    Text(L"Paramètres", m_tfTitle.Get(), D2D1::RectF(p.left + pad, p.top + pad - 4 * s, p.right - pad, p.top + pad + 22 * s), kWhite, 1);
+    Text(T("settings.title"), m_tfTitle.Get(), D2D1::RectF(p.left + pad, p.top + pad - 4 * s, p.right - pad, p.top + pad + 22 * s), kWhite, 1);
 
     float y = p.top + pad + 34 * s;
     for (const Row& r : rows) {
@@ -129,19 +144,40 @@ void Viewer::DrawSettings(float cw, float ch) {
         float kx = r.value ? sw.right - th / 2 : sw.left + th / 2;
         SetColor(kWhite, 1);
         m_rt->FillEllipse(D2D1::Ellipse(D2D1::Point2F(kx, (sw.top + sw.bottom) / 2), th / 2 - 3 * s, th / 2 - 3 * s), m_brush.Get());
-        Text(r.title, m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 6 * s, sw.left - 10 * s, rc.top + 28 * s), kWhite, 1);
-        Text(r.desc, m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 28 * s, sw.left - 10 * s, rc.top + 50 * s), kGrey, 0.9f);
+        Text(T(r.title), m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 6 * s, sw.left - 10 * s, rc.top + 28 * s), kWhite, 1);
+        Text(T(r.desc), m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 28 * s, sw.left - 10 * s, rc.top + 50 * s), kGrey, 0.9f);
+        y += rowH;
+    }
+    // Langue de l'interface : sélecteur ‹ valeur ›
+    {
+        wchar_t cur[32] = {};
+        GetPrivateProfileStringW(L"settings", L"language", L"", cur, ARRAYSIZE(cur), m_iniPath.c_str());
+        std::wstring label;
+        for (auto& l : i18n::Languages()) {
+            if (l.code == cur) label = l.name;
+            if (!cur[0] && l.code == i18n::CurrentCode()) label = Tf("settings.language.auto", l.name.c_str());
+        }
+        D2D1_RECT_F rc = D2D1::RectF(p.left + 6 * s, y, p.right - 6 * s, y + rowH - 4 * s);
+        const float bs = 28 * s, vw = 170 * s;
+        D2D1_RECT_F next = D2D1::RectF(rc.right - 12 * s - bs, rc.top + 7 * s, rc.right - 12 * s, rc.top + 7 * s + bs);
+        D2D1_RECT_F val = D2D1::RectF(next.left - vw, next.top, next.left, next.bottom);
+        D2D1_RECT_F prev = D2D1::RectF(val.left - bs, next.top, val.left, next.bottom);
+        for (auto [id, r] : {std::pair{kLangPrev, prev}, std::pair{kLangNext, next}}) {
+            const bool hov = m_mouseInside && Contains(r, m_mouse);
+            FillRound(r, bs / 2, kWhite, hov ? 0.18f : 0.09f);
+            Text(id == kLangPrev ? L"" : L"", m_tfIcon.Get(), r, kWhite, 1);
+            m_settingRows.push_back({id, r});
+        }
+        Text(label, m_tfLabel.Get(), val, kAccent, 1);
+        Text(T("settings.language"), m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 6 * s, prev.left - 10 * s, rc.top + 28 * s), kWhite, 1);
+        Text(T("settings.language.desc"), m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 28 * s, prev.left - 10 * s, rc.top + 50 * s), kGrey, 0.9f);
         y += rowH;
     }
     // Filtrage de l'image : sélecteur ‹ valeur ›
     {
-        static const wchar_t* desc[] = {
-            L"Net à 100 %, lissé en réduction, pixels nets au-delà de 300 %.",
-            L"Aucun lissage : pixel art, inspection (touche N).",
-            L"Lissage simple et rapide.",
-            L"Bicubique : plus net que linéaire.",
-            L"Meilleure réduction, un peu plus lent.",
-            L"Réduction douce, moins de crénelage.",
+        static const char* desc[] = {  // clés : la langue peut changer en cours d'exécution
+            "settings.filter.desc.auto",  "settings.filter.desc.raw",      "settings.filter.desc.linear",
+            "settings.filter.desc.cubic", "settings.filter.desc.cubic_hq", "settings.filter.desc.anisotropic",
         };
         D2D1_RECT_F rc = D2D1::RectF(p.left + 6 * s, y, p.right - 6 * s, y + rowH - 4 * s);
         const float bs = 28 * s, vw = 116 * s;
@@ -155,8 +191,8 @@ void Viewer::DrawSettings(float cw, float ch) {
             m_settingRows.push_back({id, r});
         }
         Text(FilterName(m_filter), m_tfLabel.Get(), val, kAccent, 1);
-        Text(L"Filtrage de l'image", m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 6 * s, prev.left - 10 * s, rc.top + 28 * s), kWhite, 1);
-        Text(desc[m_filter], m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 28 * s, prev.left - 10 * s, rc.top + 50 * s), kGrey, 0.9f);
+        Text(T("settings.filter"), m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 6 * s, prev.left - 10 * s, rc.top + 28 * s), kWhite, 1);
+        Text(T(desc[m_filter]), m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 28 * s, prev.left - 10 * s, rc.top + 50 * s), kGrey, 0.9f);
         y += rowH;
     }
     // Diaporama : durée par image, boutons − et +
@@ -173,8 +209,8 @@ void Viewer::DrawSettings(float cw, float ch) {
             m_settingRows.push_back({id, r});
         }
         Text(SlideDelayLabel(), m_tfLabel.Get(), val, kAccent, 1);
-        Text(L"Diaporama : durée par image", m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 6 * s, minus.left - 10 * s, rc.top + 28 * s), kWhite, 1);
-        Text(L"Aussi réglable pendant le diaporama avec ↑ et ↓.", m_tfSmall.Get(),
+        Text(T("settings.slide_delay"), m_tfSmall.Get(), D2D1::RectF(rc.left + 12 * s, rc.top + 6 * s, minus.left - 10 * s, rc.top + 28 * s), kWhite, 1);
+        Text(T("settings.slide_delay.desc"), m_tfSmall.Get(),
              D2D1::RectF(rc.left + 12 * s, rc.top + 28 * s, minus.left - 10 * s, rc.top + 50 * s), kGrey, 0.9f);
         y += rowH;
     }
@@ -182,10 +218,10 @@ void Viewer::DrawSettings(float cw, float ch) {
     D2D1_RECT_F btn = D2D1::RectF(p.left + pad, y + 8 * s, p.left + pad + 260 * s, y + 42 * s);
     bool hov = m_mouseInside && Contains(btn, m_mouse);
     FillRound(btn, 6 * s, kWhite, hov ? 0.16f : 0.09f);
-    IconLabel(btn, L"", m_updateAvailable ? L"Installer la mise à jour " + m_release.version : std::wstring(L"Rechercher une mise à jour"),
+    IconLabel(btn, L"", m_updateAvailable ? Tf("settings.update.install", m_release.version.c_str()) : std::wstring(T("settings.update.check")),
               kWhite, 1);
     m_settingRows.push_back({kCheckNow, btn});
-    Text(L"CyImgView " CYIMG_VERSION_WSTR L"   ·   réglages : %APPDATA%\\CyImgView\\settings.ini", m_tfSmall.Get(),
+    Text(L"CyImgView " CYIMG_VERSION_WSTR L"   ·   " + Tf("settings.ini_path", L"%APPDATA%\\CyImgView\\settings.ini"), m_tfSmall.Get(),
          D2D1::RectF(p.left + pad, btn.bottom + 6 * s, p.right - pad, btn.bottom + 30 * s), kGrey, 0.8f);
     m_rt->PopAxisAlignedClip();
 }

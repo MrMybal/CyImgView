@@ -7,6 +7,7 @@
 //  3. Sans aperçu exploitable : décodage LibRaw en demi-taille (rapide), puis développement complet.
 
 #include "cyimg_plugin.h"
+#include "cyimg_plugin_i18n.h"
 #include "rawfile.h"
 
 #include <libraw/libraw.h>
@@ -89,18 +90,18 @@ public:
         const auto& d = m_lr->imgdata;
         wchar_t buf[96];
         std::wstring make = Widen(d.idata.make), model = Widen(d.idata.model);
-        if (!model.empty()) host->set_info(ctx, L"Appareil", (make.empty() ? model : make + L" " + model).c_str());
+        if (!model.empty()) host->set_info(ctx, CYIMG_TR("plugin.raw.info.camera", L"Appareil"), (make.empty() ? model : make + L" " + model).c_str());
         std::wstring lens = Widen(d.lens.Lens);
         if (lens.empty()) lens = Widen(d.lens.makernotes.Lens);
-        if (!lens.empty()) host->set_info(ctx, L"Objectif", lens.c_str());
+        if (!lens.empty()) host->set_info(ctx, CYIMG_TR("plugin.raw.info.lens", L"Objectif"), lens.c_str());
         if (d.other.shutter > 0) {
             if (d.other.shutter < 0.5f) swprintf_s(buf, L"1/%.0f s", 1.0 / d.other.shutter);
             else swprintf_s(buf, L"%.1f s", d.other.shutter);
-            host->set_info(ctx, L"Exposition", buf);
+            host->set_info(ctx, CYIMG_TR("plugin.raw.info.exposure", L"Exposition"), buf);
         }
         if (d.other.aperture > 0) {
             swprintf_s(buf, L"f/%.1f", d.other.aperture);
-            host->set_info(ctx, L"Ouverture", buf);
+            host->set_info(ctx, CYIMG_TR("plugin.raw.info.aperture", L"Ouverture"), buf);
         }
         if (d.other.iso_speed > 0) {
             swprintf_s(buf, L"%.0f", d.other.iso_speed);
@@ -108,14 +109,14 @@ public:
         }
         if (d.other.focal_len > 0) {
             swprintf_s(buf, L"%.0f mm", d.other.focal_len);
-            host->set_info(ctx, L"Focale", buf);
+            host->set_info(ctx, CYIMG_TR("plugin.raw.info.focal", L"Focale"), buf);
         }
         if (d.other.timestamp > 0) {
             tm t{};
             time_t ts = d.other.timestamp;
             if (localtime_s(&t, &ts) == 0) {
                 wcsftime(buf, 96, L"%d/%m/%Y %H:%M:%S", &t);
-                host->set_info(ctx, L"Date de prise", buf);
+                host->set_info(ctx, CYIMG_TR("plugin.raw.info.date_taken", L"Date de prise"), buf);
             }
         }
         AddSensorInfo(host, ctx);
@@ -124,7 +125,7 @@ public:
     void AddSensorInfo(const CyImgHost* host, CyImgContext* ctx) {
         wchar_t buf[64];
         swprintf_s(buf, L"%u × %u", m_w, m_h);
-        host->set_info(ctx, L"Capteur", buf);
+        host->set_info(ctx, CYIMG_TR("plugin.raw.info.sensor", L"Capteur"), buf);
     }
 
 private:
@@ -280,6 +281,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     const uint32_t target = host->target_size(ctx);
     const bool best = CYIMG_HOST_HAS(host, quality) && host->quality(ctx) == 1;
     const bool canRefine = CYIMG_HOST_HAS(host, set_refinable);
+    cyimg_tr_begin(host, ctx);
     const std::wstring ext = ExtUpper(path);
     wchar_t fmt[128];
 
@@ -332,7 +334,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
             if (r == CYIMG_OK) {
                 if (scan.orientation >= 1 && scan.orientation <= 8) host->set_orientation(ctx, scan.orientation);
                 else if (raw.IsOpen()) host->set_orientation(ctx, raw.Orientation());
-                swprintf_s(fmt, L"%ls (aperçu %u×%u)", ext.c_str(), largest->w, largest->h);
+                swprintf_s(fmt, CYIMG_TR("plugin.raw.format.preview", L"%ls (aperçu %u×%u)"), ext.c_str(), largest->w, largest->h);
                 host->set_format(ctx, fmt);
                 if (needMeta) {
                     if (!scan.info.empty()) {
@@ -368,7 +370,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     const bool half = !best && canRefine;
     int r = Develop(host, ctx, raw, half, haveRef ? refHist : nullptr);
     if (r != CYIMG_OK) return r;
-    swprintf_s(fmt, half ? L"%ls (RAW, demi-taille)" : L"%ls (RAW développé)", ext.c_str());
+    swprintf_s(fmt, half ? CYIMG_TR("plugin.raw.format.half", L"%ls (RAW, demi-taille)") : CYIMG_TR("plugin.raw.format.developed", L"%ls (RAW développé)"), ext.c_str());
     host->set_format(ctx, fmt);
     raw.AddInfo(host, ctx);
     if (half) host->set_refinable(ctx);
@@ -398,4 +400,10 @@ const CyImgPlugin g_plugin = {
 
 }  // namespace
 
-extern "C" __declspec(dllexport) const CyImgPlugin* CyImg_GetPlugin(void) { return &g_plugin; }
+extern "C" __declspec(dllexport) const CyImgPlugin* CyImg_GetPlugin(void) {
+    // Le pool de threads OpenMP (vcomp140.dll) survit aux décodages : on l'épingle pour qu'il ne soit
+    // jamais déchargé sous ses threads (plantage à la fermeture sinon).
+    HMODULE omp = nullptr;
+    GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_PIN, L"vcomp140.dll", &omp);
+    return &g_plugin;
+}

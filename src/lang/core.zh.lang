@@ -1,0 +1,6 @@
+# CyImgView — core (简体中文)
+@code = zh
+@name = 简体中文
+settings.language = 界面语言
+settings.language.desc = “自动”将跟随 Windows 的显示语言。
+settings.language.auto = 自动 (%ls)

@@ -64,32 +64,32 @@ int Render(const Call& c, const wchar_t* path, bool ai) {
     if (FAILED(CreateRandomAccessStreamOnFile(path, 0 /* FileAccessMode::Read */,
                                               winrt::guid_of<winrt::Windows::Storage::Streams::IRandomAccessStream>(),
                                               winrt::put_abi(stream))))
-        return c.Fail(L"Ouverture du PDF impossible");
+        return c.Fail(CYIMG_TR("plugin.vector.pdf.err.open", L"Ouverture du PDF impossible"));
     PdfDocument doc{nullptr};
     try {
         doc = PdfDocument::LoadFromStreamAsync(stream).get();
     } catch (const winrt::hresult_error& e) {
         if (e.code() == HRESULT_FROM_WIN32(ERROR_WRONG_PASSWORD) || e.code() == HRESULT_FROM_WIN32(ERROR_INVALID_PASSWORD))
-            return c.Fail(L"PDF protégé par un mot de passe");
-        return c.Fail(Fmt(L"PDF illisible ou endommagé (erreur 0x%08X)", unsigned(e.code().value)).c_str());
+            return c.Fail(CYIMG_TR("plugin.vector.pdf.err.password", L"PDF protégé par un mot de passe"));
+        return c.Fail(Fmt(CYIMG_TR("plugin.vector.pdf.err.damaged", L"PDF illisible ou endommagé (erreur 0x%08X)"), unsigned(e.code().value)).c_str());
     }
     const uint32_t pages = doc.PageCount();
-    if (!pages) return c.Fail(L"PDF sans aucune page");
+    if (!pages) return c.Fail(CYIMG_TR("plugin.vector.pdf.err.no_page", L"PDF sans aucune page"));
     if (c.Cancelled()) return CYIMG_E_CANCELLED;
     PdfPage page = doc.GetPage(0);
     const auto size = page.Size();  // DIP (1/96 pouce), rotation comprise
     double w = size.Width, h = size.Height;
-    if (!(w > 0) || !(h > 0)) return c.Fail(L"Page PDF de taille nulle");
+    if (!(w > 0) || !(h > 0)) return c.Fail(CYIMG_TR("plugin.vector.pdf.err.zero_size", L"Page PDF de taille nulle"));
     uint32_t rw = 0, rh = 0;
     RenderSize(c, w, h, rw, rh);
 
     const PdfDevice* dev = SharedDevice();
-    if (!dev) return c.Fail(L"Direct3D 11 (WARP) / Direct2D indisponible");
+    if (!dev) return c.Fail(CYIMG_TR("plugin.vector.pdf.err.d3d", L"Direct3D 11 (WARP) / Direct2D indisponible"));
     ComPtr<IPdfRendererNative> renderer;
     ComPtr<ID2D1DeviceContext> dc;
     if (FAILED(PdfCreateRenderer(dev->dxgi, &renderer)) ||
         FAILED(dev->d2d->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, &dc)))
-        return c.Fail(L"Moteur de rendu PDF indisponible");
+        return c.Fail(CYIMG_TR("plugin.vector.pdf.err.engine", L"Moteur de rendu PDF indisponible"));
     const D2D1_PIXEL_FORMAT pf = D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
     ComPtr<ID2D1Bitmap1> target, readback;
     if (FAILED(dc->CreateBitmap(D2D1::SizeU(rw, rh), nullptr, 0,
@@ -97,7 +97,7 @@ int Render(const Call& c, const wchar_t* path, bool ai) {
         FAILED(dc->CreateBitmap(D2D1::SizeU(rw, rh), nullptr, 0,
                                 D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_CPU_READ | D2D1_BITMAP_OPTIONS_CANNOT_DRAW, pf),
                                 &readback)))
-        return c.Fail(L"Mémoire graphique insuffisante pour le rendu PDF");
+        return c.Fail(CYIMG_TR("plugin.vector.pdf.err.gpu_memory", L"Mémoire graphique insuffisante pour le rendu PDF"));
     dc->SetTarget(target.Get());
     dc->BeginDraw();
     dc->Clear(D2D1::ColorF(D2D1::ColorF::White));
@@ -105,18 +105,18 @@ int Render(const Call& c, const wchar_t* path, bool ai) {
     HRESULT hr = renderer->RenderPageToDeviceContext(winrt::get_unknown(page), dc.Get(), &params);
     const HRESULT hrEnd = dc->EndDraw();
     if (FAILED(hr) || FAILED(hrEnd))
-        return c.Fail(Fmt(L"Rendu de la page PDF impossible (erreur 0x%08X)", unsigned(FAILED(hr) ? hr : hrEnd)).c_str());
+        return c.Fail(Fmt(CYIMG_TR("plugin.vector.pdf.err.render", L"Rendu de la page PDF impossible (erreur 0x%08X)"), unsigned(FAILED(hr) ? hr : hrEnd)).c_str());
     dc->SetTarget(nullptr);
     D2D1_MAPPED_RECT map{};
     if (FAILED(readback->CopyFromBitmap(nullptr, target.Get(), nullptr)) || FAILED(readback->Map(D2D1_MAP_OPTIONS_READ, &map)))
-        return c.Fail(L"Lecture du rendu PDF impossible");
+        return c.Fail(CYIMG_TR("plugin.vector.pdf.err.read_render", L"Lecture du rendu PDF impossible"));
     const int r = DeliverPixels(c, map.bits, map.pitch, rw, rh, true);
     readback->Unmap();
     if (r != CYIMG_OK) return r;
 
     c.host->set_format(c.ctx, ai ? L"Adobe Illustrator (PDF)" : L"PDF");
-    c.Info(L"Pages", Fmt(L"%u (page 1 affichée)", pages));
-    c.Info(L"Taille de page", Fmt(L"%.0f × %.0f mm", w * 25.4 / 96, h * 25.4 / 96));
+    c.Info(CYIMG_TR("plugin.vector.info.pages", L"Pages"), Fmt(CYIMG_TR("plugin.vector.pdf.pages_value", L"%u (page 1 affichée)"), pages));
+    c.Info(CYIMG_TR("plugin.vector.info.page_size", L"Taille de page"), Fmt(L"%.0f × %.0f mm", w * 25.4 / 96, h * 25.4 / 96));
     return CYIMG_OK;
 }
 
@@ -127,11 +127,11 @@ int DecodePdf(const Call& c, const wchar_t* path, bool ai) {
     try {
         return Render(c, path, ai);
     } catch (const winrt::hresult_error& e) {
-        return c.Fail(Fmt(L"Erreur du moteur PDF de Windows (0x%08X)", unsigned(e.code().value)).c_str());
+        return c.Fail(Fmt(CYIMG_TR("plugin.vector.pdf.err.windows", L"Erreur du moteur PDF de Windows (0x%08X)"), unsigned(e.code().value)).c_str());
     } catch (const std::bad_alloc&) {
         return CYIMG_E_OUTOFMEMORY;
     } catch (...) {
-        return c.Fail(L"Erreur inattendue du moteur PDF");
+        return c.Fail(CYIMG_TR("plugin.vector.pdf.err.unexpected", L"Erreur inattendue du moteur PDF"));
     }
 }
 

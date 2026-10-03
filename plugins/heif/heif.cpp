@@ -9,6 +9,7 @@
 // - Séquences (AVIS, HEICS) : toutes les images de la première piste vidéo.
 
 #include "cyimg_plugin.h"
+#include "cyimg_plugin_i18n.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -110,8 +111,8 @@ const wchar_t* CodecName(uint32_t type) {
     case FourCC('j', 'p', 'e', 'g'): return L"JPEG";
     case FourCC('j', '2', 'k', '1'): return L"JPEG 2000";
     case FourCC('u', 'n', 'c', 'i'):
-    case FourCC('u', 'n', 'c', 'v'): return L"non compressé";
-    case FourCC('m', 's', 'k', ' '): return L"masque";
+    case FourCC('u', 'n', 'c', 'v'): return CYIMG_TR("plugin.heif.codec.uncompressed", L"non compressé");
+    case FourCC('m', 's', 'k', ' '): return CYIMG_TR("plugin.heif.codec.mask", L"masque");
     default: return nullptr;
     }
 }
@@ -194,22 +195,27 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         std::wstring m = what;
         std::wstring detail = Widen(err.message);
         while (!detail.empty() && iswspace(detail.back())) detail.pop_back();
-        if (!detail.empty() && detail != L"Success") m += L" : " + detail;
+        if (!detail.empty() && detail != L"Success") {  // message libheif (anglais) en complément
+            wchar_t buf[512];
+            swprintf_s(buf, CYIMG_TR("plugin.heif.err.detail", L"%ls : %ls"), what, detail.c_str());
+            m = buf;
+        }
         fail(m);
         // Limites de sécurité de libheif (dimensions ou mémoire déraisonnables) : message conservé
         return err.code == heif_error_Memory_allocation_error ? CYIMG_E_OUTOFMEMORY : CYIMG_E_FAIL;
     };
 
+    cyimg_tr_begin(host, ctx);
     std::vector<uint8_t> file;
-    if (!ReadAll(path, file)) return fail(L"Lecture du fichier HEIF impossible");
+    if (!ReadAll(path, file)) return fail(CYIMG_TR("plugin.heif.err.read", L"Lecture du fichier HEIF impossible"));
     if (heif_check_filetype(file.data(), int(std::min<size_t>(file.size(), 1 << 20))) == heif_filetype_no)
-        return fail(L"Ce fichier n'est pas au format HEIF/AVIF");
+        return fail(CYIMG_TR("plugin.heif.err.not_heif", L"Ce fichier n'est pas au format HEIF/AVIF"));
 
     InitLibrary();
     CtxPtr hctx(heif_context_alloc());
     if (!hctx) return CYIMG_E_OUTOFMEMORY;
     heif_error err = heif_context_read_from_memory_without_copy(hctx.get(), file.data(), file.size(), nullptr);
-    if (err.code != heif_error_Ok) return heifFail(L"Fichier HEIF illisible", err);
+    if (err.code != heif_error_Ok) return heifFail(CYIMG_TR("plugin.heif.err.unreadable", L"Fichier HEIF illisible"), err);
 
     const uint32_t target = host->target_size(ctx);
     const unsigned cpus = CpuCount();
@@ -232,7 +238,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         if (heif_context_get_primary_image_handle(hctx.get(), &h).code == heif_error_Ok) primary.reset(h);
     }
     const bool hasSequence = heif_context_has_sequence(hctx.get()) != 0;
-    if (!primary && !hasSequence) return fail(L"Aucune image dans ce fichier HEIF");
+    if (!primary && !hasSequence) return fail(CYIMG_TR("plugin.heif.err.no_image", L"Aucune image dans ce fichier HEIF"));
 
     bool isGrid = false;
     uint32_t codingType = 0;
@@ -240,7 +246,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     TrackPtr track;
     if (hasSequence) {
         track.reset(heif_context_get_track(hctx.get(), 0));
-        if (!track && !primary) return fail(L"Aucune piste vidéo dans cette séquence HEIF");
+        if (!track && !primary) return fail(CYIMG_TR("plugin.heif.err.no_track", L"Aucune piste vidéo dans cette séquence HEIF"));
         if (track && !codingType) codingType = heif_track_get_sample_entry_type_of_first_cluster(track.get());
     }
     const bool av1 = codingType == FourCC('a', 'v', '0', '1') ||
@@ -248,23 +254,23 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
                      heif_read_main_brand(file.data(), int(std::min<size_t>(file.size(), 64))) == heif_brand2_avis;
     const bool hevc = codingType == FourCC('h', 'v', 'c', '1');
     host->set_format(ctx, av1 ? L"AVIF" : hevc ? L"HEIC" : L"HEIF");
-    if (const wchar_t* cn = CodecName(codingType)) host->set_info(ctx, L"Codec", cn);
+    if (const wchar_t* cn = CodecName(codingType)) host->set_info(ctx, CYIMG_TR("plugin.heif.info.codec", L"Codec"), cn);
     // Grille : plusieurs tuiles décodées en parallèle, un thread par tuile. Image unique : threads du codec.
     opt->num_codec_threads = isGrid ? 1 : threads;
 
     wchar_t buf[96];
     if (primary) {
         const int bits = heif_image_handle_get_luma_bits_per_pixel(primary.get());
-        if (bits > 8) swprintf_s(buf, L"%d bits (affiché en 8 bits)", bits);
-        else if (bits > 0) swprintf_s(buf, L"%d bits", bits);
+        if (bits > 8) swprintf_s(buf, CYIMG_TR("plugin.heif.depth.reduced", L"%d bits (affiché en 8 bits)"), bits);
+        else if (bits > 0) swprintf_s(buf, CYIMG_TR("plugin.heif.depth.bits", L"%d bits"), bits);
         else buf[0] = 0;
-        if (buf[0]) host->set_info(ctx, L"Profondeur", buf);
-        if (isGrid) host->set_info(ctx, L"Structure", L"grille de tuiles");
+        if (buf[0]) host->set_info(ctx, CYIMG_TR("plugin.heif.info.depth", L"Profondeur"), buf);
+        if (isGrid) host->set_info(ctx, CYIMG_TR("plugin.heif.info.structure", L"Structure"), CYIMG_TR("plugin.heif.structure.grid", L"grille de tuiles"));
     }
     const int topLevel = heif_context_get_number_of_top_level_images(hctx.get());
     if (topLevel > 1) {
         swprintf_s(buf, L"%d", topLevel);
-        host->set_info(ctx, L"Images dans le fichier", buf);
+        host->set_info(ctx, CYIMG_TR("plugin.heif.info.images", L"Images dans le fichier"), buf);
     }
 
     // Vignette intégrée la plus petite couvrant la taille demandée
@@ -287,10 +293,10 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
                     thumb = std::move(th);
                 }
             }
-            swprintf_s(buf, L"oui (%dx%d)", maxW, maxH);
-            host->set_info(ctx, L"Vignette intégrée", buf);
+            swprintf_s(buf, CYIMG_TR("plugin.heif.thumb.yes", L"oui (%dx%d)"), maxW, maxH);
+            host->set_info(ctx, CYIMG_TR("plugin.heif.info.thumbnail", L"Vignette intégrée"), buf);
         } else {
-            host->set_info(ctx, L"Vignette intégrée", L"non");
+            host->set_info(ctx, CYIMG_TR("plugin.heif.info.thumbnail", L"Vignette intégrée"), CYIMG_TR("plugin.heif.no", L"non"));
         }
     }
 
@@ -314,12 +320,12 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
             if (err.code != heif_error_Ok || !img) {
                 if (frames) break;  // séquence tronquée : on garde les images déjà décodées
                 if (primary) goto still;
-                return heifFail(L"Décodage de la séquence HEIF impossible", err);
+                return heifFail(CYIMG_TR("plugin.heif.err.sequence_decode", L"Décodage de la séquence HEIF impossible"), err);
             }
             if (!frames) {
                 W = uint32_t(heif_image_get_primary_width(img.get()));
                 H = uint32_t(heif_image_get_primary_height(img.get()));
-                if (!W || !H) return fail(L"Dimensions d'image HEIF invalides");
+                if (!W || !H) return fail(CYIMG_TR("plugin.heif.err.dimensions", L"Dimensions d'image HEIF invalides"));
                 if (!alpha) alpha = HasTransparency(img.get());  // RGBA non compressé : pas de piste auxiliaire
                 out = host->alloc_bgra(ctx, W, H, alpha ? 1 : 0, &stride);
                 if (!out) return CYIMG_E_OUTOFMEMORY;
@@ -328,7 +334,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
                 out = host->add_frame(ctx, &stride);
                 if (!out) break;
             }
-            if (!CopyToBgra(img.get(), true, out, stride, W, H)) return fail(L"Image HEIF décodée inutilisable");
+            if (!CopyToBgra(img.get(), true, out, stride, W, H)) return fail(CYIMG_TR("plugin.heif.err.unusable", L"Image HEIF décodée inutilisable"));
             if (canAnimate) {
                 const uint64_t ms = uint64_t(heif_image_get_duration(img.get())) * 1000 / timescale;
                 host->set_frame_delay(ctx, frames, uint32_t(std::clamp<uint64_t>(ms, 10, 60000)));
@@ -338,11 +344,11 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         }
         if (!frames) {
             if (primary) goto still;
-            return fail(L"Séquence HEIF vide");
+            return fail(CYIMG_TR("plugin.heif.err.empty_sequence", L"Séquence HEIF vide"));
         }
         if (frames > 1) {
             swprintf_s(buf, L"%u", frames);
-            host->set_info(ctx, L"Images animées", buf);
+            host->set_info(ctx, CYIMG_TR("plugin.heif.info.frames", L"Images animées"), buf);
         }
         return CYIMG_OK;
     }
@@ -371,21 +377,24 @@ still:
         if (err.code != heif_error_Ok || !img) {
             if (err.code == heif_error_Unsupported_feature && err.subcode == heif_suberror_Unsupported_codec) {
                 const wchar_t* cn = CodecName(codingType);
-                return fail(std::wstring(L"Codec HEIF non pris en charge") + (cn ? L" : " : L"") + (cn ? cn : L""));
+                if (!cn) return fail(CYIMG_TR("plugin.heif.err.codec", L"Codec HEIF non pris en charge"));
+                wchar_t msg[128];
+                swprintf_s(msg, CYIMG_TR("plugin.heif.err.codec_named", L"Codec HEIF non pris en charge : %ls"), cn);
+                return fail(msg);
             }
             if (host->is_cancelled(ctx)) return CYIMG_E_CANCELLED;
-            return heifFail(L"Décodage HEIF impossible", err);
+            return heifFail(CYIMG_TR("plugin.heif.err.decode", L"Décodage HEIF impossible"), err);
         }
         const int w = heif_image_get_width(img.get(), heif_channel_interleaved);
         const int h = heif_image_get_height(img.get(), heif_channel_interleaved);
-        if (w <= 0 || h <= 0) return fail(L"Dimensions d'image HEIF invalides");
+        if (w <= 0 || h <= 0) return fail(CYIMG_TR("plugin.heif.err.dimensions", L"Dimensions d'image HEIF invalides"));
         uint32_t stride = 0;
         uint8_t* out = host->alloc_bgra(ctx, uint32_t(w), uint32_t(h), alpha ? 1 : 0, &stride);
         if (!out) return CYIMG_E_OUTOFMEMORY;
         if (!CopyToBgra(img.get(), alpha, out, stride, uint32_t(w), uint32_t(h)))
-            return fail(L"Image HEIF décodée inutilisable");
-        if (alpha) host->set_info(ctx, L"Alpha", L"oui");
-        if (thumb) host->set_info(ctx, L"Source", L"vignette intégrée");
+            return fail(CYIMG_TR("plugin.heif.err.unusable", L"Image HEIF décodée inutilisable"));
+        if (alpha) host->set_info(ctx, CYIMG_TR("plugin.heif.info.alpha", L"Alpha"), CYIMG_TR("plugin.heif.yes", L"oui"));
+        if (thumb) host->set_info(ctx, CYIMG_TR("plugin.heif.info.source", L"Source"), CYIMG_TR("plugin.heif.source.thumbnail", L"vignette intégrée"));
     }
     return CYIMG_OK;
 }
@@ -396,7 +405,7 @@ int DecodeSafe(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     } catch (const std::bad_alloc&) {
         return CYIMG_E_OUTOFMEMORY;
     } catch (...) {
-        if (CYIMG_HOST_HAS(host, set_error)) host->set_error(ctx, L"Erreur interne du décodeur HEIF");
+        if (CYIMG_HOST_HAS(host, set_error)) host->set_error(ctx, cyimg_tr(host, ctx, "plugin.heif.err.internal", L"Erreur interne du décodeur HEIF"));
         return CYIMG_E_FAIL;
     }
 }

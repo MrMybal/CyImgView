@@ -187,8 +187,8 @@ int DecodeXbm(Dec& d) {
         }
         ++i;
     }
-    if (w <= 0 || h <= 0 || !SizeOk(uint64_t(w), uint64_t(h))) return d.Fail(L"En-tête XBM invalide (largeur/hauteur)");
-    if (i >= n) return d.Fail(L"Données XBM absentes");
+    if (w <= 0 || h <= 0 || !SizeOk(uint64_t(w), uint64_t(h))) return d.Fail(CYIMG_TR("plugin.classic.xbm.err.header", L"En-tête XBM invalide (largeur/hauteur)"));
+    if (i >= n) return d.Fail(CYIMG_TR("plugin.classic.xbm.err.no_data", L"Données XBM absentes"));
     // X10 : valeurs 16 bits (« short »)
     const std::string decl(s + (i > 200 ? i - 200 : 0), s + i);
     const bool x10 = decl.find("short") != std::string::npos;
@@ -209,7 +209,7 @@ int DecodeXbm(Dec& d) {
             ++i;
         }
     }
-    if (vals.size() < rowUnits * size_t(h)) return d.Fail(L"Fichier XBM tronqué");
+    if (vals.size() < rowUnits * size_t(h)) return d.Fail(CYIMG_TR("plugin.classic.xbm.err.truncated", L"Fichier XBM tronqué"));
     Rgba img;
     img.Init(uint32_t(w), uint32_t(h), 255);
     for (uint32_t y = 0; y < uint32_t(h); ++y) {
@@ -259,7 +259,7 @@ int DecodeXpm(Dec& d) {
             if (!l.empty() && l.back() == '\r') l.pop_back();
             i = e + 1;
             if (lines.empty() && (l.empty() || l[0] == '!')) continue;
-            if (!push(std::move(l))) return d.Fail(L"En-tête XPM invalide");
+            if (!push(std::move(l))) return d.Fail(CYIMG_TR("plugin.classic.xpm.err.header", L"En-tête XPM invalide"));
         }
     } else {
         while (i < n && lines.size() < needed) {
@@ -278,15 +278,15 @@ int DecodeXpm(Dec& d) {
                 }
                 if (i >= n) break;
                 ++i;
-                if (!push(std::move(l))) return d.Fail(L"En-tête XPM invalide");
+                if (!push(std::move(l))) return d.Fail(CYIMG_TR("plugin.classic.xpm.err.header", L"En-tête XPM invalide"));
             } else {
                 ++i;
             }
             if ((lines.size() & 1023) == 0 && d.Cancelled()) return CYIMG_E_CANCELLED;
         }
     }
-    if (lines.empty()) return d.Fail(L"En-tête XPM absent");
-    if (lines.size() < needed) return d.Fail(L"Fichier XPM tronqué");
+    if (lines.empty()) return d.Fail(CYIMG_TR("plugin.classic.xpm.err.no_header", L"En-tête XPM absent"));
+    if (lines.size() < needed) return d.Fail(CYIMG_TR("plugin.classic.xpm.err.truncated", L"Fichier XPM tronqué"));
     unsigned long hv[4];
     {
         const char* p = lines[0].c_str();
@@ -361,13 +361,13 @@ int DecodeXpm(Dec& d) {
             memcpy(o, &v, 4);
         }
     }
-    wchar_t fmt[64];
-    swprintf_s(fmt, L"%ls, %u couleurs", xpm2 ? L"XPM2" : L"XPM", ncol);
+    wchar_t fmt[256];
+    swprintf_s(fmt, CYIMG_TR("plugin.classic.xpm.format", L"%ls, %u couleurs"), xpm2 ? L"XPM2" : L"XPM", ncol);
     d.Format(fmt);
     if (unknown) {
-        wchar_t v[32];
-        swprintf_s(v, L"%d (affichées en noir)", unknown);
-        d.Info(L"Couleurs inconnues", v);
+        wchar_t v[256];
+        swprintf_s(v, CYIMG_TR("plugin.classic.xpm.unknown_value", L"%d (affichées en noir)"), unknown);
+        d.Info(CYIMG_TR("plugin.classic.xpm.info.unknown", L"Couleurs inconnues"), v);
     }
     return Emit(d, img, anyAlpha);
 }

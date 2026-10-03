@@ -1,0 +1,8 @@
+# Noms affichés des plugins (aide) et touche Ctrl
+@code = ko
+@name = 한국어
+pluginname.classic = 클래식 형식 (Netpbm, PCX, XBM/XPM, IFF, HDR, FITS, ICNS, PICT)
+pluginname.docs = 그래픽 문서 (Krita, OpenRaster, GIMP, Clip Studio, EPS, InDesign, CorelDRAW, Affinity)
+pluginname.dicom = DICOM (의료 영상)
+pluginname.vector = 벡터 (SVG, PDF, EMF/WMF, DXF)
+viewer.key.ctrl = Ctrl

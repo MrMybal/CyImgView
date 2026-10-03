@@ -1,7 +1,7 @@
 // Plugin CyImgView « docs » : outils partagés entre les lecteurs de formats.
 #pragma once
 
-#include "cyimg_plugin.h"
+#include "cyimg_plugin_i18n.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN

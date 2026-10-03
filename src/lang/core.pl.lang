@@ -1,0 +1,6 @@
+# CyImgView — core (Polski)
+@code = pl
+@name = Polski
+settings.language = Język interfejsu
+settings.language.desc = „Automatycznie” – zgodnie z językiem systemu Windows.
+settings.language.auto = Automatycznie (%ls)

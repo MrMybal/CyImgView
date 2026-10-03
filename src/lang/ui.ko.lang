@@ -1,0 +1,152 @@
+# CyImgView — ui (한국어)
+@code = ko
+@name = 한국어
+
+# 상황에 맞는 메뉴(마우스 오른쪽 클릭): 텍스트\t바로 가기 키
+menu.copy = 이미지 복사\tCtrl+C
+menu.copy_path = 파일 경로 복사\tCtrl+Shift+C
+menu.open = 열기…\tCtrl+O
+menu.save_as = 다른 이름으로 저장…\tCtrl+S
+menu.edit = 편집\tE
+menu.reveal = 파일 탐색기에서 보기
+menu.channels = 표시할 채널\tC
+menu.channel.rgb = RGB(모든 색)\tCtrl+2
+menu.channel.red = 빨강\tCtrl+3
+menu.channel.green = 녹색\tCtrl+4
+menu.channel.blue = 파랑\tCtrl+5
+menu.channel.alpha = 알파(투명도)\tCtrl+6
+menu.filter = 필터링
+menu.filter.raw = 원본 픽셀\tN
+menu.play = 재생\tSpace
+menu.pause = 일시 중지\tSpace
+menu.rotate = 회전\tR
+menu.slideshow = 슬라이드 쇼\tD
+menu.slideshow_stop = 슬라이드 쇼 끝내기\tEsc
+menu.fullscreen = 전체 화면\tF
+menu.info = 정보\tI
+menu.settings = 설정\tP
+
+# 클립보드
+clip.err.read = 이미지를 읽을 수 없음
+clip.loading = 이미지 로드 중…
+clip.none = 복사할 이미지가 없음
+clip.err.memory = 메모리 부족
+clip.busy = 클립보드를 사용 중입니다. 다시 시도하세요
+clip.copied = 이미지 복사됨
+clip.failed = 복사 실패
+clip.path_copied = 경로 복사됨
+
+# 채널 패널
+channels.title = 채널
+channels.rgb = RGB
+channels.rgba = RGBA
+channels.letter.r = R
+channels.letter.g = G
+channels.letter.b = B
+channels.letter.a = A
+channels.desc.red = 빨강
+channels.desc.green = 녹색
+channels.desc.blue = 파랑
+channels.desc.alpha = 알파
+channels.row.rgb = RGB
+channels.row.red = 빨강
+channels.row.green = 녹색
+channels.row.blue = 파랑
+channels.row.alpha = 알파
+channels.hint = 확인란: 여러 채널 결합
+channels.no_alpha = 이 이미지에는 투명도가 없습니다
+channels.toast.rgb = 채널: RGB
+channels.toast.red = 빨강 채널
+channels.toast.green = 녹색 채널
+channels.toast.blue = 파랑 채널
+channels.toast.alpha = 알파 채널
+channels.toast.mix = 채널: %ls
+
+# 이미지 필터링
+filter.auto = 자동
+filter.raw = 원본 픽셀
+filter.linear = 선형
+filter.cubic = 큐빅
+filter.cubic_hq = 큐빅 HQ
+filter.anisotropic = 이방성
+filter.toast = 필터링: %ls
+
+# 슬라이드 쇼 및 애니메이션 재생
+slide.delay = %d초
+slide.toast.delay = 슬라이드 쇼: 이미지당 %ls
+slide.toast.start = 슬라이드 쇼 · 이미지당 %ls · Esc를 눌러 끝내기
+slide.err.two_images = 폴더에 이미지가 2개 이상 있어야 합니다
+slide.toast.paused = 슬라이드 쇼 일시 중지됨
+slide.toast.playing = 슬라이드 쇼 재생 중
+slide.tip.prev = 이전(←)
+slide.tip.play = 재생(Space)
+slide.tip.pause = 일시 중지(Space)
+slide.tip.next = 다음(→)
+slide.tip.less = 이미지당 시간 줄이기(↓)
+slide.tip.more = 이미지당 시간 늘리기(↑)
+slide.tip.shuffle = 무작위 재생
+slide.tip.exit = 슬라이드 쇼 끝내기(Esc)
+slide.anim.frame = 프레임 %d / %d
+slide.anim.play = 재생 중
+slide.anim.pause = 일시 중지됨
+
+# 편집 모드: 도구
+edit.tool.hand = 보기 이동(M 또는 Space 누르고 있기)
+edit.tool.brush = 브러시(B) — 오른쪽 클릭: 보조 색
+edit.tool.eraser = 지우개(G)
+edit.tool.line = 선(L) — Shift: 45° 각도
+edit.tool.arrow = 화살표(A)
+edit.tool.rect = 사각형(R) — Shift: 정사각형
+edit.tool.ellipse = 타원(O) — Shift: 원
+edit.tool.text = 텍스트(T)
+edit.tool.fill = 채우기(F)
+edit.tool.picker = 스포이드(K)
+edit.tool.crop = 자르기(C) — Enter를 눌러 적용
+
+# 편집 모드: 상단 막대, 색, 크기 조정 메뉴
+edit.title = 편집
+edit.modified = 수정됨
+edit.btn.done = 완료
+edit.tip.done = 편집 모드 끝내기(E / Esc)
+edit.btn.save_as = 다른 이름으로 저장
+edit.btn.save_as_dirty = 다른 이름으로 저장 •
+edit.tip.save_as = 다른 이름으로 저장…(Ctrl+S)
+edit.tip.flip_v = 상하 대칭
+edit.tip.flip_h = 좌우 대칭
+edit.tip.rot_right = 오른쪽으로 회전
+edit.tip.rot_left = 왼쪽으로 회전
+edit.tip.resize = 크기 조정
+edit.tip.fill_on = 채워진 도형(클릭: 윤곽선)
+edit.tip.fill_off = 윤곽선 도형(클릭: 채우기)
+edit.tip.font_size = 텍스트 크기( [ 및 ] )
+edit.tip.thickness = 두께( [ 및 ] )
+edit.label.font = 글꼴
+edit.label.size = 크기
+edit.tip.undo = 실행 취소(Ctrl+Z)
+edit.tip.redo = 다시 실행(Ctrl+Y)
+edit.tip.swap_colors = 기본 색 / 보조 색 바꾸기
+edit.tip.palette = 클릭: 기본 색 — 오른쪽 클릭: 보조 색
+edit.tip.custom_color = 다른 색…
+edit.resize.percent = %d%%
+edit.resize.long_side = 긴 변 %d px
+edit.crop.apply = 자르기
+edit.tip.crop_apply = 자르기 적용(Enter)
+edit.tip.crop_cancel = 취소(Esc)
+
+# 편집 모드: 메시지
+edit.loading = 이미지 로드 중…
+edit.no_image = 편집할 이미지가 없음
+edit.err.read = 이미지를 읽을 수 없음
+edit.err.memory = 메모리 부족
+edit.err.vram = 비디오 메모리 부족
+edit.err.too_big = 이미지가 너무 커서 편집할 수 없음
+edit.ask.title = 변경 내용을 저장하시겠습니까?
+edit.ask.content = 이미지가 수정되었습니다. 저장하지 않으면 변경 내용이 손실됩니다.
+edit.ask.save = 다른 이름으로 저장…
+edit.ask.discard = 저장 안 함
+
+# 다른 이름으로 저장
+edit.save.no_image = 저장할 이미지가 없음
+edit.save.no_encoder = 사용할 수 있는 이미지 인코더가 없습니다.
+edit.save.failed = 저장하지 못했습니다.\n%ls
+edit.save.done = 저장됨: %ls

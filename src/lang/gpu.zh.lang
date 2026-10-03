@@ -1,0 +1,10 @@
+# CyImgView — gpu (简体中文)
+@code = zh
+@name = 简体中文
+plugin.gpu.err.no_compiler = 找不到 d3dcompiler_47.dll
+plugin.gpu.err.no_warp = Direct3D 11 (WARP) 不可用
+plugin.gpu.err.shader = 无法编译解码着色器
+plugin.gpu.err.invalid = 尺寸或 GPU 格式无效
+plugin.gpu.err.short_mip = Mip 数据过短
+plugin.gpu.err.textures = 无法创建 Direct3D 纹理（内存不足？）
+plugin.gpu.err.readback = 无法读回结果

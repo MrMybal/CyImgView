@@ -6,7 +6,7 @@
 // MONOCHROME1/2 avec Rescale et fenêtre (WindowCenter/Width, sinon min/max), RGB, YBR, palette.
 // Multi-images : animation. Les données nominatives du patient ne sont jamais affichées.
 
-#include "cyimg_plugin.h"
+#include "cyimg_plugin_i18n.h"
 #include "dicom_codecs.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -217,7 +217,7 @@ bool Parse(const Buf& file, std::vector<uint8_t>& inflated, Dataset& ds, std::ws
         Enc menc{IsVR(file.p[pos + 4], file.p[pos + 5]), false};
         Elem e;
         if (!ReadHeader(file, pos, menc, e) || e.len == kUndefined || e.val + e.len > file.n) {
-            why = L"méta-en-tête DICOM invalide";
+            why = CYIMG_TR("plugin.dicom.why.meta", L"méta-en-tête DICOM invalide");
             return false;
         }
         ds.elems.push_back(e);
@@ -229,7 +229,7 @@ bool Parse(const Buf& file, std::vector<uint8_t>& inflated, Dataset& ds, std::ws
     if (ds.ts == "1.2.840.10008.1.2.2") ds.enc.be = true;
     if (ds.ts == "1.2.840.10008.1.2.1.99") {  // Deflated : le reste du fichier est un flux deflate brut
         if (!InflateUnknownSize(file.p + pos, file.n - pos, size_t(1) << 31, inflated)) {
-            why = L"flux Deflate DICOM corrompu";
+            why = CYIMG_TR("plugin.dicom.why.deflate", L"flux Deflate DICOM corrompu");
             return false;
         }
         ds.buf = Buf{inflated.data(), inflated.size()};
@@ -530,7 +530,7 @@ struct FrameSource {
     bool MapFragments(std::wstring& why) {
         const size_t nf = ds.fragments.size();
         if (!nf) {
-            why = L"aucun fragment de pixels";
+            why = CYIMG_TR("plugin.dicom.why.no_fragment", L"aucun fragment de pixels");
             return false;
         }
         if (im.frames == 1) {
@@ -562,7 +562,7 @@ struct FrameSource {
             }
             if (!frameFrags.empty()) return true;
         }
-        why = L"répartition des fragments entre les images impossible";
+        why = CYIMG_TR("plugin.dicom.why.fragments_split", L"répartition des fragments entre les images impossible");
         return false;
     }
 
@@ -593,7 +593,7 @@ struct FrameSource {
             if (im.bits1) {  // bits compactés (poids faible d'abord) -> 1 octet par pixel
                 const size_t pixels = size_t(im.rows) * im.cols, bit0 = pixels * k;
                 if ((bit0 + pixels + 7) / 8 > avail) {
-                    why = L"données de pixels tronquées";
+                    why = CYIMG_TR("plugin.dicom.why.pixels_truncated", L"données de pixels tronquées");
                     return false;
                 }
                 work.resize(pixels);
@@ -603,7 +603,7 @@ struct FrameSource {
                 return true;
             }
             if (uint64_t(frameBytes) * (k + 1) > avail) {
-                why = L"données de pixels tronquées";
+                why = CYIMG_TR("plugin.dicom.why.pixels_truncated", L"données de pixels tronquées");
                 return false;
             }
             out = ds.buf.p + px.val + frameBytes * k;
@@ -618,12 +618,14 @@ struct FrameSource {
         const uint8_t* p;
         size_t size;
         if (!Compressed(k, tmp, p, size)) {
-            why = L"image " + std::to_wstring(k + 1) + L" absente des fragments";
+            wchar_t msg[256];
+            swprintf_s(msg, CYIMG_TR("plugin.dicom.why.frame_missing", L"image %u absente des fragments"), unsigned(k + 1));
+            why = msg;
             return false;
         }
         if (codec == Codec::EncapsulatedNative) {
             if (size < frameBytes) {
-                why = L"fragment trop court";
+                why = CYIMG_TR("plugin.dicom.why.fragment_short", L"fragment trop court");
                 return false;
             }
             out = p;
@@ -638,40 +640,49 @@ struct FrameSource {
             uint32_t w, h, nc, prec;
             if (!DecodeLosslessJpeg(p, size, im.ba / 8, work, w, h, nc, prec, why)) return false;
             if (w != im.cols || h != im.rows || nc != im.spp) {
-                why = L"dimensions du JPEG sans perte différentes de l'en-tête DICOM";
+                why = CYIMG_TR("plugin.dicom.why.jpeg_size", L"dimensions du JPEG sans perte différentes de l'en-tête DICOM");
                 return false;
             }
             out = work.data();
             return true;
         }
-        why = L"codec inattendu";
+        why = CYIMG_TR("plugin.dicom.why.codec", L"codec inattendu");
         return false;
     }
 };
 
 int Probe(const uint8_t* h, size_t size);
 
+// Message traduit avec un seul argument texte (longueur quelconque)
+std::wstring Fmt1(const wchar_t* fmt, const std::wstring& arg) {
+    std::wstring s(wcslen(fmt) + arg.size() + 1, L' ');
+    const int n = swprintf(s.data(), s.size(), fmt, arg.c_str());
+    s.resize(n > 0 ? size_t(n) : 0);
+    return s;
+}
+
 int DecodeImpl(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
+    cyimg_tr_begin(host, ctx);
     std::wstring why;
     auto fail = [&](const std::wstring& msg, int code = CYIMG_E_FAIL) {
         if (CYIMG_HOST_HAS(host, set_error)) host->set_error(ctx, msg.c_str());
         return code;
     };
     MappedFile mf;
-    if (!mf.Open(path)) return fail(L"Lecture du fichier DICOM impossible");
-    if (!Probe(mf.data, std::min<size_t>(mf.size, 512))) return fail(L"Fichier DICOM non reconnu");
+    if (!mf.Open(path)) return fail(CYIMG_TR("plugin.dicom.err.read", L"Lecture du fichier DICOM impossible"));
+    if (!Probe(mf.data, std::min<size_t>(mf.size, 512))) return fail(CYIMG_TR("plugin.dicom.err.unrecognized", L"Fichier DICOM non reconnu"));
     std::vector<uint8_t> inflated;
     Dataset ds;
-    if (!Parse(Buf{mf.data, mf.size}, inflated, ds, why)) return fail(L"DICOM : " + why);
+    if (!Parse(Buf{mf.data, mf.size}, inflated, ds, why)) return fail(Fmt1(CYIMG_TR("plugin.dicom.err.prefix", L"DICOM : %ls"), why));
     if (!ds.hasPixels) {
-        if (ds.elems.empty()) return fail(L"Fichier DICOM non reconnu");
-        return fail(ds.Find(Tag(0x0004, 0x1220)) ? L"DICOMDIR : répertoire d'examen sans image"
-                                                  : L"Ce fichier DICOM ne contient pas d'image (rapport, document ou fichier tronqué)");
+        if (ds.elems.empty()) return fail(CYIMG_TR("plugin.dicom.err.unrecognized", L"Fichier DICOM non reconnu"));
+        return fail(ds.Find(Tag(0x0004, 0x1220)) ? CYIMG_TR("plugin.dicom.err.dicomdir", L"DICOMDIR : répertoire d'examen sans image")
+                                                  : CYIMG_TR("plugin.dicom.err.no_image", L"Ce fichier DICOM ne contient pas d'image (rapport, document ou fichier tronqué)"));
     }
 
     // Syntaxe de transfert
     Codec codec = ds.encapsulated ? Codec::Unsupported : Codec::Native;
-    std::wstring tsName = ds.ts.empty() ? (ds.enc.expl ? L"Explicit VR Little Endian (sans méta-en-tête)" : L"Implicit VR Little Endian (sans méta-en-tête)")
+    std::wstring tsName = ds.ts.empty() ? (ds.enc.expl ? CYIMG_TR("plugin.dicom.ts.explicit_no_meta", L"Explicit VR Little Endian (sans méta-en-tête)") : CYIMG_TR("plugin.dicom.ts.implicit_no_meta", L"Implicit VR Little Endian (sans méta-en-tête)"))
                                         : Widen(ds.ts, false);
     for (auto& t : kTs)
         if (ds.ts == t.uid) {
@@ -679,7 +690,7 @@ int DecodeImpl(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
             codec = ds.encapsulated ? t.codec : Codec::Native;
             if (ds.encapsulated && t.codec == Codec::Native) codec = Codec::Unsupported;
         }
-    if (codec == Codec::Unsupported) return fail(L"Compression DICOM non supportée : " + tsName, CYIMG_E_UNSUPPORTED);
+    if (codec == Codec::Unsupported) return fail(Fmt1(CYIMG_TR("plugin.dicom.err.compression", L"Compression DICOM non supportée : %ls"), tsName), CYIMG_E_UNSUPPORTED);
 
     // Description de l'image
     Image im;
@@ -705,30 +716,32 @@ int DecodeImpl(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         if (im.sign && im.padding >= 32768) im.padding -= 65536;
     }
 
-    if (!im.rows || !im.cols || im.rows > 65535 || im.cols > 65535) return fail(L"Dimensions DICOM invalides");
-    if (im.ba != 1 && im.ba != 8 && im.ba != 16 && im.ba != 32) return fail(L"BitsAllocated DICOM non géré : " + std::to_wstring(im.ba), CYIMG_E_UNSUPPORTED);
+    if (!im.rows || !im.cols || im.rows > 65535 || im.cols > 65535) return fail(CYIMG_TR("plugin.dicom.err.dimensions", L"Dimensions DICOM invalides"));
+    if (im.ba != 1 && im.ba != 8 && im.ba != 16 && im.ba != 32) return fail(Fmt1(CYIMG_TR("plugin.dicom.err.bits_allocated", L"BitsAllocated DICOM non géré : %ls"), std::to_wstring(im.ba)),
+                    CYIMG_E_UNSUPPORTED);
     if (!im.bs || im.bs > im.ba || im.hb >= im.ba || im.hb + 1 < im.bs) im.bs = im.ba, im.hb = im.ba - 1;
     const bool mono = im.photo == "MONOCHROME1" || im.photo == "MONOCHROME2";
     const bool palette = im.photo == "PALETTE COLOR";
     const bool sub422 = im.photo == "YBR_FULL_422" || im.photo == "YBR_PARTIAL_422";
     const bool color = im.photo == "RGB" || im.photo == "YBR_FULL" || im.photo == "YBR_PARTIAL_420" || sub422;
     if (!mono && !palette && !color && codec != Codec::JpegBaseline)
-        return fail(L"Interprétation photométrique DICOM non gérée : " + Widen(im.photo, false), CYIMG_E_UNSUPPORTED);
+        return fail(Fmt1(CYIMG_TR("plugin.dicom.err.photometric", L"Interprétation photométrique DICOM non gérée : %ls"), Widen(im.photo, false)),
+                    CYIMG_E_UNSUPPORTED);
     if (codec != Codec::JpegBaseline) {
-        if ((mono || palette) && im.spp != 1) return fail(L"Nombre d'échantillons DICOM incohérent");
-        if (color && im.spp != 3) return fail(L"Nombre d'échantillons DICOM incohérent");
-        if (im.ba == 1 && (!mono || codec != Codec::Native)) return fail(L"Image DICOM 1 bit non gérée", CYIMG_E_UNSUPPORTED);
-        if (color && im.ba > 16) return fail(L"Couleurs DICOM 32 bits non gérées", CYIMG_E_UNSUPPORTED);
+        if ((mono || palette) && im.spp != 1) return fail(CYIMG_TR("plugin.dicom.err.samples", L"Nombre d'échantillons DICOM incohérent"));
+        if (color && im.spp != 3) return fail(CYIMG_TR("plugin.dicom.err.samples", L"Nombre d'échantillons DICOM incohérent"));
+        if (im.ba == 1 && (!mono || codec != Codec::Native)) return fail(CYIMG_TR("plugin.dicom.err.bits1", L"Image DICOM 1 bit non gérée"), CYIMG_E_UNSUPPORTED);
+        if (color && im.ba > 16) return fail(CYIMG_TR("plugin.dicom.err.color32", L"Couleurs DICOM 32 bits non gérées"), CYIMG_E_UNSUPPORTED);
         if (sub422 && (im.ba != 8 || codec != Codec::Native)) {
             // décompressé (RLE, JPEG sans perte) : pleine résolution
-            if (codec == Codec::Native) return fail(L"YBR 4:2:2 DICOM non géré", CYIMG_E_UNSUPPORTED);
+            if (codec == Codec::Native) return fail(CYIMG_TR("plugin.dicom.err.ybr422", L"YBR 4:2:2 DICOM non géré"), CYIMG_E_UNSUPPORTED);
             im.photo = "YBR_FULL";
         }
-        if (im.photo == "YBR_PARTIAL_420") return fail(L"YBR 4:2:0 DICOM non compressé non géré", CYIMG_E_UNSUPPORTED);
+        if (im.photo == "YBR_PARTIAL_420") return fail(CYIMG_TR("plugin.dicom.err.ybr420", L"YBR 4:2:0 DICOM non compressé non géré"), CYIMG_E_UNSUPPORTED);
     }
     if (palette)
         for (int c = 0; c < 3; ++c)
-            if (!ReadLut(ds, c, im)) return fail(L"Palette de couleurs DICOM invalide");
+            if (!ReadLut(ds, c, im)) return fail(CYIMG_TR("plugin.dicom.err.palette", L"Palette de couleurs DICOM invalide"));
     if (codec == Codec::Rle || codec == Codec::JpegLossless) im.planar = false;  // sortie entrelacée
 
     // Infos (jamais de données nominatives du patient)
@@ -737,60 +750,66 @@ int DecodeImpl(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         std::string s = ds.Str(tag);
         if (!s.empty()) host->set_info(ctx, key, Widen(s, utf8).c_str());
     };
-    info(L"Modalité", Tag(0x0008, 0x0060));
-    info(L"Étude", Tag(0x0008, 0x1030));
-    info(L"Série", Tag(0x0008, 0x103E));
-    info(L"Partie du corps", Tag(0x0018, 0x0015));
-    info(L"Fabricant", Tag(0x0008, 0x0070));
-    wchar_t buf[160];
+    info(CYIMG_TR("plugin.dicom.info.modality", L"Modalité"), Tag(0x0008, 0x0060));
+    info(CYIMG_TR("plugin.dicom.info.study", L"Étude"), Tag(0x0008, 0x1030));
+    info(CYIMG_TR("plugin.dicom.info.series", L"Série"), Tag(0x0008, 0x103E));
+    info(CYIMG_TR("plugin.dicom.info.body_part", L"Partie du corps"), Tag(0x0018, 0x0015));
+    info(CYIMG_TR("plugin.dicom.info.manufacturer", L"Fabricant"), Tag(0x0008, 0x0070));
+    wchar_t buf[256];
     swprintf_s(buf, L"%u x %u", im.cols, im.rows);
-    host->set_info(ctx, L"Dimensions", buf);
-    swprintf_s(buf, L"%u alloués, %u stockés%ls%ls", im.ba, im.bs, im.sign ? L", signés" : L"", im.spp == 3 ? L" (x3)" : L"");
-    host->set_info(ctx, L"Bits", buf);
-    host->set_info(ctx, L"Photométrie", Widen(im.photo, false).c_str());
-    host->set_info(ctx, L"Syntaxe de transfert", tsName.c_str());
-    if (im.frames > 1 && codec != Codec::JpegBaseline) host->set_info(ctx, L"Images", std::to_wstring(im.frames).c_str());
-    if (ds.truncated) host->set_info(ctx, L"Attention", L"fichier tronqué");
+    host->set_info(ctx, CYIMG_TR("plugin.dicom.info.dimensions", L"Dimensions"), buf);
+    swprintf_s(buf, im.sign ? CYIMG_TR("plugin.dicom.bits_signed", L"%u alloués, %u stockés, signés")
+                            : CYIMG_TR("plugin.dicom.bits_value", L"%u alloués, %u stockés"),
+               im.ba, im.bs);
+    if (im.spp == 3) wcscat_s(buf, L" (x3)");
+    host->set_info(ctx, CYIMG_TR("plugin.dicom.info.bits", L"Bits"), buf);
+    host->set_info(ctx, CYIMG_TR("plugin.dicom.info.photometric", L"Photométrie"), Widen(im.photo, false).c_str());
+    host->set_info(ctx, CYIMG_TR("plugin.dicom.info.transfer_syntax", L"Syntaxe de transfert"), tsName.c_str());
+    if (im.frames > 1 && codec != Codec::JpegBaseline) host->set_info(ctx, CYIMG_TR("plugin.dicom.info.frames", L"Images"), std::to_wstring(im.frames).c_str());
+    if (ds.truncated) host->set_info(ctx, CYIMG_TR("plugin.dicom.info.attention", L"Attention"), CYIMG_TR("plugin.dicom.truncated", L"fichier tronqué"));
 
     FrameSource src{ds, im, codec};
     if (sub422) src.frameBytes = (size_t(im.cols) + 1) / 2 * 4 * im.rows;
     else src.frameBytes = size_t(im.rows) * im.cols * im.spp * (im.ba / 8);
-    if (ds.encapsulated && !src.MapFragments(why)) return fail(L"DICOM : " + why);
+    if (ds.encapsulated && !src.MapFragments(why)) return fail(Fmt1(CYIMG_TR("plugin.dicom.err.prefix", L"DICOM : %ls"), why));
 
     // JPEG Baseline/Extended : confié à WIC (première image)
     if (codec == Codec::JpegBaseline) {
         std::vector<uint8_t> tmp;
         const uint8_t* p;
         size_t size;
-        if (!src.Compressed(0, tmp, p, size)) return fail(L"DICOM : fragment JPEG absent");
+        if (!src.Compressed(0, tmp, p, size)) return fail(CYIMG_TR("plugin.dicom.err.no_jpeg_fragment", L"DICOM : fragment JPEG absent"));
         host->set_format(ctx, L"DICOM (JPEG)");
-        if (im.frames > 1) host->set_info(ctx, L"Images", (std::to_wstring(im.frames) + L" (seule la première est affichée)").c_str());
+        if (im.frames > 1) {
+            swprintf_s(buf, CYIMG_TR("plugin.dicom.frames_first", L"%u (seule la première est affichée)"), unsigned(im.frames));
+            host->set_info(ctx, CYIMG_TR("plugin.dicom.info.frames", L"Images"), buf);
+        }
         const int r = host->decode_encoded(ctx, p, size);
         if (r == CYIMG_OK) return r;
         for (size_t i = 0; i + 4 < size; ++i)  // précision 12 bits : non lisible par WIC
             if (p[i] == 0xFF && (p[i + 1] == 0xC1 || p[i + 1] == 0xC0) && p[i + 4] == 12)
-                return fail(L"JPEG 12 bits (DICOM Extended) non pris en charge par Windows", CYIMG_E_UNSUPPORTED);
-        return fail(L"Décodage du JPEG DICOM impossible");
+                return fail(CYIMG_TR("plugin.dicom.err.jpeg12", L"JPEG 12 bits (DICOM Extended) non pris en charge par Windows"), CYIMG_E_UNSUPPORTED);
+        return fail(CYIMG_TR("plugin.dicom.err.jpeg_decode", L"Décodage du JPEG DICOM impossible"));
     }
 
     im.bits1 = im.ba == 1;
     std::vector<uint8_t> work, tmp;
     const uint8_t* frame0 = nullptr;
-    if (!src.Native(0, work, tmp, frame0, why)) return fail(L"DICOM : " + why);
+    if (!src.Native(0, work, tmp, frame0, why)) return fail(Fmt1(CYIMG_TR("plugin.dicom.err.prefix", L"DICOM : %ls"), why));
     if (host->is_cancelled(ctx)) return CYIMG_E_CANCELLED;
     if (im.bits1) im.ba = 8, im.bs = 1, im.hb = 0;  // bits dépliés en octets
     if (mono) {
         if (!im.hasWindow) AutoWindow(frame0, im);
         BuildGrayLut(im);
-        if (im.hasWindow) swprintf_s(buf, L"centre %g, largeur %g", im.wc, im.ww);
-        else swprintf_s(buf, L"automatique (%g à %g)", im.lo, im.hi);
-        host->set_info(ctx, L"Fenêtre", buf);
+        if (im.hasWindow) swprintf_s(buf, CYIMG_TR("plugin.dicom.window_value", L"centre %g, largeur %g"), im.wc, im.ww);
+        else swprintf_s(buf, CYIMG_TR("plugin.dicom.window_auto", L"automatique (%g à %g)"), im.lo, im.hi);
+        host->set_info(ctx, CYIMG_TR("plugin.dicom.info.window", L"Fenêtre"), buf);
         if (im.slope != 1 || im.intercept != 0) {
-            swprintf_s(buf, L"pente %g, ordonnée %g", im.slope, im.intercept);
-            host->set_info(ctx, L"Rescale", buf);
+            swprintf_s(buf, CYIMG_TR("plugin.dicom.rescale_value", L"pente %g, ordonnée %g"), im.slope, im.intercept);
+            host->set_info(ctx, CYIMG_TR("plugin.dicom.info.rescale", L"Rescale"), buf);
         }
     }
-    host->set_format(ctx, codec == Codec::Rle ? L"DICOM (RLE)" : codec == Codec::JpegLossless ? L"DICOM (JPEG sans perte)" : L"DICOM");
+    host->set_format(ctx, codec == Codec::Rle ? L"DICOM (RLE)" : codec == Codec::JpegLossless ? CYIMG_TR("plugin.dicom.format.jpeg_lossless", L"DICOM (JPEG sans perte)") : L"DICOM");
 
     uint32_t stride = 0;
     uint8_t* out = host->alloc_bgra(ctx, im.cols, im.rows, 0, &stride);
@@ -816,7 +835,10 @@ int DecodeImpl(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
             if (delays) host->set_frame_delay(ctx, k, delay);
             ++shown;
         }
-        if (shown < im.frames) host->set_info(ctx, L"Images", (std::to_wstring(im.frames) + L" (" + std::to_wstring(shown) + L" chargées)").c_str());
+        if (shown < im.frames) {
+            swprintf_s(buf, CYIMG_TR("plugin.dicom.frames_loaded", L"%u (%u chargées)"), unsigned(im.frames), unsigned(shown));
+            host->set_info(ctx, CYIMG_TR("plugin.dicom.info.frames", L"Images"), buf);
+        }
     }
     return CYIMG_OK;
 }
@@ -826,7 +848,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     try {
         return DecodeImpl(host, ctx, path);
     } catch (...) {
-        if (CYIMG_HOST_HAS(host, set_error)) host->set_error(ctx, L"Mémoire insuffisante pour décoder l'image");
+        if (CYIMG_HOST_HAS(host, set_error)) host->set_error(ctx, CYIMG_TR("plugin.dicom.err.memory", L"Mémoire insuffisante pour décoder l'image"));
         return CYIMG_E_OUTOFMEMORY;
     }
 }

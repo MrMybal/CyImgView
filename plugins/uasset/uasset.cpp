@@ -9,6 +9,7 @@
 // Texture.cpp, EditorBulkData.cpp, PackageTrailer.cpp, CompressedBuffer.cpp, ImageCoreDelta.cpp).
 
 #include "cyimg_plugin.h"
+#include "cyimg_plugin_i18n.h"
 #include "codecs.h"
 #include "gpu_decode.h"
 
@@ -24,6 +25,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdarg>
 #include <cstdio>
 #include <cstring>
 #include <memory>
@@ -551,7 +553,7 @@ void ReadTextureProps(Reader& r, const Package& p, const Export& e, TextureProps
 bool DecodeCompressedBuffer(const uint8_t* data, size_t avail, std::vector<uint8_t>& out, std::wstring& err) {
     Reader r(data, avail);
     if (r.BE32() != 0xB7756362) {
-        err = L"en-tête FCompressedBuffer invalide";
+        err = CYIMG_TR("plugin.uasset.why.cbuf_header", L"en-tête FCompressedBuffer invalide");
         return false;
     }
     r.BE32();  // CRC
@@ -563,7 +565,7 @@ bool DecodeCompressedBuffer(const uint8_t* data, size_t avail, std::vector<uint8
     uint64_t rawSize = r.BE64(), compSize = r.BE64();
     r.Skip(32);  // BLAKE3
     if (rawSize > (4ull << 30) || compSize > avail) {
-        err = L"taille de données incohérente";
+        err = CYIMG_TR("plugin.uasset.why.size_mismatch", L"taille de données incohérente");
         return false;
     }
     out.resize(size_t(rawSize));
@@ -572,11 +574,11 @@ bool DecodeCompressedBuffer(const uint8_t* data, size_t avail, std::vector<uint8
         return true;
     }
     if (method != 3 && method != 4) {
-        err = L"méthode de compression inconnue";
+        err = CYIMG_TR("plugin.uasset.why.unknown_method", L"méthode de compression inconnue");
         return false;
     }
     if (method == 3 && !OodleAvailable()) {
-        err = L"décompresseur Oodle introuvable (installez Unreal Engine ou copiez oo2core_9_win64.dll dans le dossier plugins)";
+        err = CYIMG_TR("plugin.uasset.why.no_oodle", L"décompresseur Oodle introuvable (installez Unreal Engine ou copiez oo2core_9_win64.dll dans le dossier plugins)");
         return false;
     }
     std::vector<uint32_t> sizes(blocks);
@@ -596,7 +598,7 @@ bool DecodeCompressedBuffer(const uint8_t* data, size_t avail, std::vector<uint8
             ok = Lz4Decompress(src, sizes[i], out.data() + done, raw);
         }
         if (!ok) {
-            err = L"échec de décompression";
+            err = CYIMG_TR("plugin.uasset.why.decompress", L"échec de décompression");
             return false;
         }
         done += raw;
@@ -635,7 +637,7 @@ bool LoadSourcePayload(Reader& r, const Package& p, std::vector<uint8_t>& payloa
     uint8_t globalStrip = r.U8();
     r.U8();
     if (globalStrip & 1) {
-        err = L"données d'édition retirées (package cooké)";
+        err = CYIMG_TR("plugin.uasset.why.cooked_stripped", L"données d'édition retirées (package cooké)");
         return false;
     }
     const uint8_t* file = r.Data();
@@ -650,22 +652,22 @@ bool LoadSourcePayload(Reader& r, const Package& p, std::vector<uint8_t>& payloa
         int64_t offset = -1;
         if (!(flags & 0x200) && !(flags & 0x1) && !(flags & 0x400)) offset = r.I64();
         if (size == 0) {
-            err = L"texture sans données source";
+            err = CYIMG_TR("plugin.uasset.why.no_source", L"texture sans données source");
             return false;
         }
         if (flags & 0x1) {
-            err = L"données source virtualisées (stockées hors du fichier)";
+            err = CYIMG_TR("plugin.uasset.why.virtualized_outside", L"données source virtualisées (stockées hors du fichier)");
             return false;
         }
         if (flags & 0x200) {  // dans la remorque du package (FPackageTrailer)
             if (p.payloadToc <= 0) {
-                err = L"remorque de package introuvable";
+                err = CYIMG_TR("plugin.uasset.why.no_trailer", L"remorque de package introuvable");
                 return false;
             }
             Reader t(file, fileSize);
             t.Seek(uint64_t(p.payloadToc));
             if (t.U64() != 0xD1C43B2E80A5F697ull) {
-                err = L"remorque de package invalide";
+                err = CYIMG_TR("plugin.uasset.why.bad_trailer", L"remorque de package invalide");
                 return false;
             }
             uint32_t ver = t.U32(), headerLen = t.U32();
@@ -681,21 +683,21 @@ bool LoadSourcePayload(Reader& r, const Package& p, std::vector<uint8_t>& payloa
                 uint8_t access = ver >= 1 ? t.U8() : 0;
                 if (memcmp(id, hash, 20)) continue;
                 if (access != 0) {
-                    err = access == 2 ? L"données source virtualisées" : L"données source dans un autre fichier";
+                    err = access == 2 ? CYIMG_TR("plugin.uasset.why.virtualized", L"données source virtualisées") : CYIMG_TR("plugin.uasset.why.other_file", L"données source dans un autre fichier");
                     return false;
                 }
                 uint64_t abs = uint64_t(p.payloadToc) + headerLen + uint64_t(off);
                 if (abs + comp > fileSize) {
-                    err = L"données source tronquées";
+                    err = CYIMG_TR("plugin.uasset.why.source_truncated", L"données source tronquées");
                     return false;
                 }
                 return DecodeCompressedBuffer(file + abs, size_t(comp), payload, err);
             }
-            err = L"données source absentes de la remorque";
+            err = CYIMG_TR("plugin.uasset.why.not_in_trailer", L"données source absentes de la remorque");
             return false;
         }
         if (offset < 0 || uint64_t(offset) >= fileSize) {
-            err = L"position des données source invalide";
+            err = CYIMG_TR("plugin.uasset.why.bad_offset", L"position des données source invalide");
             return false;
         }
         if (flags & 0x4) {  // ancien bulk data référencé tel quel
@@ -720,21 +722,21 @@ bool LoadSourcePayload(Reader& r, const Package& p, std::vector<uint8_t>& payloa
     int64_t offset = r.I64();
     if (flags & 0x8000) r.U16();
     if (count <= 0) {
-        err = L"texture sans données source";
+        err = CYIMG_TR("plugin.uasset.why.no_source", L"texture sans données source");
         return false;
     }
     if (flags & 0x100) {
-        err = L"données source dans un fichier séparé (.ubulk)";
+        err = CYIMG_TR("plugin.uasset.why.ubulk", L"données source dans un fichier séparé (.ubulk)");
         return false;
     }
     uint64_t pos = (flags & 0x1) ? uint64_t(offset) + ((flags & 0x10000) ? 0 : uint64_t(p.bulkDataStart)) : r.Pos();
     if (pos >= fileSize || pos + uint64_t(sizeOnDisk) > fileSize) {
-        err = L"données source tronquées";
+        err = CYIMG_TR("plugin.uasset.why.source_truncated", L"données source tronquées");
         return false;
     }
     if (flags & 0x2) {
         if (!DecodeZlibChunks(file + pos, size_t(sizeOnDisk), payload)) {
-            err = L"échec de décompression zlib";
+            err = CYIMG_TR("plugin.uasset.why.zlib", L"échec de décompression zlib");
             return false;
         }
         return true;
@@ -1199,26 +1201,44 @@ const PfInfo* PixelFormatInfo(const std::string& pf) {
     return nullptr;
 }
 
+// Texte traduit puis formaté à la printf (la traduction garde les mêmes spécificateurs)
+std::wstring TrF(const char* key, const wchar_t* fallback, ...) {
+    const wchar_t* fmt = CYIMG_TR(key, fallback);
+    va_list ap, ap2;
+    va_start(ap, fallback);
+    va_copy(ap2, ap);
+    const int n = _vscwprintf(fmt, ap);
+    va_end(ap);
+    std::wstring out;
+    if (n > 0) {
+        out.resize(size_t(n) + 1);
+        vswprintf_s(out.data(), out.size(), fmt, ap2);
+        out.resize(size_t(n));
+    }
+    va_end(ap2);
+    return out;
+}
+
 bool ReadMipBytes(const wchar_t*, const std::vector<uint8_t>& uexp, const MipLoc& m, std::vector<uint8_t>& out,
                   std::wstring& why) {
     if (m.empty) {
-        why = L"mip absente";
+        why = CYIMG_TR("plugin.uasset.why.mip_missing", L"mip absente");
         return false;
     }
     if (m.compressed) {
-        why = L"mip compressée (zlib/Oodle) non gérée";
+        why = CYIMG_TR("plugin.uasset.why.mip_compressed", L"mip compressée (zlib/Oodle) non gérée");
         return false;
     }
     if (m.file.empty()) {
         if (m.offset + m.size > uexp.size()) {
-            why = L"données de mip hors du .uexp";
+            why = CYIMG_TR("plugin.uasset.why.mip_outside", L"données de mip hors du .uexp");
             return false;
         }
         out.assign(uexp.begin() + ptrdiff_t(m.offset), uexp.begin() + ptrdiff_t(m.offset + m.size));
         return true;
     }
     if (!ReadFileRange(m.file.c_str(), m.offset, size_t(m.size), out) || out.size() != m.size) {
-        why = L"fichier " + m.file.substr(m.file.find_last_of(L'\\') + 1) + L" absent ou incomplet";
+        why = TrF("plugin.uasset.why.file_missing", L"fichier %ls absent ou incomplet", m.file.substr(m.file.find_last_of(L'\\') + 1).c_str());
         return false;
     }
     return true;
@@ -1229,7 +1249,7 @@ int EmitMip(const CyImgHost* host, CyImgContext* ctx, const CookedTexture& t, co
             const std::vector<uint8_t>& data, std::wstring& why) {
     const PfInfo* pf = PixelFormatInfo(t.pixelFormat);
     if (!pf) {
-        why = L"format " + Widen(t.pixelFormat) + L" non pris en charge (ASTC/ETC : textures mobiles)";
+        why = TrF("plugin.uasset.why.pixel_format", L"format %ls non pris en charge (ASTC/ETC : textures mobiles)", Widen(t.pixelFormat).c_str());
         return CYIMG_E_UNSUPPORTED;
     }
     const uint32_t W = m.w, H = m.h;
@@ -1238,11 +1258,11 @@ int EmitMip(const CyImgHost* host, CyImgContext* ctx, const CookedTexture& t, co
     if (pf->tsf) faceBytes = size_t(W) * H * size_t(Describe(pf->tsf)->bpp);
     else faceBytes = size_t((W + 3) / 4) * ((H + 3) / 4) * BlockBytes(pf->dxgi);
     if (data.size() < faceBytes * faces) {
-        why = L"données de mip trop courtes";
+        why = CYIMG_TR("plugin.uasset.why.mip_short", L"données de mip trop courtes");
         return CYIMG_E_FAIL;
     }
     if (size_t(W) * faces > 65535) {
-        why = L"texture trop grande";
+        why = CYIMG_TR("plugin.uasset.why.too_large", L"texture trop grande");
         return CYIMG_E_FAIL;
     }
     // Formats par blocs : décompression de toutes les faces avant d'allouer l'image de sortie
@@ -1296,21 +1316,21 @@ int DecodeCooked(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path, 
     const std::wstring uexpPath = Sibling(path, L".uexp");
     std::vector<uint8_t> uexp;
     if (!ReadFileRange(uexpPath.c_str(), 0, size_t(-1) >> 1, uexp) || uexp.empty()) {
-        why = L"fichier .uexp introuvable à côté du .uasset";
+        why = CYIMG_TR("plugin.uasset.why.no_uexp", L"fichier .uexp introuvable à côté du .uasset");
         return CYIMG_E_FAIL;
     }
     const uint64_t headerSize = FileSizeOf(path);  // le moteur utilise la taille réelle du .uasset
     const Export& e = pkg.exports[size_t(pkg.main)];
     const int64_t start = e.serialOffset - int64_t(headerSize), end = start + e.serialSize;
     if (start < 0 || end > int64_t(uexp.size())) {
-        why = L"export hors du fichier .uexp";
+        why = CYIMG_TR("plugin.uasset.why.export_outside", L"export hors du fichier .uexp");
         return CYIMG_E_FAIL;
     }
     std::vector<DataResource> res;
     try {
         res = ReadDataResources(head, pkg);
     } catch (const ParseError&) {
-        why = L"table des données illisible";
+        why = CYIMG_TR("plugin.uasset.why.data_table", L"table des données illisible");
         return CYIMG_E_FAIL;
     }
     // Les propriétés « non versionnées » n'ont pas de balises : on cherche l'ancre qui les suit,
@@ -1329,8 +1349,8 @@ int DecodeCooked(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path, 
         found = ParsePlatformData(uexp, size_t(pos), pkg, res, path, headerSize, tex);
     }
     if (!found) {
-        why = pfNames.empty() ? L"aucune donnée de plateforme (texture virtuelle ou non cookée pour PC ?)"
-                              : L"structure des données cookées non reconnue";
+        why = pfNames.empty() ? CYIMG_TR("plugin.uasset.why.no_platform_data", L"aucune donnée de plateforme (texture virtuelle ou non cookée pour PC ?)")
+                              : CYIMG_TR("plugin.uasset.why.cooked_structure", L"structure des données cookées non reconnue");
         return CYIMG_E_FAIL;
     }
 
@@ -1358,21 +1378,21 @@ int DecodeCooked(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path, 
         if (r != CYIMG_OK) continue;
         if (!target) {
             wchar_t b[160];
-            swprintf_s(b, L"Unreal %ls (cookée)", Widen(pkg.MainClass()).c_str());
+            swprintf_s(b, CYIMG_TR("plugin.uasset.format.cooked", L"Unreal %ls (cookée)"), Widen(pkg.MainClass()).c_str());
             host->set_format(ctx, b);
-            host->set_info(ctx, L"Classe", Widen(pkg.MainClass()).c_str());
-            host->set_info(ctx, L"Package", Widen(pkg.packageName).c_str());
-            host->set_info(ctx, L"Format GPU", Widen(tex.pixelFormat).c_str());
+            host->set_info(ctx, CYIMG_TR("plugin.uasset.info.class", L"Classe"), Widen(pkg.MainClass()).c_str());
+            host->set_info(ctx, CYIMG_TR("plugin.uasset.info.package", L"Package"), Widen(pkg.packageName).c_str());
+            host->set_info(ctx, CYIMG_TR("plugin.uasset.info.gpu_format", L"Format GPU"), Widen(tex.pixelFormat).c_str());
             swprintf_s(b, L"%u × %u", tex.sizeX, tex.sizeY);
-            host->set_info(ctx, L"Taille", b);
+            host->set_info(ctx, CYIMG_TR("plugin.uasset.info.size", L"Taille"), b);
             swprintf_s(b, L"%zu / %zu (%u × %u)", i + 1, tex.mips.size(), m.w, m.h);
-            host->set_info(ctx, L"Mip affichée", b);
-            if (tex.cube) host->set_info(ctx, L"Cubemap", L"6 faces côte à côte");
-            host->set_info(ctx, L"Moteur", pkg.legacy == -7 ? L"Unreal Engine 4" : pkg.legacy == -8 ? L"Unreal Engine 5.0 – 5.5" : L"Unreal Engine 5.6+");
+            host->set_info(ctx, CYIMG_TR("plugin.uasset.info.mip", L"Mip affichée"), b);
+            if (tex.cube) host->set_info(ctx, CYIMG_TR("plugin.uasset.info.cubemap", L"Cubemap"), CYIMG_TR("plugin.uasset.cubemap.faces", L"6 faces côte à côte"));
+            host->set_info(ctx, CYIMG_TR("plugin.uasset.info.engine", L"Moteur"), pkg.legacy == -7 ? L"Unreal Engine 4" : pkg.legacy == -8 ? L"Unreal Engine 5.0 – 5.5" : L"Unreal Engine 5.6+");
         }
         return CYIMG_OK;
     }
-    why = lastWhy.empty() ? L"aucune mip lisible" : lastWhy;
+    why = lastWhy.empty() ? CYIMG_TR("plugin.uasset.why.no_mip", L"aucune mip lisible") : lastWhy;
     return CYIMG_E_FAIL;
 }
 
@@ -1397,12 +1417,12 @@ int DecodeSource(const CyImgHost* host, CyImgContext* ctx, const std::vector<uin
     ReadTextureProps(r, pkg, pkg.exports[size_t(pkg.main)], tp);
     const SourceInfo& s = tp.src;
     if (!s.found || s.sizeX <= 0 || s.sizeY <= 0) {
-        why = L"informations source absentes";
+        why = CYIMG_TR("plugin.uasset.why.no_source_info", L"informations source absentes");
         return CYIMG_E_FAIL;
     }
     const FormatDesc* fd = Describe(s.format);
     if (!fd) {
-        why = L"format source non géré (" + Widen(s.format) + L")";
+        why = TrF("plugin.uasset.why.source_format", L"format source non géré (%ls)", Widen(s.format).c_str());
         return CYIMG_E_FAIL;
     }
     std::vector<uint8_t> payload;
@@ -1417,7 +1437,7 @@ int DecodeSource(const CyImgHost* host, CyImgContext* ctx, const std::vector<uin
         return DecodeImageFile(host, ctx, payload.data(), payload.size(), swap);
     }
     if (c == "TSCF_UEJPEG" || c == "3") {
-        why = L"compression UEJPEG non gérée";
+        why = CYIMG_TR("plugin.uasset.why.uejpeg", L"compression UEJPEG non gérée");
         return CYIMG_E_FAIL;
     }
     const bool delta = c == "TSCF_UEDELTA" || c == "4";
@@ -1429,14 +1449,14 @@ int DecodeSource(const CyImgHost* host, CyImgContext* ctx, const std::vector<uin
     const bool cube = cls.find("Cube") != std::string::npos && s.numSlices >= 6;
     const int64_t slices = cube ? 6 : 1;  // cubemap : les 6 faces côte à côte ; sinon la 1re tranche
     if (int64_t(payload.size()) < sliceBytes * slices) {
-        why = L"données source trop courtes";
+        why = CYIMG_TR("plugin.uasset.why.source_short", L"données source trop courtes");
         return CYIMG_E_FAIL;
     }
     if (delta)
         for (int64_t i = 0; i < slices; ++i) UndoDelta(payload.data() + i * sliceBytes, W, H, fd->bpp, fd->elem);
 
     if (W * slices > 65535 || H > 65535) {
-        why = L"texture trop grande";
+        why = CYIMG_TR("plugin.uasset.why.too_large", L"texture trop grande");
         return CYIMG_E_FAIL;
     }
     uint32_t stride = 0;
@@ -1452,32 +1472,33 @@ void AddInfo(const CyImgHost* host, CyImgContext* ctx, const Package& pkg, const
     auto put = [&](const wchar_t* k, const std::wstring& v) {
         if (!v.empty()) host->set_info(ctx, k, v.c_str());
     };
-    put(L"Classe", Widen(pkg.MainClass()));
-    put(L"Package", Widen(pkg.packageName));
+    put(CYIMG_TR("plugin.uasset.info.class", L"Classe"), Widen(pkg.MainClass()));
+    put(CYIMG_TR("plugin.uasset.info.package", L"Package"), Widen(pkg.packageName));
     if (tp.src.found) {
         wchar_t b[96];
         swprintf_s(b, L"%d × %d", tp.src.sizeX, tp.src.sizeY);
-        put(L"Source", b);
+        put(CYIMG_TR("plugin.uasset.info.source", L"Source"), b);
         std::wstring fmt = ShortEnum(tp.src.format, "TSF_");
         std::wstring comp = tp.src.pngCompressed ? L"PNG" : ShortEnum(tp.src.compression, "TSCF_");
-        put(L"Format source", fmt + (comp.empty() || comp == L"None" ? L"" : L" · " + comp));
-        if (tp.src.numMips > 1) put(L"Mips", std::to_wstring(tp.src.numMips));
-        if (tp.src.numSlices > 1) put(L"Tranches", std::to_wstring(tp.src.numSlices));
-        if (tp.src.numLayers > 1) put(L"Couches", std::to_wstring(tp.src.numLayers) + L" (1re affichée)");
+        put(CYIMG_TR("plugin.uasset.info.source_format", L"Format source"), fmt + (comp.empty() || comp == L"None" ? L"" : L" · " + comp));
+        if (tp.src.numMips > 1) put(CYIMG_TR("plugin.uasset.info.mips", L"Mips"), std::to_wstring(tp.src.numMips));
+        if (tp.src.numSlices > 1) put(CYIMG_TR("plugin.uasset.info.slices", L"Tranches"), std::to_wstring(tp.src.numSlices));
+        if (tp.src.numLayers > 1) put(CYIMG_TR("plugin.uasset.info.layers", L"Couches"), TrF("plugin.uasset.layers.first", L"%d (1re affichée)", tp.src.numLayers));
     }
-    put(L"Compression", tp.compressionSettings.empty() ? L"Default" : ShortEnum(tp.compressionSettings, "TC_"));
-    if (!tp.lodGroup.empty()) put(L"Groupe LOD", ShortEnum(tp.lodGroup, "TEXTUREGROUP_"));
-    put(L"sRGB", tp.srgb ? L"oui" : L"non");
-    if (!pkg.engineVersion.empty()) put(L"Enregistré par", L"Unreal Engine " + Widen(pkg.engineVersion));
+    put(CYIMG_TR("plugin.uasset.info.compression", L"Compression"), tp.compressionSettings.empty() ? L"Default" : ShortEnum(tp.compressionSettings, "TC_"));
+    if (!tp.lodGroup.empty()) put(CYIMG_TR("plugin.uasset.info.lod_group", L"Groupe LOD"), ShortEnum(tp.lodGroup, "TEXTUREGROUP_"));
+    put(L"sRGB", tp.srgb ? CYIMG_TR("plugin.uasset.yes", L"oui") : CYIMG_TR("plugin.uasset.no", L"non"));
+    if (!pkg.engineVersion.empty()) put(CYIMG_TR("plugin.uasset.info.saved_by", L"Enregistré par"), L"Unreal Engine " + Widen(pkg.engineVersion));
 }
 
 int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
+    cyimg_tr_begin(host, ctx);
     std::vector<uint8_t> head;
     Package pkg;
-    if (!LoadHeader(path, head, pkg)) return Fail(host, ctx, L"Package Unreal illisible ou version non prise en charge");
+    if (!LoadHeader(path, head, pkg)) return Fail(host, ctx, CYIMG_TR("plugin.uasset.err.header", L"Package Unreal illisible ou version non prise en charge"));
     const std::string cls = pkg.MainClass();
     if (!IsTextureClass(cls))
-        return Fail(host, ctx, L"Ce .uasset n'est pas une texture (" + (cls.empty() ? L"classe inconnue" : Widen(cls)) + L")",
+        return Fail(host, ctx, TrF("plugin.uasset.err.not_texture", L"Ce .uasset n'est pas une texture (%ls)", cls.empty() ? CYIMG_TR("plugin.uasset.class.unknown", L"classe inconnue") : Widen(cls).c_str()),
                     CYIMG_E_UNSUPPORTED);
     if (pkg.flags & (PKG_Cooked | PKG_UnversionedProperties)) {  // texture cookée (jeu packagé, Saved/Cooked)
         std::wstring why;
@@ -1485,10 +1506,10 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         try {
             r = DecodeCooked(host, ctx, path, head, pkg, why);
         } catch (const ParseError&) {
-            why = L"structure non reconnue";
+            why = CYIMG_TR("plugin.uasset.why.structure", L"structure non reconnue");
         }
         if (r == CYIMG_OK || r == CYIMG_E_CANCELLED) return r;
-        return Fail(host, ctx, L"Texture cookée illisible : " + why, r);
+        return Fail(host, ctx, TrF("plugin.uasset.err.cooked", L"Texture cookée illisible : %ls", why.c_str()), r);
     }
 
     const uint32_t target = host->target_size(ctx);
@@ -1499,7 +1520,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
 
     // Fichier complet (données source à la fin du package)
     std::vector<uint8_t> file;
-    if (!ReadFileRange(path, 0, size_t(-1) >> 1, file)) return Fail(host, ctx, L"Lecture du fichier impossible");
+    if (!ReadFileRange(path, 0, size_t(-1) >> 1, file)) return Fail(host, ctx, CYIMG_TR("plugin.uasset.err.read", L"Lecture du fichier impossible"));
     if (host->is_cancelled(ctx)) return CYIMG_E_CANCELLED;
 
     TextureProps tp;
@@ -1508,7 +1529,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     try {
         r = DecodeSource(host, ctx, file, pkg, tp, why);
     } catch (const ParseError&) {
-        why = L"structure de la texture non reconnue";
+        why = CYIMG_TR("plugin.uasset.why.texture_structure", L"structure de la texture non reconnue");
         r = CYIMG_E_FAIL;
     }
     if (r == CYIMG_E_CANCELLED) return r;
@@ -1521,15 +1542,15 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     // Repli : la miniature de l'éditeur, avec la raison
     uint32_t tw = 0, th = 0;
     if (DecodeThumbnail(host, ctx, path, pkg, &tw, &th) == CYIMG_OK) {
-        swprintf_s(fmt, L"Unreal %ls (miniature %u×%u)", Widen(cls).c_str(), tw, th);
+        swprintf_s(fmt, CYIMG_TR("plugin.uasset.format.thumbnail", L"Unreal %ls (miniature %u×%u)"), Widen(cls).c_str(), tw, th);
         host->set_format(ctx, fmt);
         if (!target) {
             AddInfo(host, ctx, pkg, tp);
-            host->set_info(ctx, L"Pleine résolution", (L"indisponible : " + why).c_str());
+            host->set_info(ctx, CYIMG_TR("plugin.uasset.info.full_res", L"Pleine résolution"), TrF("plugin.uasset.full_res.unavailable", L"indisponible : %ls", why.c_str()).c_str());
         }
         return CYIMG_OK;
     }
-    return Fail(host, ctx, L"Texture illisible : " + why);
+    return Fail(host, ctx, TrF("plugin.uasset.err.unreadable", L"Texture illisible : %ls", why.c_str()));
 }
 
 int Probe(const uint8_t* h, size_t n) {

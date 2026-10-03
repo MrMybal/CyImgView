@@ -1,0 +1,113 @@
+# CyImgView — atualizações, salvamento, decodificação, instalador (Português do Brasil)
+@code = pt
+@name = Português
+
+# Janela de atualização
+update.toast.no_repo = Atualizações: repositório do GitHub não configurado
+update.toast.checking = Procurando atualizações…
+update.toast.available = Atualização %ls disponível
+update.toast.up_to_date = O CyImgView está atualizado (%ls)
+update.err.check = Não foi possível procurar atualizações:\n%ls
+update.no_notes = (sem notas da versão)
+update.size_mb = %.1f MB
+update.btn.install = Instalar e reiniciar\nBaixa %ls e reinicia o CyImgView
+update.available = O CyImgView %ls está disponível
+update.installed_version = Versão instalada: %ls
+update.btn.release_page = Ver a versão no GitHub
+update.btn.skip = Ignorar esta versão
+update.title = Atualização do CyImgView
+update.notes.hide = Ocultar novidades
+update.notes.show = Mostrar novidades
+update.installing = Instalando…
+update.progress = %.1f MB de %.1f MB
+update.updating_to = Atualizando para o CyImgView %ls
+update.connecting = Conectando ao GitHub…
+update.err.failed = A atualização falhou:\n%ls\n\nNenhum arquivo foi alterado.
+update.done_restart = Atualização instalada. Reinicie o CyImgView para usá-la.
+
+# Salvar como
+save.title = Salvar imagem como
+save.quality = Qualidade (JPEG, HEIF, WebP):
+save.quality.item = %d%%
+save.quality.recommended = %d%% (recomendado)
+save.err.no_wic = WIC indisponível
+save.err.memory = Memória insuficiente
+save.err.no_encoder = Codificador "%ls" indisponível
+save.err.cannot_write = Não é possível gravar nesta pasta
+save.err.encoding = Erro durante a codificação
+save.err.replace = Não é possível substituir o arquivo (ele está aberto em outro lugar?)
+
+# Decodificação
+decoder.err.file_access = Arquivo inacessível
+decoder.err.read = Não foi possível ler o arquivo
+decoder.err.unreadable = Imagem ilegível
+decoder.err.dimensions = Dimensões inválidas
+decoder.err.conversion = Falha na conversão de formato
+decoder.err.memory = Memória insuficiente
+decoder.err.decode = Erro de decodificação
+decoder.err.unknown_format = Formato não reconhecido
+decoder.err.cancelled = Cancelado
+decoder.err.plugin_failed = O plugin "%ls" não conseguiu decodificar este arquivo
+decoder.err.no_wic = WIC indisponível
+decoder.format.image = Imagem
+decoder.format.animated_gif = GIF animado
+decoder.info.camera = Câmera
+decoder.info.lens = Lente
+decoder.info.exposure = Exposição
+decoder.info.aperture = Abertura
+decoder.info.focal = Distância focal
+decoder.info.date_taken = Data da foto
+
+# Download e instalação de atualizações
+updater.err.bad_url = endereço inválido
+updater.err.no_winhttp = WinHTTP indisponível
+updater.err.connect = falha na conexão
+updater.err.no_github = não é possível conectar ao GitHub
+updater.err.no_release = nenhuma versão publicada (HTTP 404)
+updater.err.http = resposta HTTP %lu
+updater.err.interrupted = download interrompido
+updater.err.cancelled = cancelado
+updater.err.bad_archive = pacote de atualização inválido
+updater.err.suspicious = pacote suspeito (caminho fora da pasta)
+updater.err.no_repo = repositório de atualizações não configurado
+updater.err.bad_response = resposta ilegível do GitHub
+updater.err.no_version = a versão não tem número de versão
+updater.err.no_zip = a versão %ls não contém um arquivo .zip
+updater.err.bad_download_url = endereço de download inesperado
+updater.err.temp_file = não é possível criar o arquivo temporário
+updater.err.disk_full = falha na gravação (disco cheio?)
+updater.err.incomplete = download incompleto
+updater.err.checksum = soma de verificação SHA-256 incorreta: arquivo corrompido ou modificado
+updater.err.unreadable = pacote ilegível
+updater.err.no_exe = o pacote não contém CyImgView.exe
+updater.err.read_only = a pasta do aplicativo não permite gravação (%ls)
+updater.err.write = falha na gravação: %ls
+updater.err.replace = falha na substituição: %ls
+
+# Instalador / desinstalador
+setup.shortcut.desc = Visualizador de imagens rápido
+setup.progid.name = Imagem (CyImgView)
+setup.app.desc = Visualizador de imagens rápido (fotos, RAW, texturas Unreal)
+setup.err.read_installer = não é possível ler o instalador
+setup.err.incomplete = instalador incompleto (pacote ausente)
+setup.err.temp_write = não é possível gravar o arquivo temporário
+setup.err.uninstaller = não é possível criar o desinstalador
+setup.install.title = Instalar o CyImgView %ls
+setup.install.content = Pasta: %ls\n\nNão são necessários direitos de administrador.
+setup.install.installed_version = Versão instalada: %ls
+setup.install.install = Instalar
+setup.install.update = Atualizar
+setup.install.details = Atalho no menu Iniciar, "Abrir com" para imagens, fotos RAW e texturas Unreal
+setup.install.desktop = Criar um atalho na área de trabalho
+setup.install.failed = Falha na instalação
+setup.done.title = O CyImgView está instalado
+setup.done.content = Você o encontrará no menu Iniciar. As atualizações serão instaladas automaticamente.
+setup.done.launch = Abrir o CyImgView
+setup.done.default = Definir o CyImgView como visualizador de imagens padrão\nAbre as configurações "Aplicativos padrão" do Windows
+setup.uninstall.title = Desinstalar o CyImgView?
+setup.uninstall.content = O programa e seus atalhos serão removidos de %ls.
+setup.uninstall.btn = Desinstalar
+setup.uninstall.remove_settings = Excluir também minhas configurações
+setup.uninstall.done = O CyImgView foi desinstalado.
+setup.uninstall.partial = O CyImgView foi desinstalado, mas alguns arquivos não puderam ser excluídos:\n%ls
+decoder.err.plugin_crashed = O plugin "%ls" travou com este arquivo (%ls)

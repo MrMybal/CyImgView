@@ -1,0 +1,152 @@
+# CyImgView — ui (Deutsch)
+@code = de
+@name = Deutsch
+
+# Kontextmenü (Rechtsklick): Text\tTastenkombination
+menu.copy = Bild kopieren\tStrg+C
+menu.copy_path = Dateipfad kopieren\tStrg+Umschalt+C
+menu.open = Öffnen…\tStrg+O
+menu.save_as = Speichern unter…\tStrg+S
+menu.edit = Bearbeiten\tE
+menu.reveal = Im Explorer anzeigen
+menu.channels = Angezeigter Kanal\tC
+menu.channel.rgb = RGB (alle Farben)\tStrg+2
+menu.channel.red = Rot\tStrg+3
+menu.channel.green = Grün\tStrg+4
+menu.channel.blue = Blau\tStrg+5
+menu.channel.alpha = Alpha (Transparenz)\tStrg+6
+menu.filter = Filterung
+menu.filter.raw = Rohe Pixel\tN
+menu.play = Wiedergabe\tLeertaste
+menu.pause = Pause\tLeertaste
+menu.rotate = Drehen\tR
+menu.slideshow = Diashow\tD
+menu.slideshow_stop = Diashow beenden\tEsc
+menu.fullscreen = Vollbild\tF
+menu.info = Informationen\tI
+menu.settings = Einstellungen\tP
+
+# Zwischenablage
+clip.err.read = Bild kann nicht gelesen werden
+clip.loading = Bild wird geladen…
+clip.none = Kein Bild zum Kopieren
+clip.err.memory = Nicht genügend Arbeitsspeicher
+clip.busy = Zwischenablage belegt, bitte erneut versuchen
+clip.copied = Bild kopiert
+clip.failed = Kopieren fehlgeschlagen
+clip.path_copied = Pfad kopiert
+
+# Bereich Kanäle
+channels.title = Kanäle
+channels.rgb = RGB
+channels.rgba = RGBA
+channels.letter.r = R
+channels.letter.g = G
+channels.letter.b = B
+channels.letter.a = A
+channels.desc.red = Rot
+channels.desc.green = Grün
+channels.desc.blue = Blau
+channels.desc.alpha = Alpha
+channels.row.rgb = RGB
+channels.row.red = Rot
+channels.row.green = Grün
+channels.row.blue = Blau
+channels.row.alpha = Alpha
+channels.hint = Kästchen: Kanäle kombinieren
+channels.no_alpha = Dieses Bild hat keine Transparenz
+channels.toast.rgb = Kanäle: RGB
+channels.toast.red = Rotkanal
+channels.toast.green = Grünkanal
+channels.toast.blue = Blaukanal
+channels.toast.alpha = Alphakanal
+channels.toast.mix = Kanäle: %ls
+
+# Bildfilterung
+filter.auto = Automatisch
+filter.raw = Rohe Pixel
+filter.linear = Linear
+filter.cubic = Bikubisch
+filter.cubic_hq = Bikubisch HQ
+filter.anisotropic = Anisotrop
+filter.toast = Filterung: %ls
+
+# Diashow und Animationswiedergabe
+slide.delay = %d s
+slide.toast.delay = Diashow: %ls pro Bild
+slide.toast.start = Diashow · %ls pro Bild · Esc zum Beenden
+slide.err.two_images = Der Ordner muss mindestens zwei Bilder enthalten
+slide.toast.paused = Diashow angehalten
+slide.toast.playing = Diashow läuft
+slide.tip.prev = Zurück (←)
+slide.tip.play = Wiedergabe (Leertaste)
+slide.tip.pause = Pause (Leertaste)
+slide.tip.next = Weiter (→)
+slide.tip.less = Weniger Zeit pro Bild (↓)
+slide.tip.more = Mehr Zeit pro Bild (↑)
+slide.tip.shuffle = Zufällige Reihenfolge
+slide.tip.exit = Diashow beenden (Esc)
+slide.anim.frame = Frame %d / %d
+slide.anim.play = Wiedergabe
+slide.anim.pause = Angehalten
+
+# Bearbeitungsmodus: Werkzeuge
+edit.tool.hand = Ansicht verschieben (M oder Leertaste halten)
+edit.tool.brush = Pinsel (B) — Rechtsklick: 2. Farbe
+edit.tool.eraser = Radiergummi (G)
+edit.tool.line = Linie (L) — Umschalt: 45°-Winkel
+edit.tool.arrow = Pfeil (A)
+edit.tool.rect = Rechteck (R) — Umschalt: Quadrat
+edit.tool.ellipse = Ellipse (O) — Umschalt: Kreis
+edit.tool.text = Text (T)
+edit.tool.fill = Füllen (F)
+edit.tool.picker = Pipette (K)
+edit.tool.crop = Zuschneiden (C) — Eingabe zum Anwenden
+
+# Bearbeitungsmodus: obere Leiste, Farben, Menü Größe ändern
+edit.title = Bearbeiten
+edit.modified = geändert
+edit.btn.done = Fertig
+edit.tip.done = Bearbeitungsmodus beenden (E / Esc)
+edit.btn.save_as = Speichern unter
+edit.btn.save_as_dirty = Speichern unter •
+edit.tip.save_as = Speichern unter… (Strg+S)
+edit.tip.flip_v = Vertikal spiegeln
+edit.tip.flip_h = Horizontal spiegeln
+edit.tip.rot_right = Nach rechts drehen
+edit.tip.rot_left = Nach links drehen
+edit.tip.resize = Größe ändern
+edit.tip.fill_on = Gefüllte Formen (Klick: Kontur)
+edit.tip.fill_off = Konturformen (Klick: gefüllt)
+edit.tip.font_size = Textgröße ( [ und ] )
+edit.tip.thickness = Stärke ( [ und ] )
+edit.label.font = Schriftart
+edit.label.size = Größe
+edit.tip.undo = Rückgängig (Strg+Z)
+edit.tip.redo = Wiederholen (Strg+Y)
+edit.tip.swap_colors = Vorder- / Hintergrundfarbe tauschen
+edit.tip.palette = Klick: Vordergrundfarbe — Rechtsklick: Hintergrundfarbe
+edit.tip.custom_color = Weitere Farben…
+edit.resize.percent = %d %%
+edit.resize.long_side = Lange Seite %d px
+edit.crop.apply = Zuschneiden
+edit.tip.crop_apply = Zuschnitt anwenden (Eingabe)
+edit.tip.crop_cancel = Abbrechen (Esc)
+
+# Bearbeitungsmodus: Meldungen
+edit.loading = Bild wird geladen…
+edit.no_image = Kein Bild zum Bearbeiten
+edit.err.read = Bild kann nicht gelesen werden
+edit.err.memory = Nicht genügend Arbeitsspeicher
+edit.err.vram = Nicht genügend Grafikspeicher
+edit.err.too_big = Bild zu groß zum Bearbeiten
+edit.ask.title = Änderungen speichern?
+edit.ask.content = Das Bild wurde geändert. Ihre Änderungen gehen verloren, wenn Sie sie nicht speichern.
+edit.ask.save = Speichern unter…
+edit.ask.discard = Nicht speichern
+
+# Speichern unter
+edit.save.no_image = Kein Bild zum Speichern
+edit.save.no_encoder = Kein Bild-Encoder verfügbar.
+edit.save.failed = Speichern fehlgeschlagen:\n%ls
+edit.save.done = Gespeichert: %ls

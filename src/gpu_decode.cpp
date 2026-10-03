@@ -1,4 +1,5 @@
 #include "gpu_decode.h"
+#include "cyimg_plugin_i18n.h"  // messages traduits (état posé par cyimg_tr_begin dans le plugin)
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -51,13 +52,13 @@ struct Gpu {
         HMODULE dc = LoadLibraryW(L"d3dcompiler_47.dll");
         auto compile = dc ? reinterpret_cast<D3DCompileFn>(GetProcAddress(dc, "D3DCompile")) : nullptr;
         if (!compile) {
-            error = L"d3dcompiler_47.dll introuvable";
+            error = CYIMG_TR("plugin.gpu.err.no_compiler", L"d3dcompiler_47.dll introuvable");
             return false;
         }
         // WARP : créé en quelques millisecondes, sans dépendre du pilote graphique
         if (FAILED(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_WARP, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, &device,
                                      nullptr, &ctx))) {
-            error = L"Direct3D 11 (WARP) indisponible";
+            error = CYIMG_TR("plugin.gpu.err.no_warp", L"Direct3D 11 (WARP) indisponible");
             return false;
         }
         ComPtr<ID3DBlob> vsb, psb, err;
@@ -65,7 +66,7 @@ struct Gpu {
             FAILED(compile(kShader, sizeof(kShader) - 1, "decode", nullptr, nullptr, "PS", "ps_4_0", 0, 0, &psb, &err)) ||
             FAILED(device->CreateVertexShader(vsb->GetBufferPointer(), vsb->GetBufferSize(), nullptr, &vs)) ||
             FAILED(device->CreatePixelShader(psb->GetBufferPointer(), psb->GetBufferSize(), nullptr, &ps))) {
-            error = L"compilation du shader de décodage impossible";
+            error = CYIMG_TR("plugin.gpu.err.shader", L"compilation du shader de décodage impossible");
             device.Reset();
             return false;
         }
@@ -212,12 +213,12 @@ bool GpuDecodeBlocks(DXGI_FORMAT format, uint32_t width, uint32_t height, const 
                      bool floatOut, std::vector<uint8_t>& out, std::wstring& error) {
     const uint32_t bb = BlockBytes(format);
     if (!bb || !width || !height || width > 16384 || height > 16384) {
-        error = L"dimensions ou format GPU invalides";
+        error = CYIMG_TR("plugin.gpu.err.invalid", L"dimensions ou format GPU invalides");
         return false;
     }
     const uint32_t bw = (width + 3) / 4, bh = (height + 3) / 4;
     if (size < size_t(bw) * bh * bb) {
-        error = L"données de mip trop courtes";
+        error = CYIMG_TR("plugin.gpu.err.short_mip", L"données de mip trop courtes");
         return false;
     }
     // BC1 à BC5 : décodeur logiciel (instantané, pas d'attente du verrou global de Direct3D)
@@ -259,7 +260,7 @@ bool GpuDecodeBlocks(DXGI_FORMAT format, uint32_t width, uint32_t height, const 
     if (FAILED(g.device->CreateTexture2D(&td, &init, &src)) || FAILED(g.device->CreateShaderResourceView(src.Get(), nullptr, &srv)) ||
         FAILED(g.device->CreateTexture2D(&rd, nullptr, &rt)) || FAILED(g.device->CreateRenderTargetView(rt.Get(), nullptr, &rtv)) ||
         FAILED(g.device->CreateTexture2D(&sd, nullptr, &staging))) {
-        error = L"création des textures Direct3D impossible (mémoire ?)";
+        error = CYIMG_TR("plugin.gpu.err.textures", L"création des textures Direct3D impossible (mémoire ?)");
         return false;
     }
     D3D11_VIEWPORT vp{0, 0, float(width), float(height), 0, 1};
@@ -280,7 +281,7 @@ bool GpuDecodeBlocks(DXGI_FORMAT format, uint32_t width, uint32_t height, const 
 
     D3D11_MAPPED_SUBRESOURCE m{};
     if (FAILED(g.ctx->Map(staging.Get(), 0, D3D11_MAP_READ, 0, &m))) {
-        error = L"lecture du résultat impossible";
+        error = CYIMG_TR("plugin.gpu.err.readback", L"lecture du résultat impossible");
         return false;
     }
     const size_t px = floatOut ? 16 : 4, row = size_t(width) * px;

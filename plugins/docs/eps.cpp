@@ -156,9 +156,11 @@ int DecodeEpsi(const Job& job, const uint8_t* p, size_t n) {
             o[3] = 255;
         }
     }
-    wchar_t buf[96];
-    swprintf_s(buf, L"miniature intégrée (EPSI %ld × %ld, %ld bit%ls)", w, h, depth, depth > 1 ? L"s" : L"");
-    job.Info(L"Aperçu", buf);
+    wchar_t buf[256];
+    swprintf_s(buf, depth > 1 ? CYIMG_TR("plugin.docs.eps.thumb_bits", L"miniature intégrée (EPSI %ld × %ld, %ld bits)")
+                              : CYIMG_TR("plugin.docs.eps.thumb_bit", L"miniature intégrée (EPSI %ld × %ld, %ld bit)"),
+               w, h, depth);
+    job.Info(CYIMG_TR("plugin.docs.info.preview", L"Aperçu"), buf);
     return CYIMG_OK;
 }
 
@@ -176,7 +178,7 @@ int DecodeEps(const Job& job, const uint8_t* f, size_t n) {
         if (inside(wmfOff, wmfLen)) {
             const int rc = RenderWmf(job, f + wmfOff, wmfLen);
             if (rc == CYIMG_OK) {
-                job.Info(L"Aperçu", L"miniature intégrée (WMF)");
+                job.Info(CYIMG_TR("plugin.docs.info.preview", L"Aperçu"), CYIMG_TR("plugin.docs.eps.thumb_wmf", L"miniature intégrée (WMF)"));
                 return CYIMG_OK;
             }
             if (rc == CYIMG_E_OUTOFMEMORY) return rc;
@@ -185,11 +187,11 @@ int DecodeEps(const Job& job, const uint8_t* f, size_t n) {
         if (inside(psOff, psL)) ps = f + psOff, psLen = psL;
         const int rc = DecodeEpsi(job, ps, psLen);
         if (rc == CYIMG_OK || rc == CYIMG_E_OUTOFMEMORY) return rc;
-        return job.Fail(hadPreview ? L"EPS : aperçu intégré tronqué ou illisible" : L"EPS sans aperçu (PostScript non supporté)");
+        return job.Fail(hadPreview ? CYIMG_TR("plugin.docs.eps.err.preview_unreadable", L"EPS : aperçu intégré tronqué ou illisible") : CYIMG_TR("plugin.docs.eps.err.no_preview", L"EPS sans aperçu (PostScript non supporté)"));
     }
     const int rc = DecodeEpsi(job, ps, psLen);
     if (rc == CYIMG_OK || rc == CYIMG_E_OUTOFMEMORY) return rc;
-    return job.Fail(L"EPS sans aperçu (PostScript non supporté)");
+    return job.Fail(CYIMG_TR("plugin.docs.eps.err.no_preview", L"EPS sans aperçu (PostScript non supporté)"));
 }
 
 }  // namespace docs

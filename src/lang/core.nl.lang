@@ -1,0 +1,6 @@
+# CyImgView — core (Nederlands)
+@code = nl
+@name = Nederlands
+settings.language = Taal van de interface
+settings.language.desc = 'Automatisch' volgt de taal van Windows.
+settings.language.auto = Automatisch (%ls)

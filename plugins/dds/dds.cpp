@@ -6,7 +6,7 @@
 // Seule la mip 0 de la première face/tranche est affichée ; un cubemap complet est déplié en croix.
 // Vignette : la plus petite mip suffisante est décodée (rapide sur les grosses textures).
 
-#include "cyimg_plugin.h"
+#include "cyimg_plugin_i18n.h"
 #include "gpu_decode.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -142,11 +142,11 @@ bool FromDxgi(uint32_t d, Format& f) {
     case 76: case 77: f = BlockFormat(DXGI_FORMAT_BC3_UNORM, L"BC3"); break;
     case 78: f = BlockFormat(DXGI_FORMAT_BC3_UNORM, L"BC3"); f.srgb = true; break;
     case 79: case 80: f = BlockFormat(DXGI_FORMAT_BC4_UNORM, L"BC4"); break;
-    case 81: f = BlockFormat(DXGI_FORMAT_BC4_SNORM, L"BC4 signé"); f.snorm = true; break;
+    case 81: f = BlockFormat(DXGI_FORMAT_BC4_SNORM, CYIMG_TR("plugin.dds.fmt.bc4_signed", L"BC4 signé")); f.snorm = true; break;
     case 82: case 83: f = BlockFormat(DXGI_FORMAT_BC5_UNORM, L"BC5"); break;
-    case 84: f = BlockFormat(DXGI_FORMAT_BC5_SNORM, L"BC5 signé"); f.snorm = true; break;
+    case 84: f = BlockFormat(DXGI_FORMAT_BC5_SNORM, CYIMG_TR("plugin.dds.fmt.bc5_signed", L"BC5 signé")); f.snorm = true; break;
     case 94: case 95: f = BlockFormat(DXGI_FORMAT_BC6H_UF16, L"BC6H"); break;
-    case 96: f = BlockFormat(DXGI_FORMAT_BC6H_SF16, L"BC6H signé"); break;
+    case 96: f = BlockFormat(DXGI_FORMAT_BC6H_SF16, CYIMG_TR("plugin.dds.fmt.bc6h_signed", L"BC6H signé")); break;
     case 97: case 98: f = BlockFormat(DXGI_FORMAT_BC7_UNORM, L"BC7"); break;
     case 99: f = BlockFormat(DXGI_FORMAT_BC7_UNORM, L"BC7"); f.srgb = true; break;
     case 1: case 2: f = SimpleFormat(Kind::RGBA32F, 128, L"R32G32B32A32_FLOAT"); break;
@@ -184,9 +184,9 @@ bool FromDxgi(uint32_t d, Format& f) {
 }
 
 const wchar_t* DxgiHint(uint32_t d) {  // formats connus mais non affichables
-    if (d >= 100 && d <= 114) return L"vidéo YUV";
-    if (d == 19 || d == 20 || (d >= 39 && d <= 47)) return L"profondeur/stencil";
-    if (d >= 132) return L"ASTC ou format spécifique";
+    if (d >= 100 && d <= 114) return CYIMG_TR("plugin.dds.hint.yuv", L"vidéo YUV");
+    if (d == 19 || d == 20 || (d >= 39 && d <= 47)) return CYIMG_TR("plugin.dds.hint.depth_stencil", L"profondeur/stencil");
+    if (d >= 132) return CYIMG_TR("plugin.dds.hint.astc", L"ASTC ou format spécifique");
     return nullptr;
 }
 
@@ -200,9 +200,9 @@ bool FromFourCC(uint32_t cc, Format& f) {
     case FourCC('D', 'X', 'T', '5'): f = BlockFormat(DXGI_FORMAT_BC3_UNORM, L"DXT5"); return true;
     case FourCC('R', 'X', 'G', 'B'): f = BlockFormat(DXGI_FORMAT_BC3_UNORM, L"DXT5 RXGB"); f.rxgb = true; return true;
     case FourCC('A', 'T', 'I', '1'): case FourCC('B', 'C', '4', 'U'): f = BlockFormat(DXGI_FORMAT_BC4_UNORM, L"BC4 (ATI1)"); return true;
-    case FourCC('B', 'C', '4', 'S'): f = BlockFormat(DXGI_FORMAT_BC4_SNORM, L"BC4 signé"); f.snorm = true; return true;
+    case FourCC('B', 'C', '4', 'S'): f = BlockFormat(DXGI_FORMAT_BC4_SNORM, CYIMG_TR("plugin.dds.fmt.bc4_signed", L"BC4 signé")); f.snorm = true; return true;
     case FourCC('A', 'T', 'I', '2'): case FourCC('B', 'C', '5', 'U'): f = BlockFormat(DXGI_FORMAT_BC5_UNORM, L"BC5 (ATI2)"); return true;
-    case FourCC('B', 'C', '5', 'S'): f = BlockFormat(DXGI_FORMAT_BC5_SNORM, L"BC5 signé"); f.snorm = true; return true;
+    case FourCC('B', 'C', '5', 'S'): f = BlockFormat(DXGI_FORMAT_BC5_SNORM, CYIMG_TR("plugin.dds.fmt.bc5_signed", L"BC5 signé")); f.snorm = true; return true;
     case 36: f = SimpleFormat(Kind::RGBA16, 64, L"A16B16G16R16"); return true;
     case 110: f = SimpleFormat(Kind::RGBA16S, 64, L"Q16W16V16U16"); return true;
     case 111: f = SimpleFormat(Kind::R16F, 16, L"R16F"); return true;
@@ -473,12 +473,12 @@ void ToneMap(std::vector<Surface>& ss, bool data, std::wstring& note) {
     const bool hdr = !data && hi > 1;
     const float white2 = hi * hi;
     if (norm) {
-        wchar_t b[96];
-        swprintf_s(b, L"valeurs normalisées (%g à %g)", double(lo), double(hi));
+        wchar_t b[256];
+        swprintf_s(b, CYIMG_TR("plugin.dds.values_normalized", L"valeurs normalisées (%g à %g)"), double(lo), double(hi));
         note = b;
     } else if (hdr) {
-        wchar_t b[96];
-        swprintf_s(b, L"HDR, maximum %g (ramené au blanc)", double(hi));
+        wchar_t b[256];
+        swprintf_s(b, CYIMG_TR("plugin.dds.values_hdr", L"HDR, maximum %g (ramené au blanc)"), double(hi));
         note = b;
     }
     for (auto& s : ss) {
@@ -507,17 +507,26 @@ void ToneMap(std::vector<Surface>& ss, bool data, std::wstring& note) {
 
 // --- Décodage du fichier ------------------------------------------------------------------------
 
+// Message traduit avec un seul argument texte (longueur quelconque)
+std::wstring Format1(const wchar_t* fmt, const wchar_t* arg) {
+    std::wstring s(wcslen(fmt) + wcslen(arg) + 1, L'\0');
+    const int n = swprintf(s.data(), s.size(), fmt, arg);
+    s.resize(n > 0 ? size_t(n) : 0);
+    return s;
+}
+
 int DecodeImpl(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
+    cyimg_tr_begin(host, ctx);
     std::wstring why;
     auto fail = [&](const std::wstring& msg, int code = CYIMG_E_FAIL) {
         if (CYIMG_HOST_HAS(host, set_error)) host->set_error(ctx, msg.c_str());
         return code;
     };
     MappedFile mf;
-    if (!mf.Open(path)) return fail(L"Lecture du fichier DDS impossible");
+    if (!mf.Open(path)) return fail(CYIMG_TR("plugin.dds.err.read", L"Lecture du fichier DDS impossible"));
     const uint8_t* fdata = mf.data;
     const size_t fsize = mf.size;
-    if (U32(fdata) != FourCC('D', 'D', 'S', ' ') || U32(fdata + 4) != 124) return fail(L"Fichier DDS non reconnu");
+    if (U32(fdata) != FourCC('D', 'D', 'S', ' ') || U32(fdata + 4) != 124) return fail(CYIMG_TR("plugin.dds.err.unrecognized", L"Fichier DDS non reconnu"));
     uint32_t H = U32(fdata + 12), W = U32(fdata + 16), depth = U32(fdata + 24), mips = U32(fdata + 28);
     const uint32_t pfFlags = U32(fdata + 80), cc = U32(fdata + 84), bitCount = U32(fdata + 88);
     const uint32_t caps2 = U32(fdata + 112);
@@ -527,15 +536,17 @@ int DecodeImpl(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     uint32_t arraySize = 1, faces = 1;
     bool volume = false, cube = false, partialCube = false;
     if ((pfFlags & 4) && cc == FourCC('D', 'X', '1', '0')) {
-        if (fsize < 148) return fail(L"Fichier DDS tronqué");
+        if (fsize < 148) return fail(CYIMG_TR("plugin.dds.err.truncated", L"Fichier DDS tronqué"));
         const uint32_t dxgi = U32(fdata + 128), dim = U32(fdata + 132), misc = U32(fdata + 136);
         arraySize = std::max(U32(fdata + 140), 1u);
         const uint32_t alphaMode = U32(fdata + 144) & 7;
         pos = 148;
         if (!FromDxgi(dxgi, f)) {
             const wchar_t* hint = DxgiHint(dxgi);
-            return fail(L"Format DXGI " + std::to_wstring(dxgi) + L" non pris en charge" + (hint ? L" (" + std::wstring(hint) + L")" : L""),
-                        CYIMG_E_UNSUPPORTED);
+            wchar_t msg[256];
+            if (hint) swprintf_s(msg, CYIMG_TR("plugin.dds.err.dxgi_hint", L"Format DXGI %u non pris en charge (%ls)"), unsigned(dxgi), hint);
+            else swprintf_s(msg, CYIMG_TR("plugin.dds.err.dxgi", L"Format DXGI %u non pris en charge"), unsigned(dxgi));
+            return fail(msg, CYIMG_E_UNSUPPORTED);
         }
         if (dim == 2) H = 1;          // texture 1D
         volume = dim == 4;
@@ -546,16 +557,21 @@ int DecodeImpl(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     } else if (pfFlags & 4) {
         if (!FromFourCC(cc, f)) {
             const bool text = cc > 0xFFFF;
-            return fail(L"Format DDS " + (text ? L"« " + FourCCText(cc) + L" »" : std::to_wstring(cc)) + L" non pris en charge",
-                        CYIMG_E_UNSUPPORTED);
+            wchar_t msg[256];
+            if (text) swprintf_s(msg, CYIMG_TR("plugin.dds.err.fourcc", L"Format DDS « %ls » non pris en charge"), FourCCText(cc).c_str());
+            else swprintf_s(msg, CYIMG_TR("plugin.dds.err.fourcc_num", L"Format DDS %u non pris en charge"), unsigned(cc));
+            return fail(msg, CYIMG_E_UNSUPPORTED);
         }
     } else {
         // Masques : RGB (0x40), luminance (0x20000), alpha seul (0x2), YUV (0x200), bump DuDv (0x80000)
-        if (bitCount != 8 && bitCount != 16 && bitCount != 24 && bitCount != 32)
-            return fail(L"Profondeur DDS non gérée : " + std::to_wstring(bitCount) + L" bits", CYIMG_E_UNSUPPORTED);
+        if (bitCount != 8 && bitCount != 16 && bitCount != 24 && bitCount != 32) {
+            wchar_t msg[256];
+            swprintf_s(msg, CYIMG_TR("plugin.dds.err.depth", L"Profondeur DDS non gérée : %u bits"), unsigned(bitCount));
+            return fail(msg, CYIMG_E_UNSUPPORTED);
+        }
         const uint32_t rm = U32(fdata + 92), gm = U32(fdata + 96), bm = U32(fdata + 100), am = U32(fdata + 104);
         const bool hasA = (pfFlags & 1) != 0;
-        wchar_t nm[64];
+        wchar_t nm[256];
         if (pfFlags & 0x20000) {
             f = MaskFormat(bitCount, rm, 0, 0, hasA ? am : 0, L"");
             f.lum = true;
@@ -568,17 +584,21 @@ int DecodeImpl(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
             f = MaskFormat(bitCount, rm, gm, bm, hasA ? am : 0, L"");
             f.snorm = (pfFlags & 0x80000) != 0;
             if (hasA)
-                swprintf_s(nm, L"%ls%u bits RGBA (%u%u%u%u)", f.snorm ? L"signé " : L"", unsigned(bitCount), unsigned(__popcnt(rm)),
+                swprintf_s(nm, f.snorm ? CYIMG_TR("plugin.dds.mask_rgba_signed", L"signé %u bits RGBA (%u%u%u%u)")
+                                       : CYIMG_TR("plugin.dds.mask_rgba", L"%u bits RGBA (%u%u%u%u)"),
+                           unsigned(bitCount), unsigned(__popcnt(rm)),
                            unsigned(__popcnt(gm)), unsigned(__popcnt(bm)), unsigned(__popcnt(am)));
             else
-                swprintf_s(nm, L"%ls%u bits RGB (%u%u%u)", f.snorm ? L"signé " : L"", unsigned(bitCount), unsigned(__popcnt(rm)),
+                swprintf_s(nm, f.snorm ? CYIMG_TR("plugin.dds.mask_rgb_signed", L"signé %u bits RGB (%u%u%u)")
+                                       : CYIMG_TR("plugin.dds.mask_rgb", L"%u bits RGB (%u%u%u)"),
+                           unsigned(bitCount), unsigned(__popcnt(rm)),
                            unsigned(__popcnt(gm)), unsigned(__popcnt(bm)));
         } else {
-            return fail(L"Format de pixels DDS non reconnu", CYIMG_E_UNSUPPORTED);
+            return fail(CYIMG_TR("plugin.dds.err.pixel_format", L"Format de pixels DDS non reconnu"), CYIMG_E_UNSUPPORTED);
         }
         f.name = nm;
         if (const wchar_t* known = MaskName(bitCount, f.mask[0], f.mask[1], f.mask[2], f.mask[3], f.snorm)) f.name = known;
-        if (!f.mask[0] && !f.mask[1] && !f.mask[2] && !f.mask[3]) return fail(L"Masques de couleur DDS invalides");
+        if (!f.mask[0] && !f.mask[1] && !f.mask[2] && !f.mask[3]) return fail(CYIMG_TR("plugin.dds.err.masks", L"Masques de couleur DDS invalides"));
     }
     if (caps2 & 0x200) {  // cubemap classique : faces présentes indiquées par 6 bits
         cube = true;
@@ -590,8 +610,8 @@ int DecodeImpl(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     if (!volume) depth = 1;
     depth = std::max(depth, 1u);
     mips = std::clamp(mips, 1u, 32u);
-    if (!W || !H || W > 65536 || H > 65536) return fail(L"Dimensions DDS invalides");
-    if (f.kind == Kind::Block && (W > 16384 || H > 16384)) return fail(L"Texture compressée trop grande (16384 px maximum)");
+    if (!W || !H || W > 65536 || H > 65536) return fail(CYIMG_TR("plugin.dds.err.dimensions", L"Dimensions DDS invalides"));
+    if (f.kind == Kind::Block && (W > 16384 || H > 16384)) return fail(CYIMG_TR("plugin.dds.err.too_big", L"Texture compressée trop grande (16384 px maximum)"));
 
     // Mips : tailles et décalages dans un élément (face / tranche de tableau)
     struct Mip {
@@ -611,13 +631,13 @@ int DecodeImpl(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     const uint64_t avail = fsize - pos;
     const bool showCross = cube && !partialCube;
     const uint32_t needFaces = showCross ? 6 : 1;
-    if (chain[0].bytes > avail) return fail(L"Fichier DDS tronqué");
+    if (chain[0].bytes > avail) return fail(CYIMG_TR("plugin.dds.err.truncated", L"Fichier DDS tronqué"));
     uint64_t totalElems = uint64_t(arraySize) * faces;
     if (elemBytes * totalElems > avail) {
         // mips manquantes ou tableau incomplet : éléments contigus de la seule mip 0 ? on se limite à la mip 0
         chain.resize(1);
         elemBytes = chain[0].bytes * chain[0].d;
-        if (elemBytes * needFaces > avail) return fail(L"Fichier DDS tronqué");
+        if (elemBytes * needFaces > avail) return fail(CYIMG_TR("plugin.dds.err.truncated", L"Fichier DDS tronqué"));
     }
 
     // Mip affichée : la plus petite suffisante pour une vignette
@@ -633,7 +653,7 @@ int DecodeImpl(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     for (uint32_t i = 0; i < needFaces; ++i) {
         if (host->is_cancelled(ctx)) return CYIMG_E_CANCELLED;
         const uint8_t* src = fdata + pos + elemBytes * i + m.offset;
-        if (!DecodeSurface(f, src, m.w, m.h, surf[i], why)) return fail(L"Décodage DDS impossible : " + why);
+        if (!DecodeSurface(f, src, m.w, m.h, surf[i], why)) return fail(Format1(CYIMG_TR("plugin.dds.err.decode", L"Décodage DDS impossible : %ls"), why.c_str()));
     }
     // Flottants -> 8 bits
     std::wstring toneNote;
@@ -679,18 +699,28 @@ int DecodeImpl(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     }
 
     host->set_format(ctx, (L"DDS " + f.name + (f.srgb && f.name.find(L"SRGB") == std::wstring::npos ? L" sRGB" : L"")).c_str());
-    host->set_info(ctx, L"Format", f.name.c_str());
-    host->set_info(ctx, L"Mipmaps", std::to_wstring(chain.size()).c_str());
-    if (mi) host->set_info(ctx, L"Mip affichée", (std::to_wstring(mi) + L" (" + std::to_wstring(m.w) + L" x " + std::to_wstring(m.h) + L")").c_str());
-    if (cube) host->set_info(ctx, L"Cubemap", partialCube ? (std::to_wstring(faces) + L" faces (première affichée)").c_str()
-                                                         : L"6 faces (croix : +Y / -X +Z +X -Z / -Y)");
-    if (arraySize > 1) host->set_info(ctx, L"Tableau", (std::to_wstring(arraySize) + L" textures (première affichée)").c_str());
-    if (volume) host->set_info(ctx, L"Volume", (L"profondeur " + std::to_wstring(depth) + L" (première tranche affichée)").c_str());
+    host->set_info(ctx, CYIMG_TR("plugin.dds.info.format", L"Format"), f.name.c_str());
+    host->set_info(ctx, CYIMG_TR("plugin.dds.info.mipmaps", L"Mipmaps"), std::to_wstring(chain.size()).c_str());
+    if (mi) host->set_info(ctx, CYIMG_TR("plugin.dds.info.mip_shown", L"Mip affichée"), (std::to_wstring(mi) + L" (" + std::to_wstring(m.w) + L" x " + std::to_wstring(m.h) + L")").c_str());
+    wchar_t buf[256];
+    if (cube) {
+        if (partialCube) swprintf_s(buf, CYIMG_TR("plugin.dds.cube_partial", L"%u faces (première affichée)"), unsigned(faces));
+        else wcscpy_s(buf, CYIMG_TR("plugin.dds.cube_full", L"6 faces (croix : +Y / -X +Z +X -Z / -Y)"));
+        host->set_info(ctx, CYIMG_TR("plugin.dds.info.cubemap", L"Cubemap"), buf);
+    }
+    if (arraySize > 1) {
+        swprintf_s(buf, CYIMG_TR("plugin.dds.array_value", L"%u textures (première affichée)"), unsigned(arraySize));
+        host->set_info(ctx, CYIMG_TR("plugin.dds.info.array", L"Tableau"), buf);
+    }
+    if (volume) {
+        swprintf_s(buf, CYIMG_TR("plugin.dds.volume_value", L"profondeur %u (première tranche affichée)"), unsigned(depth));
+        host->set_info(ctx, CYIMG_TR("plugin.dds.info.volume", L"Volume"), buf);
+    }
     if (f.dxgi == DXGI_FORMAT_BC5_UNORM || f.dxgi == DXGI_FORMAT_BC5_SNORM)
-        host->set_info(ctx, L"Normal map", L"bleu = Z reconstruit depuis R et G");
-    if (f.premul) host->set_info(ctx, L"Alpha", L"prémultiplié");
-    if (alphaEmpty) host->set_info(ctx, L"Alpha", L"ignoré (canal vide)");
-    if (!toneNote.empty()) host->set_info(ctx, L"Valeurs", toneNote.c_str());
+        host->set_info(ctx, CYIMG_TR("plugin.dds.info.normal_map", L"Normal map"), CYIMG_TR("plugin.dds.normal_map_value", L"bleu = Z reconstruit depuis R et G"));
+    if (f.premul) host->set_info(ctx, CYIMG_TR("plugin.dds.info.alpha", L"Alpha"), CYIMG_TR("plugin.dds.alpha_premul", L"prémultiplié"));
+    if (alphaEmpty) host->set_info(ctx, CYIMG_TR("plugin.dds.info.alpha", L"Alpha"), CYIMG_TR("plugin.dds.alpha_ignored", L"ignoré (canal vide)"));
+    if (!toneNote.empty()) host->set_info(ctx, CYIMG_TR("plugin.dds.info.values", L"Valeurs"), toneNote.c_str());
     return CYIMG_OK;
 }
 
@@ -699,7 +729,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     try {
         return DecodeImpl(host, ctx, path);
     } catch (...) {
-        if (CYIMG_HOST_HAS(host, set_error)) host->set_error(ctx, L"Mémoire insuffisante pour décoder l'image");
+        if (CYIMG_HOST_HAS(host, set_error)) host->set_error(ctx, CYIMG_TR("plugin.dds.err.memory", L"Mémoire insuffisante pour décoder l'image"));
         return CYIMG_E_OUTOFMEMORY;
     }
 }

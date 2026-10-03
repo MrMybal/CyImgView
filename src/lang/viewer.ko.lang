@@ -1,0 +1,130 @@
+# CyImgView — viewer (한국어)
+@code = ko
+@name = 한국어
+
+# 숫자 및 단위
+viewer.decimal = .
+viewer.unit.bytes = %llu바이트
+viewer.unit.kb = %.1f KB
+viewer.unit.mb = %.1f MB
+viewer.unit.gb = %.2f GB
+viewer.zoom.pct1 = %.1f%%
+viewer.zoom.pct0 = %.0f%%
+
+# 오류, 가운데 메시지, 알림
+viewer.err.direct2d = Direct2D를 사용할 수 없습니다.
+viewer.msg.open_failed = 이 파일을 열 수 없음
+viewer.msg.drop = 여기에 이미지를 끌어 놓으세요
+viewer.msg.drop_sub = 또는 Ctrl+O를 눌러 파일 열기
+viewer.toast.device_lost = 그래픽 드라이버가 재설정됨: 변경 내용 손실
+viewer.toast.fit = 창에 맞춤
+viewer.toast.not_found = 파일을 찾을 수 없음
+viewer.toast.no_images = 이 폴더에 이미지가 없음
+viewer.toast.first = 첫 번째 이미지
+viewer.toast.last = 마지막 이미지
+viewer.toast.shuffle_on = 무작위 순서
+viewer.toast.shuffle_off = 폴더 순서
+
+# "열기" 대화 상자
+viewer.dlg.images = 이미지
+viewer.dlg.all_files = 모든 파일
+viewer.dlg.open_title = 이미지 열기
+
+# 도구 모음 도구 설명
+viewer.btn.open = 열기(Ctrl+O)
+viewer.btn.save_as = 다른 이름으로 저장 / 변환(Ctrl+S)
+viewer.btn.edit = 편집(E)
+viewer.btn.zoom_out = 축소(-)
+viewer.btn.zoom_in = 확대(+)
+viewer.btn.fit = 창에 맞춤(0)
+viewer.btn.actual = 실제 크기(1)
+viewer.btn.rotate = 회전(R)
+viewer.btn.channels = 채널: 채널 표시 또는 결합(C)
+viewer.btn.strip = 필름 스트립(T)
+viewer.btn.info = 정보(I)
+viewer.btn.help = 바로 가기 키(H)
+viewer.btn.slideshow = 전체 화면 슬라이드 쇼(D)
+viewer.btn.settings = 설정(P)
+viewer.btn.fullscreen = 전체 화면(F)
+viewer.btn.update = 새 버전 사용 가능(Ctrl+U)
+viewer.update.badge = 업데이트 %ls
+
+# 상태 표시줄
+viewer.status.raw = RAW 현상 중…
+viewer.status.frame = 프레임 %d/%d
+viewer.status.paused = (일시 중지됨)
+viewer.status.channels = 채널 %ls
+
+# 정보 패널
+viewer.info.title = 정보
+viewer.info.file = 파일
+viewer.info.folder = 폴더
+viewer.info.size = 크기
+viewer.info.modified = 수정한 날짜
+viewer.info.dimensions = 해상도
+viewer.info.dims = %d × %d  (%.1f MP)
+viewer.info.format = 형식
+viewer.info.decode = 디코딩
+
+# 바로 가기 키 패널(k = 키, d = 설명)
+viewer.help.title = 바로 가기 키
+viewer.help.plugins = 로드된 플러그인(%d)
+viewer.help.no_plugins = 없음("plugins" 폴더가 비어 있음)
+viewer.help.k.nav = ← → / Space / Backspace
+viewer.help.d.nav = 이전 / 다음 이미지
+viewer.help.d.filter = 원본 픽셀 / 필터링(설정에서 필터 선택)
+viewer.help.d.slideshow = 전체 화면 슬라이드 쇼(↑ ↓: 이미지당 시간, Space: 일시 중지)
+viewer.help.k.copy = Ctrl+C / 오른쪽 클릭
+viewer.help.d.copy = 이미지 복사(Ctrl+Shift+C: 경로)
+viewer.help.k.channels = RGB 단추 / C / Ctrl+2…6
+viewer.help.d.channels = 채널: 단일 채널(빨강, 녹색, 파랑, 알파)
+viewer.help.k.anim = Space / , / .
+viewer.help.d.anim = 애니메이션: 재생-일시 중지 / 이전-다음 프레임
+viewer.help.k.home_end = Home / End
+viewer.help.d.home_end = 첫 번째 / 마지막 이미지
+viewer.help.k.zoom = 휠 / + / -
+viewer.help.d.zoom = 확대/축소(마우스 위치 중심)
+viewer.help.k.drag = 끌기
+viewer.help.d.drag = 확대된 이미지 이동
+viewer.help.k.dblclick = 두 번 클릭 / Z
+viewer.help.d.dblclick = 창에 맞춤 ↔ 실제 크기 전환
+viewer.help.d.fit = 창에 맞춤 / 100%
+viewer.help.k.rotate = R / Shift+R
+viewer.help.d.rotate = 오른쪽 / 왼쪽으로 회전
+viewer.help.k.fullscreen = F / F11 / Enter
+viewer.help.d.fullscreen = 전체 화면
+viewer.help.d.strip = 필름 스트립 표시 / 숨기기
+viewer.help.d.info = 정보 패널
+viewer.help.d.open = 파일 열기(또는 끌어서 놓기)
+viewer.help.d.save_as = 다른 이름으로 저장 / 형식 변환
+viewer.help.d.update = 업데이트 확인
+viewer.help.d.settings = 설정(단일 창, 필름 스트립, 업데이트)
+viewer.help.d.edit = 편집 모드(브러시, 도형, 텍스트, 자르기…)
+viewer.help.d.reload = 폴더 다시 로드
+viewer.help.k.mouse_side = 마우스 측면 단추
+viewer.help.d.mouse_side = 이전 / 다음 이미지
+viewer.help.k.esc = Esc
+viewer.help.d.esc = 패널 닫기 / 끝내기
+
+# 설정 패널(settings.language* 키는 core.*.lang에 있음)
+settings.title = 설정
+settings.single_window = 기존 창에서 파일 열기
+settings.single_window.desc = 끄면 파일을 열 때마다 새 창이 만들어집니다.
+settings.strip = 필름 스트립 표시
+settings.strip.desc = 아래쪽에 폴더 이미지의 미리 보기를 표시합니다(T 키).
+settings.auto_update = 자동으로 업데이트 확인
+settings.auto_update.desc = 하루 최대 한 번, CyImgView의 GitHub 릴리스에서 확인합니다.
+settings.shuffle = 슬라이드 쇼: 무작위 순서
+settings.shuffle.desc = 끄면 폴더 순서대로 이미지가 재생됩니다(D 키).
+settings.filter = 이미지 필터링
+settings.filter.desc.auto = 100%에서 선명하게, 축소 시 부드럽게, 300% 초과 시 픽셀을 또렷하게.
+settings.filter.desc.raw = 보간 없음: 픽셀 아트, 세부 검사(N 키).
+settings.filter.desc.linear = 간단하고 빠른 보간.
+settings.filter.desc.cubic = 바이큐빅: 선형보다 선명.
+settings.filter.desc.cubic_hq = 최고의 축소 품질, 약간 느림.
+settings.filter.desc.anisotropic = 부드러운 축소, 계단 현상 감소.
+settings.slide_delay = 슬라이드 쇼: 이미지당 시간
+settings.slide_delay.desc = 슬라이드 쇼 중에도 ↑ 및 ↓로 조정할 수 있습니다.
+settings.update.install = 업데이트 %ls 설치
+settings.update.check = 업데이트 확인
+settings.ini_path = 설정: %ls

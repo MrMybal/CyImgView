@@ -17,19 +17,19 @@ const uint8_t kEga[16][3] = {
 }  // namespace
 
 int DecodePcx(Dec& d) {
-    if (d.n < 128 || d.d[0] != 0x0A) return d.Fail(L"Fichier PCX non reconnu");
+    if (d.n < 128 || d.d[0] != 0x0A) return d.Fail(CYIMG_TR("plugin.classic.pcx.err.unrecognized", L"Fichier PCX non reconnu"));
     const uint8_t* h = d.d;
     const uint8_t ver = h[1], enc = h[2], bpp = h[3], planes = h[65];
     const uint32_t xmin = LE16(h + 4), ymin = LE16(h + 6), xmax = LE16(h + 8), ymax = LE16(h + 10);
     const uint32_t bpl = LE16(h + 66);
-    if (xmax < xmin || ymax < ymin) return d.Fail(L"Dimensions PCX invalides");
+    if (xmax < xmin || ymax < ymin) return d.Fail(CYIMG_TR("plugin.classic.pcx.err.dimensions", L"Dimensions PCX invalides"));
     const uint32_t w = xmax - xmin + 1, H = ymax - ymin + 1;
-    if (!SizeOk(w, H)) return d.Fail(L"Dimensions PCX invalides");
+    if (!SizeOk(w, H)) return d.Fail(CYIMG_TR("plugin.classic.pcx.err.dimensions", L"Dimensions PCX invalides"));
     const bool indexed = planes == 1 || (bpp == 1 && planes <= 4);
     const bool rgb = bpp == 8 && (planes == 3 || planes == 4);
     if (!(bpp == 1 || bpp == 2 || bpp == 4 || bpp == 8) || (!indexed && !rgb) || enc > 1)
-        return d.Fail(L"Variante PCX non gérée");
-    if (bpl == 0 || uint64_t(bpl) * 8 < uint64_t(w) * bpp) return d.Fail(L"En-tête PCX invalide (octets par ligne)");
+        return d.Fail(CYIMG_TR("plugin.classic.pcx.err.variant", L"Variante PCX non gérée"));
+    if (bpl == 0 || uint64_t(bpl) * 8 < uint64_t(w) * bpp) return d.Fail(CYIMG_TR("plugin.classic.pcx.err.bpl", L"En-tête PCX invalide (octets par ligne)"));
 
     // Palette
     uint8_t pal[256][3] = {};
@@ -57,7 +57,7 @@ int DecodePcx(Dec& d) {
     size_t pos = 128;
     const size_t end = (indexed && bpp * planes == 8 && d.n >= 128 + 769 && d.d[d.n - 769] == 0x0C) ? d.n - 769 : d.n;
     if (enc == 0) {
-        if (end - pos < buf.size()) return d.Fail(L"Fichier PCX tronqué");
+        if (end - pos < buf.size()) return d.Fail(CYIMG_TR("plugin.classic.pcx.err.truncated", L"Fichier PCX tronqué"));
         memcpy(buf.data(), d.d + pos, buf.size());
     } else {
         size_t o = 0;
@@ -65,13 +65,13 @@ int DecodePcx(Dec& d) {
             if (pos >= end) {
                 // Certains encodeurs s'arrêtent avant la dernière ligne : tolérer une perte minime
                 if (o + lineBytes >= buf.size()) break;
-                return d.Fail(L"Fichier PCX tronqué");
+                return d.Fail(CYIMG_TR("plugin.classic.pcx.err.truncated", L"Fichier PCX tronqué"));
             }
             uint8_t c = d.d[pos++];
             size_t cnt = 1;
             if ((c & 0xC0) == 0xC0) {
                 cnt = c & 0x3F;
-                if (pos >= end) return d.Fail(L"Fichier PCX tronqué");
+                if (pos >= end) return d.Fail(CYIMG_TR("plugin.classic.pcx.err.truncated", L"Fichier PCX tronqué"));
                 c = d.d[pos++];
             }
             cnt = std::min(cnt, buf.size() - o);
@@ -101,13 +101,13 @@ int DecodePcx(Dec& d) {
             o[0] = pal[idx][0], o[1] = pal[idx][1], o[2] = pal[idx][2];
         }
     }
-    wchar_t fmt[64];
-    if (rgb) swprintf_s(fmt, L"PCX %d bits", planes * 8);
-    else swprintf_s(fmt, L"PCX %d couleurs", palSize);
+    wchar_t fmt[256];
+    if (rgb) swprintf_s(fmt, CYIMG_TR("plugin.classic.pcx.format_bits", L"PCX %d bits"), planes * 8);
+    else swprintf_s(fmt, CYIMG_TR("plugin.classic.pcx.format_colors", L"PCX %d couleurs"), palSize);
     d.Format(fmt);
-    wchar_t v[16];
+    wchar_t v[256];
     swprintf_s(v, L"%u", unsigned(ver));
-    d.Info(L"Version PCX", v);
+    d.Info(CYIMG_TR("plugin.classic.pcx.info.version", L"Version PCX"), v);
     return Emit(d, img, rgb && planes == 4);
 }
 

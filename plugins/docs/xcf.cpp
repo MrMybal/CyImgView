@@ -136,12 +136,12 @@ private:
     };
 
     uint32_t U32(uint64_t pos) const {
-        if (pos > m_n || m_n - pos < 4) throw Fail{L"GIMP : fichier tronqué"};
+        if (pos > m_n || m_n - pos < 4) throw Fail{CYIMG_TR("plugin.docs.xcf.err.truncated", L"GIMP : fichier tronqué")};
         return Be32(m_f + pos);
     }
     uint64_t Ptr(uint64_t pos) const {
         if (!m_ptr64) return U32(pos);
-        if (pos > m_n || m_n - pos < 8) throw Fail{L"GIMP : fichier tronqué"};
+        if (pos > m_n || m_n - pos < 8) throw Fail{CYIMG_TR("plugin.docs.xcf.err.truncated", L"GIMP : fichier tronqué")};
         return Be64(m_f + pos);
     }
     // Propriétés : appelle fn(type, début, longueur), retourne la position après PROP_END
@@ -151,11 +151,11 @@ private:
             const uint32_t type = U32(pos), len = U32(pos + 4);
             pos += 8;
             if (type == PROP_END) return pos;
-            if (len > m_n - pos) throw Fail{L"GIMP : propriété invalide"};
+            if (len > m_n - pos) throw Fail{CYIMG_TR("plugin.docs.xcf.err.property", L"GIMP : propriété invalide")};
             fn(type, pos, len);
             pos += len;
         }
-        throw Fail{L"GIMP : propriétés invalides"};
+        throw Fail{CYIMG_TR("plugin.docs.xcf.err.properties", L"GIMP : propriétés invalides")};
     }
     void ReadLayer(uint64_t pos, Layer& L);
     // Pixels d'une hiérarchie (premier niveau) : composants entrelacés, w*h*bpp octets
@@ -177,7 +177,7 @@ private:
 void Xcf::ReadLayer(uint64_t pos, Layer& L) {
     L.w = U32(pos), L.h = U32(pos + 4), L.type = U32(pos + 8);
     const uint32_t nameLen = U32(pos + 12);
-    if (nameLen > m_n - pos - 16) throw Fail{L"GIMP : calque invalide"};
+    if (nameLen > m_n - pos - 16) throw Fail{CYIMG_TR("plugin.docs.xcf.err.layer", L"GIMP : calque invalide")};
     pos += 16 + nameLen;
     pos = Props(pos, [&](uint32_t type, uint64_t p, uint32_t len) {
         const uint8_t* d = m_f + p;
@@ -338,20 +338,20 @@ uint8_t Xcf::Comp(const uint8_t* p, bool color) const {
 
 int Xcf::Run() {
     m_job.host->set_format(m_job.ctx, L"GIMP XCF");
-    if (m_n < 30) throw Fail{L"GIMP : fichier tronqué"};
+    if (m_n < 30) throw Fail{CYIMG_TR("plugin.docs.xcf.err.truncated", L"GIMP : fichier tronqué")};
     if (memcmp(m_f + 9, "file", 4) == 0) m_version = 0;
     else if (m_f[9] == 'v') m_version = uint32_t(atoi(reinterpret_cast<const char*>(m_f + 10)) & 0xFFFF);  // "v011\0"
-    else throw Fail{L"GIMP : version inconnue"};
-    if (m_f[13] != 0) throw Fail{L"GIMP : en-tête invalide"};
+    else throw Fail{CYIMG_TR("plugin.docs.xcf.err.version", L"GIMP : version inconnue")};
+    if (m_f[13] != 0) throw Fail{CYIMG_TR("plugin.docs.xcf.err.header", L"GIMP : en-tête invalide")};
     m_ptr64 = m_version >= 11;
     m_w = U32(14), m_h = U32(18), m_base = U32(22);
     uint64_t pos = 26;
     if (m_version >= 4) {
-        if (!GetPrecision(m_version, U32(26), m_prec)) throw Fail{L"GIMP : précision non gérée"};
+        if (!GetPrecision(m_version, U32(26), m_prec)) throw Fail{CYIMG_TR("plugin.docs.xcf.err.precision", L"GIMP : précision non gérée")};
         pos = 30;
     }
-    if (!m_w || !m_h || m_w > 65535 || m_h > 65535 || m_base > 2) throw Fail{L"GIMP : en-tête invalide"};
-    if (uint64_t(m_w) * m_h > (uint64_t(1) << 29)) throw Fail{L"GIMP : image trop grande"};
+    if (!m_w || !m_h || m_w > 65535 || m_h > 65535 || m_base > 2) throw Fail{CYIMG_TR("plugin.docs.xcf.err.header", L"GIMP : en-tête invalide")};
+    if (uint64_t(m_w) * m_h > (uint64_t(1) << 29)) throw Fail{CYIMG_TR("plugin.docs.xcf.err.too_big", L"GIMP : image trop grande")};
 
     pos = Props(pos, [&](uint32_t type, uint64_t p, uint32_t len) {
         if (type == PROP_COLORMAP && len >= 4) {
@@ -361,7 +361,7 @@ int Xcf::Run() {
             m_comp = m_f[p];
         }
     });
-    if (m_comp > 2) throw Fail{L"GIMP : compression non gérée"};
+    if (m_comp > 2) throw Fail{CYIMG_TR("plugin.docs.xcf.err.compression", L"GIMP : compression non gérée")};
 
     // Liste des calques (du haut vers le bas)
     std::vector<Layer> layers;
@@ -380,15 +380,20 @@ int Xcf::Run() {
         layers.push_back(std::move(L));
     }
 
-    wchar_t buf[96];
-    static const wchar_t* bases[] = {L"RVB", L"Niveaux de gris", L"Couleurs indexées"};
-    m_job.Info(L"Mode", bases[m_base]);
-    swprintf_s(buf, L"%d bits%ls%ls", m_prec.bytes * 8, m_prec.isFloat ? L" flottant" : L"", m_prec.linear ? L" linéaire" : L"");
-    m_job.Info(L"Précision", buf);
+    wchar_t buf[256];
+    const wchar_t* const bases[] = {CYIMG_TR("plugin.docs.xcf.mode.rgb", L"RVB"), CYIMG_TR("plugin.docs.xcf.mode.gray", L"Niveaux de gris"),
+                                    CYIMG_TR("plugin.docs.xcf.mode.indexed", L"Couleurs indexées")};
+    m_job.Info(CYIMG_TR("plugin.docs.info.mode", L"Mode"), bases[m_base]);
+    const wchar_t* precFmt = m_prec.isFloat ? (m_prec.linear ? CYIMG_TR("plugin.docs.xcf.prec_float_linear", L"%d bits flottant linéaire")
+                                                             : CYIMG_TR("plugin.docs.xcf.prec_float", L"%d bits flottant"))
+                                            : (m_prec.linear ? CYIMG_TR("plugin.docs.xcf.prec_linear", L"%d bits linéaire")
+                                                             : CYIMG_TR("plugin.docs.xcf.prec_int", L"%d bits"));
+    swprintf_s(buf, precFmt, m_prec.bytes * 8);
+    m_job.Info(CYIMG_TR("plugin.docs.info.precision", L"Précision"), buf);
     swprintf_s(buf, L"%zu", layers.size());
-    m_job.Info(L"Calques", buf);
+    m_job.Info(CYIMG_TR("plugin.docs.info.layers", L"Calques"), buf);
     swprintf_s(buf, L"%u", m_version);
-    m_job.Info(L"Version XCF", buf);
+    m_job.Info(CYIMG_TR("plugin.docs.info.xcf_version", L"Version XCF"), buf);
 
     // Groupes : visibilité et opacité héritées via le chemin de l'élément
     std::map<std::vector<uint32_t>, const Layer*> groups;
@@ -476,11 +481,11 @@ int Xcf::Run() {
         if (m_job.Cancelled()) return CYIMG_E_CANCELLED;
     }
     if (unreadable) {
-        if (!drawn) throw Fail{L"GIMP : données des calques illisibles ou tronquées"};
-        swprintf_s(buf, L"%d (fichier tronqué ou corrompu)", unreadable);
-        m_job.Info(L"Calques illisibles", buf);
+        if (!drawn) throw Fail{CYIMG_TR("plugin.docs.xcf.err.layers_data", L"GIMP : données des calques illisibles ou tronquées")};
+        swprintf_s(buf, CYIMG_TR("plugin.docs.xcf.unreadable_value", L"%d (fichier tronqué ou corrompu)"), unreadable);
+        m_job.Info(CYIMG_TR("plugin.docs.info.unreadable_layers", L"Calques illisibles"), buf);
     }
-    if (otherModes) m_job.Info(L"Modes de fusion", L"approximés (fusion normale)");
+    if (otherModes) m_job.Info(CYIMG_TR("plugin.docs.info.blend_modes", L"Modes de fusion"), CYIMG_TR("plugin.docs.xcf.blend_approx", L"approximés (fusion normale)"));
 
     bool opaque = true;
     for (size_t i = 3; i < canvas.size() && opaque; i += 4) opaque = canvas[i] == 255;

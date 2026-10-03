@@ -1,0 +1,8 @@
+# Noms affichés des plugins (aide) et touche Ctrl
+@code = zh
+@name = 简体中文
+pluginname.classic = 经典格式 (Netpbm, PCX, XBM/XPM, IFF, HDR, FITS, ICNS, PICT)
+pluginname.docs = 图形文档 (Krita, OpenRaster, GIMP, Clip Studio, EPS, InDesign, CorelDRAW, Affinity)
+pluginname.dicom = DICOM（医学影像）
+pluginname.vector = 矢量 (SVG, PDF, EMF/WMF, DXF)
+viewer.key.ctrl = Ctrl

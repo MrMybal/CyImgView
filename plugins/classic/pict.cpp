@@ -220,7 +220,7 @@ int DecodePict(Dec& d) {
     int ver = 0;
     size_t base = 0;
     if (!VersionAt(d.d, d.n, 512, ver)) {
-        if (!VersionAt(d.d, d.n, 0, ver)) return d.Fail(L"Fichier PICT non reconnu");
+        if (!VersionAt(d.d, d.n, 0, ver)) return d.Fail(CYIMG_TR("plugin.classic.pict.err.unrecognized", L"Fichier PICT non reconnu"));
     } else {
         base = 512;
     }
@@ -308,10 +308,10 @@ int DecodePict(Dec& d) {
         return CYIMG_OK;
     }
     if (maps.empty()) {
-        if (truncated) return d.Fail(L"Fichier PICT tronqué ou invalide (aucune image bitmap lue)");
-        if (qtSeen) return d.Fail(L"PICT QuickTime : compression non prise en charge (seuls JPEG et PNG le sont)");
-        return d.Fail(vector ? L"PICT purement vectoriel : aucune image bitmap à afficher"
-                             : L"Ce fichier PICT ne contient aucune image bitmap");
+        if (truncated) return d.Fail(CYIMG_TR("plugin.classic.pict.err.truncated", L"Fichier PICT tronqué ou invalide (aucune image bitmap lue)"));
+        if (qtSeen) return d.Fail(CYIMG_TR("plugin.classic.pict.err.qt", L"PICT QuickTime : compression non prise en charge (seuls JPEG et PNG le sont)"));
+        return d.Fail(vector ? CYIMG_TR("plugin.classic.pict.err.vector", L"PICT purement vectoriel : aucune image bitmap à afficher")
+                             : CYIMG_TR("plugin.classic.pict.err.no_bitmap", L"Ce fichier PICT ne contient aucune image bitmap"));
     }
 
     // 2) assemblage des bitmaps : toile = union des rectangles de destination, à la résolution source
@@ -353,12 +353,12 @@ int DecodePict(Dec& d) {
     }
     d.Format(ver == 2 ? L"PICT 2 (bitmap)" : L"PICT 1 (bitmap)");
     if (maps.size() > 1) {
-        wchar_t v[16];
+        wchar_t v[256];
         swprintf_s(v, L"%zu", maps.size());
-        d.Info(L"Bandes bitmap", v);
+        d.Info(CYIMG_TR("plugin.classic.pict.info.bands", L"Bandes bitmap"), v);
     }
-    if (vector) d.Info(L"Dessin vectoriel", L"ignoré");
-    if (truncated) d.Info(L"Avertissement", L"fichier tronqué");
+    if (vector) d.Info(CYIMG_TR("plugin.classic.pict.info.vector", L"Dessin vectoriel"), CYIMG_TR("plugin.classic.pict.ignored", L"ignoré"));
+    if (truncated) d.Info(CYIMG_TR("plugin.classic.info.warning", L"Avertissement"), CYIMG_TR("plugin.classic.truncated", L"fichier tronqué"));
     return Emit(d, canvas, false);
 }
 

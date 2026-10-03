@@ -1,0 +1,10 @@
+# CyImgView — gpu (Nederlands)
+@code = nl
+@name = Nederlands
+plugin.gpu.err.no_compiler = d3dcompiler_47.dll niet gevonden
+plugin.gpu.err.no_warp = Direct3D 11 (WARP) niet beschikbaar
+plugin.gpu.err.shader = kan de decodeer-shader niet compileren
+plugin.gpu.err.invalid = ongeldige afmetingen of GPU-indeling
+plugin.gpu.err.short_mip = mip-gegevens te kort
+plugin.gpu.err.textures = kan geen Direct3D-texturen maken (geheugen vol?)
+plugin.gpu.err.readback = kan het resultaat niet teruglezen

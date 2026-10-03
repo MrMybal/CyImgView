@@ -1,0 +1,152 @@
+# CyImgView — interfaccia: menu di scelta rapida, canali, filtro, presentazione, Appunti, modalità modifica (Italiano)
+@code = it
+@name = Italiano
+
+# Menu di scelta rapida (clic destro): testo\tscorciatoia
+menu.copy = Copia immagine\tCtrl+C
+menu.copy_path = Copia percorso file\tCtrl+Maiusc+C
+menu.open = Apri…\tCtrl+O
+menu.save_as = Salva con nome…\tCtrl+S
+menu.edit = Modifica\tE
+menu.reveal = Mostra in Esplora file
+menu.channels = Canale visualizzato\tC
+menu.channel.rgb = RGB (tutti i colori)\tCtrl+2
+menu.channel.red = Rosso\tCtrl+3
+menu.channel.green = Verde\tCtrl+4
+menu.channel.blue = Blu\tCtrl+5
+menu.channel.alpha = Alfa (trasparenza)\tCtrl+6
+menu.filter = Filtro
+menu.filter.raw = Pixel non filtrati\tN
+menu.play = Riproduci\tSpazio
+menu.pause = Pausa\tSpazio
+menu.rotate = Ruota\tR
+menu.slideshow = Presentazione\tD
+menu.slideshow_stop = Esci dalla presentazione\tEsc
+menu.fullscreen = Schermo intero\tF
+menu.info = Informazioni\tI
+menu.settings = Impostazioni\tP
+
+# Appunti
+clip.err.read = Impossibile leggere l'immagine
+clip.loading = Caricamento dell'immagine…
+clip.none = Nessuna immagine da copiare
+clip.err.memory = Memoria insufficiente
+clip.busy = Appunti occupati, riprova
+clip.copied = Immagine copiata
+clip.failed = Copia non riuscita
+clip.path_copied = Percorso copiato
+
+# Pannello Canali
+channels.title = Canali
+channels.rgb = RGB
+channels.rgba = RGBA
+channels.letter.r = R
+channels.letter.g = G
+channels.letter.b = B
+channels.letter.a = A
+channels.desc.red = rosso
+channels.desc.green = verde
+channels.desc.blue = blu
+channels.desc.alpha = alfa
+channels.row.rgb = RGB
+channels.row.red = Rosso
+channels.row.green = Verde
+channels.row.blue = Blu
+channels.row.alpha = Alfa
+channels.hint = Caselle: combina più canali
+channels.no_alpha = Questa immagine non ha trasparenza
+channels.toast.rgb = Canali: RGB
+channels.toast.red = Canale rosso
+channels.toast.green = Canale verde
+channels.toast.blue = Canale blu
+channels.toast.alpha = Canale alfa
+channels.toast.mix = Canali: %ls
+
+# Filtro dell'immagine
+filter.auto = Automatico
+filter.raw = Pixel non filtrati
+filter.linear = Lineare
+filter.cubic = Bicubico
+filter.cubic_hq = Bicubico HQ
+filter.anisotropic = Anisotropico
+filter.toast = Filtro: %ls
+
+# Presentazione e riproduzione delle animazioni
+slide.delay = %d s
+slide.toast.delay = Presentazione: %ls per immagine
+slide.toast.start = Presentazione · %ls per immagine · Esc per uscire
+slide.err.two_images = La cartella deve contenere almeno due immagini
+slide.toast.paused = Presentazione in pausa
+slide.toast.playing = Presentazione in corso
+slide.tip.prev = Precedente (←)
+slide.tip.play = Riproduci (Spazio)
+slide.tip.pause = Pausa (Spazio)
+slide.tip.next = Successiva (→)
+slide.tip.less = Meno tempo per immagine (↓)
+slide.tip.more = Più tempo per immagine (↑)
+slide.tip.shuffle = Ordine casuale
+slide.tip.exit = Esci dalla presentazione (Esc)
+slide.anim.frame = Fotogramma %d / %d
+slide.anim.play = In riproduzione
+slide.anim.pause = In pausa
+
+# Modalità modifica: strumenti
+edit.tool.hand = Sposta vista (M, o tieni premuto Spazio)
+edit.tool.brush = Pennello (B) — clic destro: 2° colore
+edit.tool.eraser = Gomma (G)
+edit.tool.line = Linea (L) — Maiusc: angoli di 45°
+edit.tool.arrow = Freccia (A)
+edit.tool.rect = Rettangolo (R) — Maiusc: quadrato
+edit.tool.ellipse = Ellisse (O) — Maiusc: cerchio
+edit.tool.text = Testo (T)
+edit.tool.fill = Riempimento (F)
+edit.tool.picker = Contagocce (K)
+edit.tool.crop = Ritaglia (C) — Invio per applicare
+
+# Modalità modifica: barra superiore, colori, menu Ridimensiona
+edit.title = Modifica
+edit.modified = modificata
+edit.btn.done = Fine
+edit.tip.done = Esci dalla modalità modifica (E / Esc)
+edit.btn.save_as = Salva con nome
+edit.btn.save_as_dirty = Salva con nome •
+edit.tip.save_as = Salva con nome… (Ctrl+S)
+edit.tip.flip_v = Capovolgi verticalmente
+edit.tip.flip_h = Capovolgi orizzontalmente
+edit.tip.rot_right = Ruota a destra
+edit.tip.rot_left = Ruota a sinistra
+edit.tip.resize = Ridimensiona
+edit.tip.fill_on = Forme piene (clic: contorno)
+edit.tip.fill_off = Forme a contorno (clic: piene)
+edit.tip.font_size = Dimensione testo ( [ e ] )
+edit.tip.thickness = Spessore ( [ e ] )
+edit.label.font = Carattere
+edit.label.size = Dimensione
+edit.tip.undo = Annulla (Ctrl+Z)
+edit.tip.redo = Ripeti (Ctrl+Y)
+edit.tip.swap_colors = Scambia colore primario / secondario
+edit.tip.palette = Clic: colore primario — clic destro: secondario
+edit.tip.custom_color = Altri colori…
+edit.resize.percent = %d%%
+edit.resize.long_side = Lato lungo %d px
+edit.crop.apply = Ritaglia
+edit.tip.crop_apply = Applica ritaglio (Invio)
+edit.tip.crop_cancel = Annulla (Esc)
+
+# Modalità modifica: messaggi
+edit.loading = Caricamento dell'immagine…
+edit.no_image = Nessuna immagine da modificare
+edit.err.read = Impossibile leggere l'immagine
+edit.err.memory = Memoria insufficiente
+edit.err.vram = Memoria video insufficiente
+edit.err.too_big = Immagine troppo grande da modificare
+edit.ask.title = Salvare le modifiche?
+edit.ask.content = L'immagine è stata modificata. Le modifiche andranno perse se non le salvi.
+edit.ask.save = Salva con nome…
+edit.ask.discard = Non salvare
+
+# Salva con nome
+edit.save.no_image = Nessuna immagine da salvare
+edit.save.no_encoder = Nessun codificatore di immagini disponibile.
+edit.save.failed = Salvataggio non riuscito:\n%ls
+edit.save.done = Salvato: %ls

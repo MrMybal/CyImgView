@@ -1,0 +1,6 @@
+# CyImgView — textes de base (français, langue source)
+@code = fr
+@name = Français
+settings.language = Langue de l'interface
+settings.language.desc = « Automatique » suit la langue de Windows.
+settings.language.auto = Automatique (%ls)

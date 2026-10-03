@@ -1,0 +1,8 @@
+# Noms affichés des plugins (aide) et touche Ctrl
+@code = it
+@name = Italiano
+pluginname.classic = Formati classici (Netpbm, PCX, XBM/XPM, IFF, HDR, FITS, ICNS, PICT)
+pluginname.docs = Documenti grafici (Krita, OpenRaster, GIMP, Clip Studio, EPS, InDesign, CorelDRAW, Affinity)
+pluginname.dicom = DICOM (imaging medico)
+pluginname.vector = Vettoriale (SVG, PDF, EMF/WMF, DXF)
+viewer.key.ctrl = Ctrl

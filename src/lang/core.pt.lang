@@ -1,0 +1,6 @@
+# CyImgView — textos básicos (Português do Brasil)
+@code = pt
+@name = Português
+settings.language = Idioma da interface
+settings.language.desc = "Automático" segue o idioma do Windows.
+settings.language.auto = Automático (%ls)

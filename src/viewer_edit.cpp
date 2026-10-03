@@ -7,6 +7,7 @@
 
 #include "viewer.h"
 #include "viewer_util.h"
+#include "i18n.h"
 
 #include <commctrl.h>
 #include <commdlg.h>
@@ -27,33 +28,30 @@ const uint32_t kPalette[16] = {0x000000, 0x7F7F7F, 0xC3C3C3, 0xFFFFFF, 0x880015,
                                0x22B14C, 0x00A2E8, 0x3F48CC, 0xA349A4, 0xB97A57, 0xFFAEC9, 0x99D9EA, 0x7092BE};
 
 struct ResizeOption {
-    const wchar_t* label;
-    bool percent;
+    bool percent;  // libellé « 25 % » ou « Grand côté 800 px », traduit à l'affichage
     int value;
 };
 const ResizeOption kResize[] = {
-    {L"25 %", true, 25},          {L"50 %", true, 50},         {L"75 %", true, 75},
-    {L"150 %", true, 150},        {L"200 %", true, 200},       {L"Grand côté 800 px", false, 800},
-    {L"Grand côté 1280 px", false, 1280}, {L"Grand côté 1920 px", false, 1920}, {L"Grand côté 2560 px", false, 2560},
-    {L"Grand côté 3840 px", false, 3840},
+    {true, 25},    {true, 50},     {true, 75},     {true, 150},    {true, 200},
+    {false, 800},  {false, 1280},  {false, 1920},  {false, 2560},  {false, 3840},
 };
 
 struct ToolDef {
-    int tool;  // Viewer::Tool (privé : on passe par int)
-    const wchar_t* tip;
+    int tool;         // Viewer::Tool (privé : on passe par int)
+    const char* tip;  // clé de traduction (la langue peut changer en cours d'exécution)
 };
 const ToolDef kTools[] = {
-    {0, L"Déplacer la vue (M, ou Espace maintenu)"},
-    {1, L"Pinceau (B) — clic droit : 2e couleur"},
-    {2, L"Gomme (G)"},
-    {3, L"Ligne (L) — Maj : angles de 45°"},
-    {4, L"Flèche (A)"},
-    {5, L"Rectangle (R) — Maj : carré"},
-    {6, L"Ellipse (O) — Maj : cercle"},
-    {7, L"Texte (T)"},
-    {8, L"Remplissage (F)"},
-    {9, L"Pipette (K)"},
-    {10, L"Recadrer (C) — Entrée pour valider"},
+    {0, "edit.tool.hand"},
+    {1, "edit.tool.brush"},
+    {2, "edit.tool.eraser"},
+    {3, "edit.tool.line"},
+    {4, "edit.tool.arrow"},
+    {5, "edit.tool.rect"},
+    {6, "edit.tool.ellipse"},
+    {7, "edit.tool.text"},
+    {8, "edit.tool.fill"},
+    {9, "edit.tool.picker"},
+    {10, "edit.tool.crop"},
 };
 
 D2D1_RECT_F Norm(D2D1_POINT_2F a, D2D1_POINT_2F b) {
@@ -95,13 +93,13 @@ void Viewer::ReloadList() {
 void Viewer::SaveAs() {
     const FileEntry* cur = Current();
     if (!cur || (!m_cur && !m_edit.active)) {
-        ShowToast(L"Aucune image à enregistrer");
+        ShowToast(T("edit.save.no_image"));
         return;
     }
     if (m_edit.textActive) CommitText();
     if (m_saveFormats.empty()) m_saveFormats = EnumerateSaveFormats();
     if (m_saveFormats.empty()) {
-        MessageBoxW(m_hwnd, L"Aucun encodeur d'image n'est disponible.", L"CyImgView", MB_ICONERROR);
+        MessageBoxW(m_hwnd, T("edit.save.no_encoder"), L"CyImgView", MB_ICONERROR);
         return;
     }
 
@@ -111,7 +109,7 @@ void Viewer::SaveAs() {
     bool alpha = false;
     if (m_edit.active) {
         if (!ReadCanvas(px, stride)) {
-            ShowToast(L"Lecture de l'image impossible");
+            ShowToast(T("edit.err.read"));
             return;
         }
         w = m_edit.w;
@@ -122,7 +120,7 @@ void Viewer::SaveAs() {
         int rot;
         FlipRot(flip, rot);
         if (!OrientPixels(CurPixels(), m_cur->width, m_cur->height, m_cur->stride, flip, rot, px, w, h, stride)) {
-            ShowToast(L"Mémoire insuffisante");
+            ShowToast(T("edit.err.memory"));
             return;
         }
         alpha = m_cur->hasAlpha;
@@ -145,10 +143,10 @@ void Viewer::SaveAs() {
     bool ok = SaveImage(req, fmt, px.Data(), w, h, stride, alpha, err);
     SetCursor(LoadCursorW(nullptr, IDC_ARROW));
     if (!ok) {
-        MessageBoxW(m_hwnd, (L"L'enregistrement a échoué :\n" + err).c_str(), L"CyImgView", MB_ICONERROR);
+        MessageBoxW(m_hwnd, Tf("edit.save.failed", err.c_str()).c_str(), L"CyImgView", MB_ICONERROR);
         return;
     }
-    ShowToast(L"Enregistré : " + FileNameOf(req.path));
+    ShowToast(Tf("edit.save.done", FileNameOf(req.path).c_str()));
     if (m_edit.active) m_edit.dirty = false;
     ForgetFile(req.path);
     const bool overwroteCurrent = Key(req.path) == Key(cur->path);
@@ -273,7 +271,7 @@ void Viewer::Redo() {
 bool Viewer::BeginEdit() {
     if (m_edit.active) return true;
     if (!m_cur || !CreateDeviceResources()) {
-        ShowToast(m_loading ? L"Image en cours de chargement…" : L"Aucune image à modifier");
+        ShowToast(T(m_loading ? "edit.loading" : "edit.no_image"));
         return false;
     }
     bool flip;
@@ -282,16 +280,16 @@ bool Viewer::BeginEdit() {
     PixelBuffer px;
     uint32_t w, h, stride;
     if (!OrientPixels(CurPixels(), m_cur->width, m_cur->height, m_cur->stride, flip, rot, px, w, h, stride)) {
-        ShowToast(L"Mémoire insuffisante");
+        ShowToast(T("edit.err.memory"));
         return false;
     }
     if (std::max(w, h) > m_dc->GetMaximumBitmapSize()) {
-        ShowToast(L"Image trop grande pour l'édition");
+        ShowToast(T("edit.err.too_big"));
         return false;
     }
     ComPtr<ID2D1Bitmap1> canvas = NewCanvas(w, h);
     if (!canvas || FAILED(canvas->CopyFromMemory(nullptr, px.Data(), stride))) {
-        ShowToast(L"Mémoire vidéo insuffisante");
+        ShowToast(T("edit.err.vram"));
         return false;
     }
     EditState fresh;
@@ -331,14 +329,14 @@ bool Viewer::EndEdit(bool ask) {
     if (!m_edit.active) return true;
     if (m_edit.textActive) CommitText();
     if (ask && m_edit.dirty) {
-        TASKDIALOG_BUTTON buttons[] = {{100, L"Enregistrer sous…"}, {101, L"Ne pas enregistrer"}};
+        TASKDIALOG_BUTTON buttons[] = {{100, T("edit.ask.save")}, {101, T("edit.ask.discard")}};
         TASKDIALOGCONFIG tc{sizeof(tc)};
         tc.hwndParent = m_hwnd;
         tc.dwFlags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_POSITION_RELATIVE_TO_WINDOW;
         tc.pszWindowTitle = L"CyImgView";
         tc.pszMainIcon = TD_WARNING_ICON;
-        tc.pszMainInstruction = L"Enregistrer les modifications ?";
-        tc.pszContent = L"L'image a été modifiée. Les changements seront perdus si vous ne les enregistrez pas.";
+        tc.pszMainInstruction = T("edit.ask.title");
+        tc.pszContent = T("edit.ask.content");
         tc.cButtons = ARRAYSIZE(buttons);
         tc.pButtons = buttons;
         tc.dwCommonButtons = TDCBF_CANCEL_BUTTON;
@@ -577,7 +575,7 @@ void Viewer::ResizeCanvas(uint32_t w, uint32_t h) {
     if (w == m_edit.w && h == m_edit.h) return;
     ComPtr<ID2D1Bitmap1> out = NewCanvas(w, h);
     if (!out) {
-        ShowToast(L"Mémoire vidéo insuffisante");
+        ShowToast(T("edit.err.vram"));
         return;
     }
     ID2D1Bitmap1* src = m_edit.canvas.Get();
@@ -958,11 +956,11 @@ void Viewer::DrawEditOverlay(float left, float top, float z) {
             D2D1_RECT_F ok = D2D1::RectF(r.right - 196 * s, r.bottom + 8 * s, r.right - 64 * s, r.bottom + 40 * s);
             D2D1_RECT_F no = D2D1::RectF(r.right - 56 * s, r.bottom + 8 * s, r.right, r.bottom + 40 * s);
             FillRound(ok, 6 * s, kAccent, 0.95f);
-            IconLabel(ok, L"", L"Recadrer", 0x0B1A2A, 1);
+            IconLabel(ok, L"", T("edit.crop.apply"), 0x0B1A2A, 1);
             FillRound(no, 6 * s, kPanel, 0.95f);
             Text(L"", m_tfIcon.Get(), no, kWhite, 1);
-            m_editButtons.push_back({EditCmd::CropApply, 0, ok, L"Valider le recadrage (Entrée)"});
-            m_editButtons.push_back({EditCmd::CropCancel, 0, no, L"Annuler (Échap)"});
+            m_editButtons.push_back({EditCmd::CropApply, 0, ok, T("edit.tip.crop_apply")});
+            m_editButtons.push_back({EditCmd::CropCancel, 0, no, T("edit.tip.crop_cancel")});
         }
     }
 
@@ -1026,26 +1024,26 @@ void Viewer::DrawEditUi(float cw, float ch) {
     float x = cw - 10 * s;
     // Terminer
     D2D1_RECT_F done = D2D1::RectF(x - 110 * s, by, x, by + bs);
-    bool hDone = button(EditCmd::Done, 0, done, L"Quitter le mode édition (E / Échap)");
+    bool hDone = button(EditCmd::Done, 0, done, T("edit.tip.done"));
     FillRound(done, 6 * s, kAccent, hDone ? 1.0f : 0.85f);
-    IconLabel(done, L"", L"Terminer", 0x0B1A2A, 1);
+    IconLabel(done, L"", T("edit.btn.done"), 0x0B1A2A, 1);
     x = done.left - 8 * s;
     // Enregistrer sous
     D2D1_RECT_F save = D2D1::RectF(x - 150 * s, by, x, by + bs);
-    button(EditCmd::SaveAs, 0, save, L"Enregistrer sous… (Ctrl+S)");
+    button(EditCmd::SaveAs, 0, save, T("edit.tip.save_as"));
     SetColor(kWhite, 0.25f);
     m_rt->DrawRoundedRectangle(D2D1::RoundedRect(save, 6 * s, 6 * s), m_brush.Get(), 1);
-    IconLabel(save, L"", m_edit.dirty ? L"Enregistrer sous •" : L"Enregistrer sous", kWhite, 0.95f);
+    IconLabel(save, L"", T(m_edit.dirty ? "edit.btn.save_as_dirty" : "edit.btn.save_as"), kWhite, 0.95f);
     x = save.left - 14 * s;
 
     struct Ico { EditCmd cmd; const wchar_t* glyph; const wchar_t* tip; };
-    const Ico transforms[] = {{EditCmd::FlipV, L"⇅", L"Miroir vertical"},
-                              {EditCmd::FlipH, L"⇄", L"Miroir horizontal"},
-                              {EditCmd::RotR, L"", L"Pivoter à droite"},
-                              {EditCmd::RotL, L"", L"Pivoter à gauche"}};
+    const Ico transforms[] = {{EditCmd::FlipV, L"⇅", T("edit.tip.flip_v")},
+                              {EditCmd::FlipH, L"⇄", T("edit.tip.flip_h")},
+                              {EditCmd::RotR, L"", T("edit.tip.rot_right")},
+                              {EditCmd::RotL, L"", T("edit.tip.rot_left")}};
     // Redimensionner
     D2D1_RECT_F rs = D2D1::RectF(x - bs, by, x, by + bs);
-    button(EditCmd::ResizeMenu, 0, rs, L"Redimensionner", m_edit.resizeMenu);
+    button(EditCmd::ResizeMenu, 0, rs, T("edit.tip.resize"), m_edit.resizeMenu);
     Text(L"", m_tfIcon.Get(), rs, kWhite, 0.92f);
     D2D1_RECT_F resizeBtn = rs;
     x = rs.left - gap;
@@ -1065,7 +1063,7 @@ void Viewer::DrawEditUi(float cw, float ch) {
     x -= 12 * s;
     // Remplir les formes
     D2D1_RECT_F fr = D2D1::RectF(x - bs, by, x, by + bs);
-    button(EditCmd::FillToggle, 0, fr, m_edit.fill ? L"Formes pleines (cliquer : contour)" : L"Formes en contour (cliquer : pleines)", m_edit.fill);
+    button(EditCmd::FillToggle, 0, fr, T(m_edit.fill ? "edit.tip.fill_on" : "edit.tip.fill_off"), m_edit.fill);
     {
         D2D1_RECT_F sq = D2D1::RectF(fr.left + 10 * s, fr.top + 10 * s, fr.right - 10 * s, fr.bottom - 10 * s);
         SetColor(m_edit.color, 1);
@@ -1082,7 +1080,7 @@ void Viewer::DrawEditUi(float cw, float ch) {
     D2D1_RECT_F vr = D2D1::RectF(x - 54 * s, by, x, by + bs);
     Text(vb, m_tfSmall.Get(), vr, kWhite, 0.95f);
     m_sliderRect = D2D1::RectF(vr.left - 130 * s, by + 8 * s, vr.left - 8 * s, by + bs - 8 * s);
-    m_editButtons.push_back({EditCmd::Slider, 0, m_sliderRect, textTool ? L"Taille du texte ( [ et ] )" : L"Épaisseur ( [ et ] )"});
+    m_editButtons.push_back({EditCmd::Slider, 0, m_sliderRect, T(textTool ? "edit.tip.font_size" : "edit.tip.thickness")});
     float sy = (m_sliderRect.top + m_sliderRect.bottom) / 2;
     SetColor(kWhite, 0.2f);
     m_rt->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(m_sliderRect.left, sy - 2 * s, m_sliderRect.right, sy + 2 * s), 2 * s, 2 * s), m_brush.Get());
@@ -1091,22 +1089,22 @@ void Viewer::DrawEditUi(float cw, float ch) {
     m_rt->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(m_sliderRect.left, sy - 2 * s, kx, sy + 2 * s), 2 * s, 2 * s), m_brush.Get());
     m_rt->FillEllipse(D2D1::Ellipse(D2D1::Point2F(kx, sy), 7 * s, 7 * s), m_brush.Get());
     D2D1_RECT_F lbl = D2D1::RectF(m_sliderRect.left - 70 * s, by, m_sliderRect.left - 8 * s, by + bs);
-    Text(textTool ? L"Police" : L"Taille", m_tfSmall.Get(), lbl, kGrey, 1);
+    Text(T(textTool ? "edit.label.font" : "edit.label.size"), m_tfSmall.Get(), lbl, kGrey, 1);
     x = lbl.left - 14 * s;
     // Annuler / Rétablir
     D2D1_RECT_F redo = D2D1::RectF(x - bs, by, x, by + bs);
-    button(EditCmd::Redo, 0, redo, L"Rétablir (Ctrl+Y)", false, !m_edit.redo.empty());
+    button(EditCmd::Redo, 0, redo, T("edit.tip.redo"), false, !m_edit.redo.empty());
     Text(L"", m_tfIcon.Get(), redo, kWhite, m_edit.redo.empty() ? 0.3f : 0.92f);
     D2D1_RECT_F undo = D2D1::RectF(redo.left - gap - bs, by, redo.left - gap, by + bs);
-    button(EditCmd::Undo, 0, undo, L"Annuler (Ctrl+Z)", false, !m_edit.undo.empty() || m_edit.textActive);
+    button(EditCmd::Undo, 0, undo, T("edit.tip.undo"), false, !m_edit.undo.empty() || m_edit.textActive);
     Text(L"", m_tfIcon.Get(), undo, kWhite, (m_edit.undo.empty() && !m_edit.textActive) ? 0.3f : 0.92f);
     // Titre
     if (const FileEntry* cur = Current()) {
         float tr = undo.left - 16 * s;
-        Text(L"Édition", m_tfTitle.Get(), D2D1::RectF(16 * s, 7 * s, tr, 28 * s), kAccent, 1);
+        Text(T("edit.title"), m_tfTitle.Get(), D2D1::RectF(16 * s, 7 * s, tr, 28 * s), kAccent, 1);
         wchar_t dims[64];
         swprintf_s(dims, L"   ·   %u × %u", m_edit.w, m_edit.h);
-        Text(cur->name + dims + (m_edit.dirty ? L"   ·   modifiée" : L""), m_tfSub.Get(), D2D1::RectF(16 * s, 28 * s, tr, 46 * s), kGrey, 1);
+        Text(cur->name + dims + (m_edit.dirty ? L"   ·   " + std::wstring(T("edit.modified")) : std::wstring()), m_tfSub.Get(), D2D1::RectF(16 * s, 28 * s, tr, 46 * s), kGrey, 1);
     }
 
     // --- Outils (colonne de gauche) ---
@@ -1117,7 +1115,7 @@ void Viewer::DrawEditUi(float cw, float ch) {
     for (auto& td : kTools) {
         D2D1_RECT_F r = D2D1::RectF(tx, ty, tx + tb, ty + tb);
         bool active = int(m_edit.tool) == td.tool;
-        button(EditCmd::Tool, td.tool, r, td.tip, active);
+        button(EditCmd::Tool, td.tool, r, T(td.tip), active);
         DrawToolIcon(Tool(td.tool), r, active ? kAccent : kWhite, 0.95f);
         ty += tb;
     }
@@ -1139,7 +1137,7 @@ void Viewer::DrawEditUi(float cw, float ch) {
     SetColor(kWhite, 0.9f);
     m_rt->DrawRectangle(c1, m_brush.Get(), 1.5f * s);
     m_editButtons.push_back({EditCmd::SwapColors, 0, D2D1::RectF(c1.left, c1.top, c2.right, c2.bottom),
-                             L"Inverser couleur principale / secondaire"});
+                             T("edit.tip.swap_colors")});
     float sx = px + 54 * s;
     for (int i = 0; i < 16; ++i) {
         int col = i / 2, row = i % 2;
@@ -1150,10 +1148,10 @@ void Viewer::DrawEditUi(float cw, float ch) {
         bool h = hov && hov->cmd == EditCmd::Color && hov->arg == i;
         SetColor(kWhite, h ? 0.9f : 0.18f);
         m_rt->DrawRectangle(r, m_brush.Get(), h ? 2 * s : 1);
-        m_editButtons.push_back({EditCmd::Color, i, r, L"Clic : couleur principale — clic droit : secondaire"});
+        m_editButtons.push_back({EditCmd::Color, i, r, T("edit.tip.palette")});
     }
     D2D1_RECT_F plus = D2D1::RectF(sx + 8 * (sw + sg) + 4 * s, pyb - 46 * s, sx + 8 * (sw + sg) + 36 * s, pyb - 14 * s);
-    button(EditCmd::CustomColor, 0, plus, L"Autre couleur…");
+    button(EditCmd::CustomColor, 0, plus, T("edit.tip.custom_color"));
     Text(L"", m_tfIcon.Get(), plus, kWhite, 0.9f);
 
     // --- Menu Redimensionner ---
@@ -1170,8 +1168,9 @@ void Viewer::DrawEditUi(float cw, float ch) {
             button(EditCmd::ResizeOpt, i, r, nullptr);
             const ResizeOption& o = kResize[i];
             double k = o.percent ? o.value / 100.0 : double(o.value) / std::max(m_edit.w, m_edit.h);
-            wchar_t b[64];
-            swprintf_s(b, L"%ls   (%ld × %ld)", o.label, std::lround(m_edit.w * k), std::lround(m_edit.h * k));
+            const std::wstring label = o.percent ? Tf("edit.resize.percent", o.value) : Tf("edit.resize.long_side", o.value);
+            wchar_t b[128];
+            swprintf_s(b, L"%ls   (%ld × %ld)", label.c_str(), std::lround(m_edit.w * k), std::lround(m_edit.h * k));
             Text(b, m_tfSmall.Get(), D2D1::RectF(r.left + 10 * s, r.top, r.right, r.bottom), kWhite, 0.95f);
             iy += ih;
         }

@@ -124,19 +124,19 @@ int DecodeMetafile(const Call& c, const std::vector<uint8_t>& data, bool gz) {
     bool placeable = false;
     if (wmf) emf.h = WmfToEmf(data, placeable);
     else if (data.size() < 0x7FFFFFFF) emf.h = SetEnhMetaFileBits(UINT(data.size()), data.data());
-    if (!emf.h) return c.Fail(wmf ? L"Métafichier WMF invalide" : L"Métafichier EMF invalide");
+    if (!emf.h) return c.Fail(wmf ? CYIMG_TR("plugin.vector.meta.err.wmf", L"Métafichier WMF invalide") : CYIMG_TR("plugin.vector.meta.err.emf", L"Métafichier EMF invalide"));
 
     // Octets EMF (WMF converti) pour Direct2D
     std::vector<uint8_t> bytes;
     if (wmf) {
         const UINT n = GetEnhMetaFileBits(emf.h, 0, nullptr);
-        if (!n) return c.Fail(L"Conversion WMF -> EMF impossible");
+        if (!n) return c.Fail(CYIMG_TR("plugin.vector.meta.err.convert", L"Conversion WMF -> EMF impossible"));
         bytes.resize(n);
         GetEnhMetaFileBits(emf.h, n, bytes.data());
     }
     const std::vector<uint8_t>& eb = wmf ? bytes : data;
     ENHMETAHEADER hdr{};
-    if (!GetEnhMetaFileHeader(emf.h, sizeof(hdr), &hdr)) return c.Fail(L"En-tête de métafichier invalide");
+    if (!GetEnhMetaFileHeader(emf.h, sizeof(hdr), &hdr)) return c.Fail(CYIMG_TR("plugin.vector.meta.err.header", L"En-tête de métafichier invalide"));
 
     // Taille naturelle : rclFrame (0,01 mm) -> pixels 96 ppp ; sinon rclBounds (pixels du périphérique)
     double w = (hdr.rclFrame.right - hdr.rclFrame.left) * 96.0 / 2540.0;
@@ -145,13 +145,13 @@ int DecodeMetafile(const Call& c, const std::vector<uint8_t>& data, bool gz) {
         w = double(hdr.rclBounds.right - hdr.rclBounds.left + 1);
         h = double(hdr.rclBounds.bottom - hdr.rclBounds.top + 1);
     }
-    if (!(w > 0.5) || !(h > 0.5) || w > 1e6 || h > 1e6) return c.Fail(L"Dimensions du métafichier invalides");
+    if (!(w > 0.5) || !(h > 0.5) || w > 1e6 || h > 1e6) return c.Fail(CYIMG_TR("plugin.vector.meta.err.size", L"Dimensions du métafichier invalides"));
     uint32_t rw = 0, rh = 0;
     RenderSize(c, w, h, rw, rh);
     if (c.Cancelled()) return CYIMG_E_CANCELLED;
 
-    const wchar_t* fmt = wmf ? (gz ? L"WMZ (WMF compressé)" : placeable ? L"WMF (placeable)" : L"WMF")
-                             : (gz ? L"EMZ (EMF compressé)" : L"EMF");
+    const wchar_t* fmt = wmf ? (gz ? CYIMG_TR("plugin.vector.format.wmz", L"WMZ (WMF compressé)") : placeable ? L"WMF (placeable)" : L"WMF")
+                             : (gz ? CYIMG_TR("plugin.vector.format.emz", L"EMZ (EMF compressé)") : L"EMF");
     bool done = false;
     WicTarget t;
     if (t.Create(rw, rh) && t.dc) {
@@ -180,9 +180,9 @@ int DecodeMetafile(const Call& c, const std::vector<uint8_t>& data, bool gz) {
     }
     if (r != CYIMG_OK) return r;
     c.host->set_format(c.ctx, fmt);
-    c.Info(L"Taille d'origine", Fmt(L"%.1f × %.1f mm", w * 25.4 / 96, h * 25.4 / 96));
-    c.Info(L"Enregistrements", Fmt(L"%u", unsigned(hdr.nRecords)));
-    c.Info(L"Rendu", done ? L"Direct2D" : L"GDI");
+    c.Info(CYIMG_TR("plugin.vector.info.original_size", L"Taille d'origine"), Fmt(L"%.1f × %.1f mm", w * 25.4 / 96, h * 25.4 / 96));
+    c.Info(CYIMG_TR("plugin.vector.info.records", L"Enregistrements"), Fmt(L"%u", unsigned(hdr.nRecords)));
+    c.Info(CYIMG_TR("plugin.vector.info.render", L"Rendu"), done ? L"Direct2D" : L"GDI");
     return CYIMG_OK;
 }
 

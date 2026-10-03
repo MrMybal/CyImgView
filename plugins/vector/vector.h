@@ -1,7 +1,7 @@
 // Plugin CyImgView « vector » : déclarations communes aux différents formats vectoriels.
 #pragma once
 
-#include "cyimg_plugin.h"
+#include "cyimg_plugin_i18n.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN

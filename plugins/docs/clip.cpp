@@ -253,8 +253,8 @@ int DecodeClip(const Job& job, const uint8_t* f, size_t n) {
     // Repli : PNG contigu dans le fichier
     size_t off = 0, len = 0;
     if (FindLargestPng(f, n, off, len) && job.Preview(f + off, len, L"PNG") == CYIMG_OK) return CYIMG_OK;
-    return job.Fail(db ? L"Clip Studio Paint : aperçu CanvasPreview absent ou illisible"
-                       : L"Clip Studio Paint : base de données interne introuvable (fichier tronqué ?)");
+    return job.Fail(db ? CYIMG_TR("plugin.docs.clip.err.no_preview", L"Clip Studio Paint : aperçu CanvasPreview absent ou illisible")
+                       : CYIMG_TR("plugin.docs.clip.err.no_db", L"Clip Studio Paint : base de données interne introuvable (fichier tronqué ?)"));
 }
 
 }  // namespace docs

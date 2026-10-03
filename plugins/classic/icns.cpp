@@ -67,7 +67,7 @@ bool Unrle(const uint8_t* s, size_t n, size_t& pos, uint8_t* out, size_t count, 
 }  // namespace
 
 int DecodeIcns(Dec& d) {
-    if (d.n < 8 || memcmp(d.d, "icns", 4) != 0) return d.Fail(L"Fichier ICNS non reconnu");
+    if (d.n < 8 || memcmp(d.d, "icns", 4) != 0) return d.Fail(CYIMG_TR("plugin.classic.icns.err.unrecognized", L"Fichier ICNS non reconnu"));
     const size_t end = std::min<size_t>(d.n, BE32(d.d + 4));
     std::vector<Entry> list, masks;
     for (size_t pos = 8; pos + 8 <= end;) {
@@ -100,7 +100,7 @@ int DecodeIcns(Dec& d) {
         }
         list.push_back(e);
     }
-    if (list.empty()) return d.Fail(L"Aucune icône exploitable dans ce fichier ICNS");
+    if (list.empty()) return d.Fail(CYIMG_TR("plugin.classic.icns.err.no_icon", L"Aucune icône exploitable dans ce fichier ICNS"));
 
     // Ordre de préférence : JPEG 2000 en dernier ; vignette = la plus petite assez grande ; sinon la plus grande
     const uint32_t target = d.Target();
@@ -113,7 +113,7 @@ int DecodeIcns(Dec& d) {
     };
     std::stable_sort(list.begin(), list.end(), [&](const Entry& a, const Entry& b) { return score(a) > score(b); });
 
-    wchar_t fmt[64];
+    wchar_t fmt[256];
     for (const Entry& e : list) {
         if (d.Cancelled()) return CYIMG_E_CANCELLED;
         if (e.kind == Kind::Png || e.kind == Kind::Jp2) {
@@ -150,13 +150,14 @@ int DecodeIcns(Dec& d) {
                         masked = true;
                         break;
                     }
-        swprintf_s(fmt, L"ICNS (%hs%ls)", e.type, masked ? L" + masque" : L"");
+        if (masked) swprintf_s(fmt, CYIMG_TR("plugin.classic.icns.format_masked", L"ICNS (%hs + masque)"), e.type);
+        else swprintf_s(fmt, L"ICNS (%hs)", e.type);
         d.Format(fmt);
         return Emit(d, img, masked || e.kind == Kind::Argb);
     }
     const bool onlyJp2 = std::all_of(list.begin(), list.end(), [](const Entry& e) { return e.kind == Kind::Jp2; });
-    return d.Fail(onlyJp2 ? L"Icônes ICNS en JPEG 2000 : aucun décodeur JPEG 2000 n'est installé dans Windows"
-                          : L"Icônes ICNS invalides ou tronquées");
+    return d.Fail(onlyJp2 ? CYIMG_TR("plugin.classic.icns.err.jp2", L"Icônes ICNS en JPEG 2000 : aucun décodeur JPEG 2000 n'est installé dans Windows")
+                          : CYIMG_TR("plugin.classic.icns.err.invalid", L"Icônes ICNS invalides ou tronquées"));
 }
 
 }  // namespace classic

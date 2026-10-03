@@ -1,0 +1,113 @@
+# CyImgView — core2 (Nederlands)
+@code = nl
+@name = Nederlands
+
+# Updatevenster
+update.toast.no_repo = Updates: GitHub-repository niet geconfigureerd
+update.toast.checking = Controleren op updates…
+update.toast.available = Update %ls beschikbaar
+update.toast.up_to_date = CyImgView is up-to-date (%ls)
+update.err.check = Kan niet controleren op updates:\n%ls
+update.no_notes = (geen releaseopmerkingen)
+update.size_mb = %.1f MB
+update.btn.install = Installeren en opnieuw starten\nDownloadt %ls en start CyImgView opnieuw
+update.available = CyImgView %ls is beschikbaar
+update.installed_version = Geïnstalleerde versie: %ls
+update.btn.release_page = Release bekijken op GitHub
+update.btn.skip = Deze versie overslaan
+update.title = CyImgView-update
+update.notes.hide = Nieuwe functies verbergen
+update.notes.show = Nieuwe functies tonen
+update.installing = Installeren…
+update.progress = %.1f MB van %.1f MB
+update.updating_to = Bijwerken naar CyImgView %ls
+update.connecting = Verbinding maken met GitHub…
+update.err.failed = De update is mislukt:\n%ls\n\nEr zijn geen bestanden gewijzigd.
+update.done_restart = Update geïnstalleerd. Start CyImgView opnieuw om deze te gebruiken.
+
+# Opslaan als
+save.title = Afbeelding opslaan als
+save.quality = Kwaliteit (JPEG, HEIF, WebP):
+save.quality.item = %d%%
+save.quality.recommended = %d%% (aanbevolen)
+save.err.no_wic = WIC niet beschikbaar
+save.err.memory = Onvoldoende geheugen
+save.err.no_encoder = Encoder '%ls' niet beschikbaar
+save.err.cannot_write = Kan niet schrijven naar deze map
+save.err.encoding = Fout bij het coderen
+save.err.replace = Kan het bestand niet vervangen (is het elders geopend?)
+
+# Decoderen
+decoder.err.file_access = Bestand niet toegankelijk
+decoder.err.read = Kan het bestand niet lezen
+decoder.err.unreadable = Onleesbare afbeelding
+decoder.err.dimensions = Ongeldige afmetingen
+decoder.err.conversion = Conversie van indeling mislukt
+decoder.err.memory = Onvoldoende geheugen
+decoder.err.decode = Decodeerfout
+decoder.err.unknown_format = Onbekende indeling
+decoder.err.cancelled = Geannuleerd
+decoder.err.plugin_failed = De plug-in '%ls' kon dit bestand niet decoderen
+decoder.err.no_wic = WIC niet beschikbaar
+decoder.format.image = Afbeelding
+decoder.format.animated_gif = Geanimeerde GIF
+decoder.info.camera = Camera
+decoder.info.lens = Objectief
+decoder.info.exposure = Belichting
+decoder.info.aperture = Diafragma
+decoder.info.focal = Brandpuntsafstand
+decoder.info.date_taken = Opnamedatum
+
+# Updates downloaden en installeren
+updater.err.bad_url = ongeldig adres
+updater.err.no_winhttp = WinHTTP niet beschikbaar
+updater.err.connect = verbinding mislukt
+updater.err.no_github = kan geen verbinding maken met GitHub
+updater.err.no_release = geen gepubliceerde release (HTTP 404)
+updater.err.http = HTTP-antwoord %lu
+updater.err.interrupted = download onderbroken
+updater.err.cancelled = geannuleerd
+updater.err.bad_archive = ongeldig updatearchief
+updater.err.suspicious = verdacht archief (pad buiten de map)
+updater.err.no_repo = updaterepository niet geconfigureerd
+updater.err.bad_response = onleesbaar antwoord van GitHub
+updater.err.no_version = release zonder versienummer
+updater.err.no_zip = release %ls bevat geen .zip-archief
+updater.err.bad_download_url = onverwacht downloadadres
+updater.err.temp_file = kan het tijdelijke bestand niet maken
+updater.err.disk_full = schrijven mislukt (schijf vol?)
+updater.err.incomplete = onvolledige download
+updater.err.checksum = SHA-256-controlesom komt niet overeen: bestand beschadigd of gewijzigd
+updater.err.unreadable = onleesbaar archief
+updater.err.no_exe = het archief bevat geen CyImgView.exe
+updater.err.read_only = de toepassingsmap is niet beschrijfbaar (%ls)
+updater.err.write = schrijven mislukt: %ls
+updater.err.replace = vervangen mislukt: %ls
+
+# Installatie / verwijderen
+setup.shortcut.desc = Snelle afbeeldingsviewer
+setup.progid.name = Afbeelding (CyImgView)
+setup.app.desc = Snelle afbeeldingsviewer (foto's, RAW, Unreal-texturen)
+setup.err.read_installer = kan het installatieprogramma niet lezen
+setup.err.incomplete = onvolledig installatieprogramma (archief ontbreekt)
+setup.err.temp_write = kan het tijdelijke bestand niet schrijven
+setup.err.uninstaller = kan het verwijderprogramma niet maken
+setup.install.title = CyImgView %ls installeren
+setup.install.content = Map: %ls\n\nGeen beheerdersrechten vereist.
+setup.install.installed_version = Geïnstalleerde versie: %ls
+setup.install.install = Installeren
+setup.install.update = Bijwerken
+setup.install.details = Snelkoppeling in het menu Start, 'Openen met' voor afbeeldingen, RAW-foto's en Unreal-texturen
+setup.install.desktop = Snelkoppeling op het bureaublad maken
+setup.install.failed = Installatie mislukt
+setup.done.title = CyImgView is geïnstalleerd
+setup.done.content = U vindt het in het menu Start. Updates worden automatisch geïnstalleerd.
+setup.done.launch = CyImgView starten
+setup.done.default = CyImgView instellen als standaardviewer voor afbeeldingen\nOpent de Windows-instellingen 'Standaard-apps'
+setup.uninstall.title = CyImgView verwijderen?
+setup.uninstall.content = Het programma en de snelkoppelingen worden verwijderd uit %ls.
+setup.uninstall.btn = Verwijderen
+setup.uninstall.remove_settings = Ook mijn instellingen verwijderen
+setup.uninstall.done = CyImgView is verwijderd.
+setup.uninstall.partial = CyImgView is verwijderd, maar sommige bestanden konden niet worden verwijderd:\n%ls
+decoder.err.plugin_crashed = De plug-in '%ls' is vastgelopen op dit bestand (%ls)

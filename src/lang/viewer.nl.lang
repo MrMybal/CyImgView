@@ -1,0 +1,130 @@
+# CyImgView — viewer (Nederlands)
+@code = nl
+@name = Nederlands
+
+# Getallen en eenheden
+viewer.decimal = ,
+viewer.unit.bytes = %llu B
+viewer.unit.kb = %.1f KB
+viewer.unit.mb = %.1f MB
+viewer.unit.gb = %.2f GB
+viewer.zoom.pct1 = %.1f%%
+viewer.zoom.pct0 = %.0f%%
+
+# Fouten, gecentreerde berichten, meldingen
+viewer.err.direct2d = Direct2D is niet beschikbaar.
+viewer.msg.open_failed = Kan dit bestand niet openen
+viewer.msg.drop = Sleep een afbeelding hierheen
+viewer.msg.drop_sub = of druk op Ctrl+O om een bestand te openen
+viewer.toast.device_lost = Grafisch stuurprogramma opnieuw ingesteld: wijzigingen verloren
+viewer.toast.fit = Passend
+viewer.toast.not_found = Bestand niet gevonden
+viewer.toast.no_images = Geen afbeeldingen in deze map
+viewer.toast.first = Eerste afbeelding
+viewer.toast.last = Laatste afbeelding
+viewer.toast.shuffle_on = Willekeurige volgorde
+viewer.toast.shuffle_off = Mapvolgorde
+
+# Dialoogvenster 'Openen'
+viewer.dlg.images = Afbeeldingen
+viewer.dlg.all_files = Alle bestanden
+viewer.dlg.open_title = Een afbeelding openen
+
+# Knopinfo van de werkbalk
+viewer.btn.open = Openen (Ctrl+O)
+viewer.btn.save_as = Opslaan als / converteren (Ctrl+S)
+viewer.btn.edit = Bewerken (E)
+viewer.btn.zoom_out = Uitzoomen (-)
+viewer.btn.zoom_in = Inzoomen (+)
+viewer.btn.fit = Aanpassen aan venster (0)
+viewer.btn.actual = Werkelijke grootte (1)
+viewer.btn.rotate = Draaien (R)
+viewer.btn.channels = Kanalen: tonen of combineren (C)
+viewer.btn.strip = Filmstrip (T)
+viewer.btn.info = Informatie (I)
+viewer.btn.help = Sneltoetsen (H)
+viewer.btn.slideshow = Diavoorstelling op volledig scherm (D)
+viewer.btn.settings = Instellingen (P)
+viewer.btn.fullscreen = Volledig scherm (F)
+viewer.btn.update = Nieuwe versie beschikbaar (Ctrl+U)
+viewer.update.badge = Update %ls
+
+# Statusregel
+viewer.status.raw = RAW ontwikkelen…
+viewer.status.frame = frame %d/%d
+viewer.status.paused = (gepauzeerd)
+viewer.status.channels = kanalen %ls
+
+# Deelvenster Informatie
+viewer.info.title = Informatie
+viewer.info.file = Bestand
+viewer.info.folder = Map
+viewer.info.size = Grootte
+viewer.info.modified = Gewijzigd
+viewer.info.dimensions = Afmetingen
+viewer.info.dims = %d × %d  (%.1f MP)
+viewer.info.format = Indeling
+viewer.info.decode = Decodering
+
+# Deelvenster Sneltoetsen (k = toets, d = beschrijving)
+viewer.help.title = Sneltoetsen
+viewer.help.plugins = Geladen plug-ins (%d)
+viewer.help.no_plugins = Geen (map 'plugins' is leeg)
+viewer.help.k.nav = ← → / Spatiebalk / Backspace
+viewer.help.d.nav = Vorige / volgende afbeelding
+viewer.help.d.filter = Ruwe pixels / filtering (kies het filter in Instellingen)
+viewer.help.d.slideshow = Diavoorstelling op volledig scherm (↑ ↓: tijd per afbeelding, Spatiebalk: pauze)
+viewer.help.k.copy = Ctrl+C / rechtsklikken
+viewer.help.d.copy = Afbeelding kopiëren (Ctrl+Shift+C: het pad)
+viewer.help.k.channels = Knop RGB / C / Ctrl+2…6
+viewer.help.d.channels = Kanalen: één kanaal (rood, groen, blauw, alfa)
+viewer.help.k.anim = Spatiebalk / , / .
+viewer.help.d.anim = Animatie: afspelen-pauzeren / vorig-volgend frame
+viewer.help.k.home_end = Home / End
+viewer.help.d.home_end = Eerste / laatste afbeelding
+viewer.help.k.zoom = Muiswiel / + / -
+viewer.help.d.zoom = Zoomen (gecentreerd op de muis)
+viewer.help.k.drag = Slepen
+viewer.help.d.drag = Ingezoomde afbeelding verschuiven
+viewer.help.k.dblclick = Dubbelklikken / Z
+viewer.help.d.dblclick = Wisselen passend ↔ werkelijke grootte
+viewer.help.d.fit = Aanpassen aan venster / 100%
+viewer.help.k.rotate = R / Shift+R
+viewer.help.d.rotate = Rechtsom / linksom draaien
+viewer.help.k.fullscreen = F / F11 / Enter
+viewer.help.d.fullscreen = Volledig scherm
+viewer.help.d.strip = Filmstrip tonen / verbergen
+viewer.help.d.info = Deelvenster Informatie
+viewer.help.d.open = Een bestand openen (of slepen en neerzetten)
+viewer.help.d.save_as = Opslaan als / indeling converteren
+viewer.help.d.update = Controleren op updates
+viewer.help.d.settings = Instellingen (één venster, filmstrip, updates)
+viewer.help.d.edit = Bewerkingsmodus (penseel, vormen, tekst, bijsnijden…)
+viewer.help.d.reload = Map opnieuw laden
+viewer.help.k.mouse_side = Zijknoppen van de muis
+viewer.help.d.mouse_side = Vorige / volgende afbeelding
+viewer.help.k.esc = Esc
+viewer.help.d.esc = Deelvenster sluiten / afsluiten
+
+# Deelvenster Instellingen (de sleutels settings.language* staan in core.*.lang)
+settings.title = Instellingen
+settings.single_window = Bestanden openen in het bestaande venster
+settings.single_window.desc = Anders opent elk bestand een nieuw venster.
+settings.strip = Filmstrip tonen
+settings.strip.desc = Miniaturen van de afbeeldingen in de map onderaan (toets T).
+settings.auto_update = Automatisch controleren op updates
+settings.auto_update.desc = Hooguit eenmaal per dag, via de GitHub-releases van CyImgView.
+settings.shuffle = Diavoorstelling: willekeurige volgorde
+settings.shuffle.desc = Anders worden de afbeeldingen in mapvolgorde getoond (toets D).
+settings.filter = Afbeeldingsfiltering
+settings.filter.desc.auto = Scherp op 100%, vloeiend bij verkleinen, scherpe pixels boven 300%.
+settings.filter.desc.raw = Geen afvlakking: pixelart, inspectie (toets N).
+settings.filter.desc.linear = Eenvoudige, snelle afvlakking.
+settings.filter.desc.cubic = Bicubisch: scherper dan lineair.
+settings.filter.desc.cubic_hq = Beste verkleining, iets trager.
+settings.filter.desc.anisotropic = Zachte verkleining, minder kartelranden.
+settings.slide_delay = Diavoorstelling: tijd per afbeelding
+settings.slide_delay.desc = Ook tijdens de diavoorstelling aan te passen met ↑ en ↓.
+settings.update.install = Update %ls installeren
+settings.update.check = Controleren op updates
+settings.ini_path = instellingen: %ls

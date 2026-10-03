@@ -42,17 +42,19 @@ std::wstring FourCC(const uint8_t* p) {
 }  // namespace
 
 int DecodeIff(Dec& d) {
-    if (d.n < 12) return d.Fail(L"Fichier IFF tronqué");
+    if (d.n < 12) return d.Fail(CYIMG_TR("plugin.classic.iff.err.truncated", L"Fichier IFF tronqué"));
     const uint8_t* f = d.d;
     if (memcmp(f, "FORM", 4) != 0) {
         if (memcmp(f, "FOR4", 4) == 0 || memcmp(f, "FOR8", 4) == 0)
-            return d.Fail(L"Fichier IFF Maya (FOR4/FOR8) : non pris en charge, seules les images ILBM/PBM le sont");
-        return d.Fail(L"Conteneur IFF non pris en charge (seules les images FORM ILBM/PBM le sont)");
+            return d.Fail(CYIMG_TR("plugin.classic.iff.err.maya", L"Fichier IFF Maya (FOR4/FOR8) : non pris en charge, seules les images ILBM/PBM le sont"));
+        return d.Fail(CYIMG_TR("plugin.classic.iff.err.container", L"Conteneur IFF non pris en charge (seules les images FORM ILBM/PBM le sont)"));
     }
     const bool pbm = memcmp(f + 8, "PBM ", 4) == 0;
     if (!pbm && memcmp(f + 8, "ILBM", 4) != 0) {
-        std::wstring msg = L"Ce fichier IFF n'est pas une image ILBM/PBM (type « " + FourCC(f + 8) + L" »)";
-        return d.Fail(msg.c_str());
+        wchar_t msg[256];
+        swprintf_s(msg, CYIMG_TR("plugin.classic.iff.err.not_image", L"Ce fichier IFF n'est pas une image ILBM/PBM (type « %ls »)"),
+                   FourCC(f + 8).c_str());
+        return d.Fail(msg);
     }
     const size_t end = std::min<size_t>(d.n, size_t(BE32(f + 4)) + 8);
 
@@ -76,15 +78,15 @@ int DecodeIff(Dec& d) {
         if (len > end - pos - 8) break;
         pos += 8 + len + (len & 1);
     }
-    if (!bmhd) return d.Fail(L"Fichier IFF : en-tête BMHD absent");
-    if (!bodyPos) return d.Fail(L"Fichier IFF : données BODY absentes (fichier tronqué ?)");
+    if (!bmhd) return d.Fail(CYIMG_TR("plugin.classic.iff.err.no_bmhd", L"Fichier IFF : en-tête BMHD absent"));
+    if (!bodyPos) return d.Fail(CYIMG_TR("plugin.classic.iff.err.no_body", L"Fichier IFF : données BODY absentes (fichier tronqué ?)"));
     const uint32_t w = BE16(bmhd), h = BE16(bmhd + 2);
     const uint32_t planes = bmhd[8], masking = bmhd[9], comp = bmhd[10];
     const uint32_t transColor = BE16(bmhd + 12);
-    if (!SizeOk(w, h)) return d.Fail(L"Dimensions IFF invalides");
-    if (comp > 1) return d.Fail(L"Compression IFF non gérée (seul ByteRun1 l'est)");
+    if (!SizeOk(w, h)) return d.Fail(CYIMG_TR("plugin.classic.iff.err.dimensions", L"Dimensions IFF invalides"));
+    if (comp > 1) return d.Fail(CYIMG_TR("plugin.classic.iff.err.compression", L"Compression IFF non gérée (seul ByteRun1 l'est)"));
     if (pbm ? planes != 8 : (planes < 1 || (planes > 8 && planes != 24 && planes != 32)))
-        return d.Fail(L"Nombre de plans IFF non géré");
+        return d.Fail(CYIMG_TR("plugin.classic.iff.err.planes", L"Nombre de plans IFF non géré"));
 
     // Palette (CMAP) : les fichiers OCS stockent 4 bits par composante dans le quartet haut
     uint8_t pal[256][3] = {};
@@ -117,9 +119,9 @@ int DecodeIff(Dec& d) {
     const bool alpha = masking == 1 || masking == 2 || planes == 32;
     for (uint32_t y = 0; y < h; ++y) {
         if (comp == 1) {
-            if (!ByteRun1(body, bodyLen, bpos, line.data(), lineBytes)) return d.Fail(L"Fichier IFF tronqué");
+            if (!ByteRun1(body, bodyLen, bpos, line.data(), lineBytes)) return d.Fail(CYIMG_TR("plugin.classic.iff.err.truncated", L"Fichier IFF tronqué"));
         } else {
-            if (bpos + lineBytes > bodyLen) return d.Fail(L"Fichier IFF tronqué");
+            if (bpos + lineBytes > bodyLen) return d.Fail(CYIMG_TR("plugin.classic.iff.err.truncated", L"Fichier IFF tronqué"));
             memcpy(line.data(), body + bpos, lineBytes);
             bpos += lineBytes;
         }
@@ -157,15 +159,15 @@ int DecodeIff(Dec& d) {
         if ((y & 63) == 0 && d.Cancelled()) return CYIMG_E_CANCELLED;
     }
 
-    wchar_t fmt[80];
-    if (pbm) swprintf_s(fmt, L"IFF PBM (Deluxe Paint), 256 couleurs");
+    wchar_t fmt[256];
+    if (pbm) wcscpy_s(fmt, CYIMG_TR("plugin.classic.iff.format_pbm", L"IFF PBM (Deluxe Paint), 256 couleurs"));
     else if (ham) swprintf_s(fmt, L"IFF ILBM HAM%u", planes);
-    else if (ehb) swprintf_s(fmt, L"IFF ILBM EHB (64 couleurs)");
-    else if (planes >= 24) swprintf_s(fmt, L"IFF ILBM %u bits", planes);
-    else swprintf_s(fmt, L"IFF ILBM %u couleurs", 1u << planes);
+    else if (ehb) wcscpy_s(fmt, CYIMG_TR("plugin.classic.iff.format_ehb", L"IFF ILBM EHB (64 couleurs)"));
+    else if (planes >= 24) swprintf_s(fmt, CYIMG_TR("plugin.classic.iff.format_bits", L"IFF ILBM %u bits"), planes);
+    else swprintf_s(fmt, CYIMG_TR("plugin.classic.iff.format_colors", L"IFF ILBM %u couleurs"), 1u << planes);
     d.Format(fmt);
-    if (masking == 1) d.Info(L"Masque", L"plan de masque");
-    else if (masking == 2) d.Info(L"Masque", L"couleur transparente");
+    if (masking == 1) d.Info(CYIMG_TR("plugin.classic.iff.info.mask", L"Masque"), CYIMG_TR("plugin.classic.iff.mask_plane", L"plan de masque"));
+    else if (masking == 2) d.Info(CYIMG_TR("plugin.classic.iff.info.mask", L"Masque"), CYIMG_TR("plugin.classic.iff.mask_color", L"couleur transparente"));
     return Emit(d, img, alpha);
 }
 

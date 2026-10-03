@@ -1,0 +1,130 @@
+# CyImgView — visionneuse : barre d'outils, ligne d'état, panneaux Informations / Raccourcis / Paramètres
+@code = fr
+@name = Français
+
+# Nombres et unités
+viewer.decimal = ,
+viewer.unit.bytes = %llu o
+viewer.unit.kb = %.1f Ko
+viewer.unit.mb = %.1f Mo
+viewer.unit.gb = %.2f Go
+viewer.zoom.pct1 = %.1f %%
+viewer.zoom.pct0 = %.0f %%
+
+# Erreurs, messages centrés, toasts
+viewer.err.direct2d = Direct2D est indisponible.
+viewer.msg.open_failed = Impossible d'ouvrir ce fichier
+viewer.msg.drop = Glissez une image ici
+viewer.msg.drop_sub = ou appuyez sur Ctrl+O pour ouvrir un fichier
+viewer.toast.device_lost = Pilote graphique réinitialisé : modifications perdues
+viewer.toast.fit = Ajusté
+viewer.toast.not_found = Fichier introuvable
+viewer.toast.no_images = Aucune image dans ce dossier
+viewer.toast.first = Première image
+viewer.toast.last = Dernière image
+viewer.toast.shuffle_on = Ordre aléatoire
+viewer.toast.shuffle_off = Ordre du dossier
+
+# Boîte de dialogue « Ouvrir »
+viewer.dlg.images = Images
+viewer.dlg.all_files = Tous les fichiers
+viewer.dlg.open_title = Ouvrir une image
+
+# Info-bulles de la barre d'outils
+viewer.btn.open = Ouvrir (Ctrl+O)
+viewer.btn.save_as = Enregistrer sous / convertir (Ctrl+S)
+viewer.btn.edit = Modifier (E)
+viewer.btn.zoom_out = Zoom arrière (-)
+viewer.btn.zoom_in = Zoom avant (+)
+viewer.btn.fit = Ajuster à la fenêtre (0)
+viewer.btn.actual = Taille réelle (1)
+viewer.btn.rotate = Pivoter (R)
+viewer.btn.channels = Couches : afficher ou combiner les canaux (C)
+viewer.btn.strip = Pellicule (T)
+viewer.btn.info = Informations (I)
+viewer.btn.help = Raccourcis (H)
+viewer.btn.slideshow = Diaporama plein écran (D)
+viewer.btn.settings = Paramètres (P)
+viewer.btn.fullscreen = Plein écran (F)
+viewer.btn.update = Nouvelle version disponible (Ctrl+U)
+viewer.update.badge = Mise à jour %ls
+
+# Ligne d'état
+viewer.status.raw = développement RAW…
+viewer.status.frame = image %d/%d
+viewer.status.paused = (pause)
+viewer.status.channels = canaux %ls
+
+# Panneau Informations
+viewer.info.title = Informations
+viewer.info.file = Fichier
+viewer.info.folder = Dossier
+viewer.info.size = Taille
+viewer.info.modified = Modifié
+viewer.info.dimensions = Dimensions
+viewer.info.dims = %d × %d  (%.1f Mpx)
+viewer.info.format = Format
+viewer.info.decode = Décodage
+
+# Panneau Raccourcis (k = touche, d = description)
+viewer.help.title = Raccourcis
+viewer.help.plugins = Plugins chargés (%d)
+viewer.help.no_plugins = Aucun (dossier « plugins » vide)
+viewer.help.k.nav = ← → / Espace / Retour
+viewer.help.d.nav = Image précédente / suivante
+viewer.help.d.filter = Pixels bruts / filtrage (choix du filtrage dans les paramètres)
+viewer.help.d.slideshow = Diaporama plein écran (↑ ↓ : durée par image, Espace : pause)
+viewer.help.k.copy = Ctrl+C / clic droit
+viewer.help.d.copy = Copier l'image (Ctrl+Maj+C : le chemin)
+viewer.help.k.channels = Bouton RVB / C / Ctrl+2…6
+viewer.help.d.channels = Couches : canal seul (rouge, vert, bleu, alpha)
+viewer.help.k.anim = Espace / , / .
+viewer.help.d.anim = Animation : lecture-pause / image précédente-suivante
+viewer.help.k.home_end = Début / Fin
+viewer.help.d.home_end = Première / dernière image
+viewer.help.k.zoom = Molette / + / -
+viewer.help.d.zoom = Zoom (centré sur la souris)
+viewer.help.k.drag = Glisser
+viewer.help.d.drag = Déplacer l'image zoomée
+viewer.help.k.dblclick = Double-clic / Z
+viewer.help.d.dblclick = Basculer ajusté ↔ taille réelle
+viewer.help.d.fit = Ajuster à la fenêtre / 100 %
+viewer.help.k.rotate = R / Maj+R
+viewer.help.d.rotate = Pivoter à droite / à gauche
+viewer.help.k.fullscreen = F / F11 / Entrée
+viewer.help.d.fullscreen = Plein écran
+viewer.help.d.strip = Afficher / masquer la pellicule
+viewer.help.d.info = Panneau d'informations
+viewer.help.d.open = Ouvrir un fichier (ou glisser-déposer)
+viewer.help.d.save_as = Enregistrer sous / convertir le format
+viewer.help.d.update = Rechercher une mise à jour
+viewer.help.d.settings = Paramètres (fenêtre unique, pellicule, mises à jour)
+viewer.help.d.edit = Mode édition (pinceau, formes, texte, recadrage…)
+viewer.help.d.reload = Recharger le dossier
+viewer.help.k.mouse_side = Boutons latéraux souris
+viewer.help.d.mouse_side = Image précédente / suivante
+viewer.help.k.esc = Échap
+viewer.help.d.esc = Fermer le panneau / quitter
+
+# Panneau Paramètres (les clés settings.language* sont dans core.*.lang)
+settings.title = Paramètres
+settings.single_window = Ouvrir les fichiers dans la fenêtre existante
+settings.single_window.desc = Sinon, chaque fichier ouvert crée une nouvelle fenêtre.
+settings.strip = Afficher la pellicule
+settings.strip.desc = Vignettes des images du dossier en bas de l'écran (touche T).
+settings.auto_update = Rechercher les mises à jour automatiquement
+settings.auto_update.desc = Au plus une fois par jour, sur les releases GitHub de CyImgView.
+settings.shuffle = Diaporama : ordre aléatoire
+settings.shuffle.desc = Sinon, les images défilent dans l'ordre du dossier (touche D).
+settings.filter = Filtrage de l'image
+settings.filter.desc.auto = Net à 100 %, lissé en réduction, pixels nets au-delà de 300 %.
+settings.filter.desc.raw = Aucun lissage : pixel art, inspection (touche N).
+settings.filter.desc.linear = Lissage simple et rapide.
+settings.filter.desc.cubic = Bicubique : plus net que linéaire.
+settings.filter.desc.cubic_hq = Meilleure réduction, un peu plus lent.
+settings.filter.desc.anisotropic = Réduction douce, moins de crénelage.
+settings.slide_delay = Diaporama : durée par image
+settings.slide_delay.desc = Aussi réglable pendant le diaporama avec ↑ et ↓.
+settings.update.install = Installer la mise à jour %ls
+settings.update.check = Rechercher une mise à jour
+settings.ini_path = réglages : %ls

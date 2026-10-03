@@ -1,0 +1,6 @@
+# CyImgView — core strings (English)
+@code = en
+@name = English
+settings.language = Interface language
+settings.language.desc = "Automatic" follows the Windows language.
+settings.language.auto = Automatic (%ls)

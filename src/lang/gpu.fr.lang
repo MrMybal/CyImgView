@@ -1,0 +1,10 @@
+# Décodage des textures GPU (BC1 à BC7), partagé par les plugins uasset et dds
+@code = fr
+@name = Français
+plugin.gpu.err.no_compiler = d3dcompiler_47.dll introuvable
+plugin.gpu.err.no_warp = Direct3D 11 (WARP) indisponible
+plugin.gpu.err.shader = compilation du shader de décodage impossible
+plugin.gpu.err.invalid = dimensions ou format GPU invalides
+plugin.gpu.err.short_mip = données de mip trop courtes
+plugin.gpu.err.textures = création des textures Direct3D impossible (mémoire ?)
+plugin.gpu.err.readback = lecture du résultat impossible

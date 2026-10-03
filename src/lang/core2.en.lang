@@ -1,0 +1,113 @@
+# CyImgView — updates, saving, decoding, installer (English)
+@code = en
+@name = English
+
+# Update window
+update.toast.no_repo = Updates: GitHub repository not configured
+update.toast.checking = Checking for updates…
+update.toast.available = Update %ls available
+update.toast.up_to_date = CyImgView is up to date (%ls)
+update.err.check = Unable to check for updates:\n%ls
+update.no_notes = (no release notes)
+update.size_mb = %.1f MB
+update.btn.install = Install and restart\nDownloads %ls, then restarts CyImgView
+update.available = CyImgView %ls is available
+update.installed_version = Installed version: %ls
+update.btn.release_page = View the release on GitHub
+update.btn.skip = Skip this version
+update.title = CyImgView Update
+update.notes.hide = Hide what's new
+update.notes.show = Show what's new
+update.installing = Installing…
+update.progress = %.1f MB of %.1f MB
+update.updating_to = Updating to CyImgView %ls
+update.connecting = Connecting to GitHub…
+update.err.failed = The update failed:\n%ls\n\nNo files were changed.
+update.done_restart = Update installed. Restart CyImgView to use it.
+
+# Save as
+save.title = Save Image As
+save.quality = Quality (JPEG, HEIF, WebP):
+save.quality.item = %d%%
+save.quality.recommended = %d%% (recommended)
+save.err.no_wic = WIC unavailable
+save.err.memory = Out of memory
+save.err.no_encoder = “%ls” encoder unavailable
+save.err.cannot_write = Cannot write to this folder
+save.err.encoding = Error while encoding
+save.err.replace = Cannot replace the file (is it open elsewhere?)
+
+# Decoding
+decoder.err.file_access = File not accessible
+decoder.err.read = Unable to read the file
+decoder.err.unreadable = Unreadable image
+decoder.err.dimensions = Invalid dimensions
+decoder.err.conversion = Format conversion failed
+decoder.err.memory = Out of memory
+decoder.err.decode = Decoding error
+decoder.err.unknown_format = Unrecognized format
+decoder.err.cancelled = Cancelled
+decoder.err.plugin_failed = The “%ls” plugin could not decode this file
+decoder.err.no_wic = WIC unavailable
+decoder.format.image = Image
+decoder.format.animated_gif = Animated GIF
+decoder.info.camera = Camera
+decoder.info.lens = Lens
+decoder.info.exposure = Exposure
+decoder.info.aperture = Aperture
+decoder.info.focal = Focal length
+decoder.info.date_taken = Date taken
+
+# Downloading and installing updates
+updater.err.bad_url = invalid address
+updater.err.no_winhttp = WinHTTP unavailable
+updater.err.connect = connection failed
+updater.err.no_github = cannot connect to GitHub
+updater.err.no_release = no published release (HTTP 404)
+updater.err.http = HTTP response %lu
+updater.err.interrupted = download interrupted
+updater.err.cancelled = cancelled
+updater.err.bad_archive = invalid update archive
+updater.err.suspicious = suspicious archive (path outside the folder)
+updater.err.no_repo = update repository not configured
+updater.err.bad_response = unreadable response from GitHub
+updater.err.no_version = release has no version number
+updater.err.no_zip = release %ls has no .zip archive
+updater.err.bad_download_url = unexpected download address
+updater.err.temp_file = cannot create the temporary file
+updater.err.disk_full = write failed (disk full?)
+updater.err.incomplete = incomplete download
+updater.err.checksum = SHA-256 checksum mismatch: file corrupted or modified
+updater.err.unreadable = unreadable archive
+updater.err.no_exe = the archive does not contain CyImgView.exe
+updater.err.read_only = the application folder is not writable (%ls)
+updater.err.write = write failed: %ls
+updater.err.replace = replace failed: %ls
+
+# Installer / uninstaller
+setup.shortcut.desc = Fast image viewer
+setup.progid.name = Image (CyImgView)
+setup.app.desc = Fast image viewer (photos, RAW, Unreal textures)
+setup.err.read_installer = cannot read the installer
+setup.err.incomplete = incomplete installer (archive missing)
+setup.err.temp_write = cannot write the temporary file
+setup.err.uninstaller = cannot create the uninstaller
+setup.install.title = Install CyImgView %ls
+setup.install.content = Folder: %ls\n\nNo administrator rights required.
+setup.install.installed_version = Installed version: %ls
+setup.install.install = Install
+setup.install.update = Update
+setup.install.details = Start menu shortcut, “Open with” for images, RAW photos and Unreal textures
+setup.install.desktop = Create a desktop shortcut
+setup.install.failed = Installation failed
+setup.done.title = CyImgView is installed
+setup.done.content = You'll find it in the Start menu. Updates will be installed automatically.
+setup.done.launch = Launch CyImgView
+setup.done.default = Make CyImgView the default image viewer\nOpens the Windows “Default apps” settings
+setup.uninstall.title = Uninstall CyImgView?
+setup.uninstall.content = The program and its shortcuts will be removed from %ls.
+setup.uninstall.btn = Uninstall
+setup.uninstall.remove_settings = Also delete my settings
+setup.uninstall.done = CyImgView has been uninstalled.
+setup.uninstall.partial = CyImgView has been uninstalled, but some files could not be deleted:\n%ls
+decoder.err.plugin_crashed = The "%ls" plugin crashed on this file (%ls)

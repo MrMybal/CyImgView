@@ -1,0 +1,10 @@
+# GPU texture decoding (BC1 to BC7), shared by the uasset and dds plugins
+@code = en
+@name = English
+plugin.gpu.err.no_compiler = d3dcompiler_47.dll not found
+plugin.gpu.err.no_warp = Direct3D 11 (WARP) unavailable
+plugin.gpu.err.shader = could not compile the decoding shader
+plugin.gpu.err.invalid = invalid dimensions or GPU format
+plugin.gpu.err.short_mip = mip data too short
+plugin.gpu.err.textures = could not create Direct3D textures (out of memory?)
+plugin.gpu.err.readback = could not read back the result

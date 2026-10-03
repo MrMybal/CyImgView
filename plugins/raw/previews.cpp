@@ -6,6 +6,8 @@
 
 #include "rawfile.h"
 
+#include "cyimg_plugin_i18n.h"
+
 #include <cstdio>
 #include <cstring>
 
@@ -192,27 +194,27 @@ void AddExif(const Tiff& t0, const std::vector<Entry>& ifd0, const Tiff& te, con
     if (auto e = Find(ifd0, 0x0110)) model = t0.Ascii(*e);
     if (!model.empty()) {
         std::wstring brand = make.substr(0, make.find(L' '));
-        add(L"Appareil", (!brand.empty() && model.find(brand) == std::wstring::npos) ? make + L" " + model : model);
+        add(CYIMG_TR("plugin.raw.info.camera", L"Appareil"), (!brand.empty() && model.find(brand) == std::wstring::npos) ? make + L" " + model : model);
     }
-    if (auto e = Find(exif, 0xA434)) add(L"Objectif", te.Ascii(*e));
+    if (auto e = Find(exif, 0xA434)) add(CYIMG_TR("plugin.raw.info.lens", L"Objectif"), te.Ascii(*e));
     double v;
     if (auto e = Find(exif, 0x829A); e && te.Rational(*e, v) && v > 0) {
         if (v < 0.5) swprintf_s(buf, L"1/%.0f s", 1.0 / v);
         else swprintf_s(buf, L"%.1f s", v);
-        add(L"Exposition", buf);
+        add(CYIMG_TR("plugin.raw.info.exposure", L"Exposition"), buf);
     }
     if (auto e = Find(exif, 0x829D); e && te.Rational(*e, v) && v > 0) {
         swprintf_s(buf, L"f/%.1f", v);
-        add(L"Ouverture", buf);
+        add(CYIMG_TR("plugin.raw.info.aperture", L"Ouverture"), buf);
     }
     if (auto e = Find(exif, 0x8827)) {
         if (uint32_t iso = te.Scalar(*e)) add(L"ISO", std::to_wstring(iso));
     }
     if (auto e = Find(exif, 0x920A); e && te.Rational(*e, v) && v > 0) {
         swprintf_s(buf, L"%.0f mm", v);
-        add(L"Focale", buf);
+        add(CYIMG_TR("plugin.raw.info.focal", L"Focale"), buf);
     }
-    if (auto e = Find(exif, 0x9003)) add(L"Date de prise", FormatDate(te.Ascii(*e)));
+    if (auto e = Find(exif, 0x9003)) add(CYIMG_TR("plugin.raw.info.date_taken", L"Date de prise"), FormatDate(te.Ascii(*e)));
 }
 
 void ScanTiff(const RawFile& f, RawScan& out) {

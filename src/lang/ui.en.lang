@@ -1,0 +1,152 @@
+# CyImgView — interface: context menu, channels, filtering, slideshow, clipboard, edit mode (English)
+@code = en
+@name = English
+
+# Context menu (right click): text\tshortcut
+menu.copy = Copy image\tCtrl+C
+menu.copy_path = Copy file path\tCtrl+Shift+C
+menu.open = Open…\tCtrl+O
+menu.save_as = Save as…\tCtrl+S
+menu.edit = Edit\tE
+menu.reveal = Show in Explorer
+menu.channels = Displayed channel\tC
+menu.channel.rgb = RGB (all colors)\tCtrl+2
+menu.channel.red = Red\tCtrl+3
+menu.channel.green = Green\tCtrl+4
+menu.channel.blue = Blue\tCtrl+5
+menu.channel.alpha = Alpha (transparency)\tCtrl+6
+menu.filter = Filtering
+menu.filter.raw = Raw pixels\tN
+menu.play = Play\tSpace
+menu.pause = Pause\tSpace
+menu.rotate = Rotate\tR
+menu.slideshow = Slideshow\tD
+menu.slideshow_stop = Exit slideshow\tEsc
+menu.fullscreen = Full screen\tF
+menu.info = Information\tI
+menu.settings = Settings\tP
+
+# Clipboard
+clip.err.read = Unable to read the image
+clip.loading = Image is loading…
+clip.none = No image to copy
+clip.err.memory = Not enough memory
+clip.busy = Clipboard busy, please try again
+clip.copied = Image copied
+clip.failed = Copy failed
+clip.path_copied = Path copied
+
+# Channels panel
+channels.title = Channels
+channels.rgb = RGB
+channels.rgba = RGBA
+channels.letter.r = R
+channels.letter.g = G
+channels.letter.b = B
+channels.letter.a = A
+channels.desc.red = red
+channels.desc.green = green
+channels.desc.blue = blue
+channels.desc.alpha = alpha
+channels.row.rgb = RGB
+channels.row.red = Red
+channels.row.green = Green
+channels.row.blue = Blue
+channels.row.alpha = Alpha
+channels.hint = Checkboxes: combine channels
+channels.no_alpha = This image has no transparency
+channels.toast.rgb = Channels: RGB
+channels.toast.red = Red channel
+channels.toast.green = Green channel
+channels.toast.blue = Blue channel
+channels.toast.alpha = Alpha channel
+channels.toast.mix = Channels: %ls
+
+# Image filtering
+filter.auto = Automatic
+filter.raw = Raw pixels
+filter.linear = Linear
+filter.cubic = Cubic
+filter.cubic_hq = Cubic HQ
+filter.anisotropic = Anisotropic
+filter.toast = Filtering: %ls
+
+# Slideshow and animation playback
+slide.delay = %d s
+slide.toast.delay = Slideshow: %ls per image
+slide.toast.start = Slideshow · %ls per image · Esc to exit
+slide.err.two_images = The folder needs at least two images
+slide.toast.paused = Slideshow paused
+slide.toast.playing = Slideshow playing
+slide.tip.prev = Previous (←)
+slide.tip.play = Play (Space)
+slide.tip.pause = Pause (Space)
+slide.tip.next = Next (→)
+slide.tip.less = Less time per image (↓)
+slide.tip.more = More time per image (↑)
+slide.tip.shuffle = Shuffle
+slide.tip.exit = Exit slideshow (Esc)
+slide.anim.frame = Frame %d / %d
+slide.anim.play = Playing
+slide.anim.pause = Paused
+
+# Edit mode: tools
+edit.tool.hand = Pan view (M, or hold Space)
+edit.tool.brush = Brush (B) — right click: 2nd color
+edit.tool.eraser = Eraser (G)
+edit.tool.line = Line (L) — Shift: 45° angles
+edit.tool.arrow = Arrow (A)
+edit.tool.rect = Rectangle (R) — Shift: square
+edit.tool.ellipse = Ellipse (O) — Shift: circle
+edit.tool.text = Text (T)
+edit.tool.fill = Fill (F)
+edit.tool.picker = Color picker (K)
+edit.tool.crop = Crop (C) — Enter to apply
+
+# Edit mode: top bar, colors, Resize menu
+edit.title = Editing
+edit.modified = modified
+edit.btn.done = Done
+edit.tip.done = Exit edit mode (E / Esc)
+edit.btn.save_as = Save as
+edit.btn.save_as_dirty = Save as •
+edit.tip.save_as = Save as… (Ctrl+S)
+edit.tip.flip_v = Flip vertical
+edit.tip.flip_h = Flip horizontal
+edit.tip.rot_right = Rotate right
+edit.tip.rot_left = Rotate left
+edit.tip.resize = Resize
+edit.tip.fill_on = Filled shapes (click: outline)
+edit.tip.fill_off = Outlined shapes (click: filled)
+edit.tip.font_size = Text size ( [ and ] )
+edit.tip.thickness = Thickness ( [ and ] )
+edit.label.font = Font
+edit.label.size = Size
+edit.tip.undo = Undo (Ctrl+Z)
+edit.tip.redo = Redo (Ctrl+Y)
+edit.tip.swap_colors = Swap primary / secondary color
+edit.tip.palette = Click: primary color — right click: secondary
+edit.tip.custom_color = More colors…
+edit.resize.percent = %d%%
+edit.resize.long_side = Long side %d px
+edit.crop.apply = Crop
+edit.tip.crop_apply = Apply crop (Enter)
+edit.tip.crop_cancel = Cancel (Esc)
+
+# Edit mode: messages
+edit.loading = Image is loading…
+edit.no_image = No image to edit
+edit.err.read = Unable to read the image
+edit.err.memory = Not enough memory
+edit.err.vram = Not enough video memory
+edit.err.too_big = Image too large to edit
+edit.ask.title = Save changes?
+edit.ask.content = The image has been modified. Your changes will be lost if you don't save them.
+edit.ask.save = Save as…
+edit.ask.discard = Don't save
+
+# Save as
+edit.save.no_image = No image to save
+edit.save.no_encoder = No image encoder is available.
+edit.save.failed = Saving failed:\n%ls
+edit.save.done = Saved: %ls

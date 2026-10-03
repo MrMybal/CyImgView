@@ -78,14 +78,14 @@ int DecodeHdr(Dec& d) {
         return true;
     };
     std::string l;
-    if (!readLine(l) || l.rfind("#?", 0) != 0) return d.Fail(L"Fichier Radiance HDR non reconnu");
+    if (!readLine(l) || l.rfind("#?", 0) != 0) return d.Fail(CYIMG_TR("plugin.classic.hdr.err.unrecognized", L"Fichier Radiance HDR non reconnu"));
     for (;;) {
-        if (!readLine(l)) return d.Fail(L"En-tête HDR tronqué");
+        if (!readLine(l)) return d.Fail(CYIMG_TR("plugin.classic.hdr.err.header_truncated", L"En-tête HDR tronqué"));
         if (l.empty()) break;
         if (l.rfind("FORMAT=", 0) == 0) {
             formatSeen = true;
             if (l.find("32-bit_rle_xyze") != std::string::npos) xyz = true;
-            else if (l.find("32-bit_rle_rgbe") == std::string::npos) return d.Fail(L"Format de pixels HDR non géré");
+            else if (l.find("32-bit_rle_rgbe") == std::string::npos) return d.Fail(CYIMG_TR("plugin.classic.hdr.err.pixel_format", L"Format de pixels HDR non géré"));
         } else if (l.rfind("EXPOSURE=", 0) == 0) {
             const double e = atof(l.c_str() + 9);
             if (e > 0 && std::isfinite(e)) exposure *= e, hasExposure = true;
@@ -94,15 +94,15 @@ int DecodeHdr(Dec& d) {
         }
     }
     (void)formatSeen;
-    if (!readLine(l)) return d.Fail(L"Fichier HDR tronqué (résolution absente)");
+    if (!readLine(l)) return d.Fail(CYIMG_TR("plugin.classic.hdr.err.no_resolution", L"Fichier HDR tronqué (résolution absente)"));
     char s1 = 0, a1 = 0, s2 = 0, a2 = 0;
     unsigned n1 = 0, n2 = 0;
     if (sscanf_s(l.c_str(), "%c%c %u %c%c %u", &s1, 1, &a1, 1, &n1, &s2, 1, &a2, 1, &n2) != 6 ||
         (s1 != '+' && s1 != '-') || (s2 != '+' && s2 != '-') || !((a1 == 'Y' && a2 == 'X') || (a1 == 'X' && a2 == 'Y')))
-        return d.Fail(L"Ligne de résolution HDR invalide");
+        return d.Fail(CYIMG_TR("plugin.classic.hdr.err.resolution", L"Ligne de résolution HDR invalide"));
     const bool yFirst = a1 == 'Y';
     const uint32_t W = yFirst ? n2 : n1, H = yFirst ? n1 : n2;
-    if (!SizeOk(W, H)) return d.Fail(L"Dimensions HDR invalides");
+    if (!SizeOk(W, H)) return d.Fail(CYIMG_TR("plugin.classic.hdr.err.dimensions", L"Dimensions HDR invalides"));
     const uint32_t lines = n1, lineLen = n2;
 
     // Vignette : un pixel sur k dans chaque direction
@@ -113,8 +113,8 @@ int DecodeHdr(Dec& d) {
     const float invExp = float(1.0 / exposure);
     for (uint32_t i = 0; i < lines; ++i) {
         if (!ReadScanline(d.d, d.n, pos, lineLen, scan.data())) {
-            if (i == 0) return d.Fail(L"Données HDR invalides ou tronquées");
-            d.Info(L"Avertissement", L"fichier tronqué");
+            if (i == 0) return d.Fail(CYIMG_TR("plugin.classic.hdr.err.data", L"Données HDR invalides ou tronquées"));
+            d.Info(CYIMG_TR("plugin.classic.info.warning", L"Avertissement"), CYIMG_TR("plugin.classic.truncated", L"fichier tronqué"));
             break;
         }
         if ((i & 63) == 0 && d.Cancelled()) return CYIMG_E_CANCELLED;
@@ -145,17 +145,17 @@ int DecodeHdr(Dec& d) {
     Rgba img;
     const double ev = ToneMap(rgb.data(), ow, oh, img, true);
     d.Format(xyz ? L"Radiance HDR (XYZE)" : L"Radiance HDR (RGBE)");
-    wchar_t buf[64];
-    swprintf_s(buf, L"%+.2f IL (automatique, Reinhard)", ev);
-    d.Info(L"Exposition", buf);
+    wchar_t buf[256];
+    swprintf_s(buf, CYIMG_TR("plugin.classic.hdr.exposure_value", L"%+.2f IL (automatique, Reinhard)"), ev);
+    d.Info(CYIMG_TR("plugin.classic.info.exposure", L"Exposition"), buf);
     if (hasExposure) {
         swprintf_s(buf, L"%g", exposure);
-        d.Info(L"EXPOSURE (fichier)", buf);
+        d.Info(CYIMG_TR("plugin.classic.hdr.info.exposure_file", L"EXPOSURE (fichier)"), buf);
     }
-    d.InfoA(L"Logiciel", software);
+    d.InfoA(CYIMG_TR("plugin.classic.hdr.info.software", L"Logiciel"), software);
     if (k > 1) {
         swprintf_s(buf, L"%u × %u", W, H);
-        d.Info(L"Taille réelle", buf);
+        d.Info(CYIMG_TR("plugin.classic.info.real_size", L"Taille réelle"), buf);
     }
     return Emit(d, img, false);
 }

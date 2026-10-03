@@ -91,7 +91,7 @@ bool ParseHdu(const uint8_t* f, size_t n, size_t pos, Hdu& h) {
 int DecodeFits(Dec& d) {
     // Recherche de l'image : HDU primaire, sinon première extension IMAGE
     Hdu h;
-    if (!ParseHdu(d.d, d.n, 0, h)) return d.Fail(L"En-tête FITS invalide ou tronqué");
+    if (!ParseHdu(d.d, d.n, 0, h)) return d.Fail(CYIMG_TR("plugin.classic.fits.err.header", L"En-tête FITS invalide ou tronqué"));
     const Hdu primary = h;
     bool found = h.naxis >= 2 && h.axes[0] && h.axes[1];
     std::string extName;
@@ -107,17 +107,17 @@ int DecodeFits(Dec& d) {
             extName = h.Str("EXTNAME");
         }
     }
-    if (!found) return d.Fail(L"Ce fichier FITS ne contient pas d'image (tableaux de données uniquement)");
+    if (!found) return d.Fail(CYIMG_TR("plugin.classic.fits.err.no_image", L"Ce fichier FITS ne contient pas d'image (tableaux de données uniquement)"));
 
     const uint64_t W64 = h.axes[0], H64 = h.axes[1];
-    if (!SizeOk(W64, H64)) return d.Fail(L"Dimensions FITS non gérées");
+    if (!SizeOk(W64, H64)) return d.Fail(CYIMG_TR("plugin.classic.fits.err.dimensions", L"Dimensions FITS non gérées"));
     const uint32_t W = uint32_t(W64), H = uint32_t(H64);
     const uint64_t depth = h.naxis >= 3 ? std::max<uint64_t>(1, h.axes[2]) : 1;
     const bool rgb = depth == 3;
     const int planes = rgb ? 3 : 1;
     const int bpv = std::abs(h.bitpix) / 8;
     const uint64_t planeBytes = uint64_t(W) * H * bpv;
-    if (h.dataPos > d.n || d.n - h.dataPos < planeBytes * planes) return d.Fail(L"Fichier FITS tronqué");
+    if (h.dataPos > d.n || d.n - h.dataPos < planeBytes * planes) return d.Fail(CYIMG_TR("plugin.classic.fits.err.truncated", L"Fichier FITS tronqué"));
     const double bzero = h.Num("BZERO", 0), bscale = h.Num("BSCALE", 1);
     const bool hasBlank = h.Has("BLANK") && h.bitpix > 0;
     const double blank = h.Num("BLANK", 0);
@@ -165,7 +165,7 @@ int DecodeFits(Dec& d) {
     smp.reserve(v.size() / step + 1);
     for (size_t i = 0; i < v.size(); i += step)
         if (std::isfinite(v[i])) smp.push_back(v[i]);
-    if (smp.empty()) return d.Fail(L"Image FITS vide (aucune valeur valide)");
+    if (smp.empty()) return d.Fail(CYIMG_TR("plugin.classic.fits.err.empty", L"Image FITS vide (aucune valeur valide)"));
     auto pct = [&](double q) {
         const size_t i = std::min(smp.size() - 1, size_t(q * double(smp.size() - 1)));
         std::nth_element(smp.begin(), smp.begin() + ptrdiff_t(i), smp.end());
@@ -192,31 +192,35 @@ int DecodeFits(Dec& d) {
         else o[0] = o[1] = o[2] = map(v[i]);
     }
 
-    wchar_t buf[96];
-    swprintf_s(buf, L"FITS %d bits%ls%ls", std::abs(h.bitpix), h.bitpix < 0 ? L" flottant" : L"", rgb ? L", RVB" : L"");
+    wchar_t buf[256];
+    const wchar_t* fitsFmt = h.bitpix < 0 ? (rgb ? CYIMG_TR("plugin.classic.fits.format_float_rgb", L"FITS %d bits flottant, RVB")
+                                                : CYIMG_TR("plugin.classic.fits.format_float", L"FITS %d bits flottant"))
+                                          : (rgb ? CYIMG_TR("plugin.classic.fits.format_rgb", L"FITS %d bits, RVB")
+                                                 : CYIMG_TR("plugin.classic.fits.format", L"FITS %d bits"));
+    swprintf_s(buf, fitsFmt, std::abs(h.bitpix));
     d.Format(buf);
     auto info = [&](const wchar_t* label, const char* key) {
         std::string s = h.Str(key);
         if (s.empty()) s = primary.Str(key);
         d.InfoA(label, s);
     };
-    info(L"Objet", "OBJECT");
-    info(L"Télescope", "TELESCOP");
-    info(L"Instrument", "INSTRUME");
-    info(L"Date d'observation", "DATE-OBS");
-    info(L"Temps de pose (s)", "EXPTIME");
-    info(L"Filtre", "FILTER");
-    info(L"Observateur", "OBSERVER");
-    d.InfoA(L"Extension", extName);
+    info(CYIMG_TR("plugin.classic.fits.info.object", L"Objet"), "OBJECT");
+    info(CYIMG_TR("plugin.classic.fits.info.telescope", L"Télescope"), "TELESCOP");
+    info(CYIMG_TR("plugin.classic.fits.info.instrument", L"Instrument"), "INSTRUME");
+    info(CYIMG_TR("plugin.classic.fits.info.date_obs", L"Date d'observation"), "DATE-OBS");
+    info(CYIMG_TR("plugin.classic.fits.info.exptime", L"Temps de pose (s)"), "EXPTIME");
+    info(CYIMG_TR("plugin.classic.fits.info.filter", L"Filtre"), "FILTER");
+    info(CYIMG_TR("plugin.classic.fits.info.observer", L"Observateur"), "OBSERVER");
+    d.InfoA(CYIMG_TR("plugin.classic.fits.info.extension", L"Extension"), extName);
     if (depth > 1 && !rgb) {
         swprintf_s(buf, L"1 / %llu", static_cast<unsigned long long>(depth));
-        d.Info(L"Plan affiché", buf);
+        d.Info(CYIMG_TR("plugin.classic.fits.info.plane", L"Plan affiché"), buf);
     }
-    swprintf_s(buf, L"%g … %g (centiles 0,5 %% – 99,5 %%)", double(lo), double(hi));
-    d.Info(L"Étirement", buf);
+    swprintf_s(buf, CYIMG_TR("plugin.classic.fits.stretch_value", L"%g … %g (centiles 0,5 %% – 99,5 %%)"), double(lo), double(hi));
+    d.Info(CYIMG_TR("plugin.classic.fits.info.stretch", L"Étirement"), buf);
     if (k > 1) {
         swprintf_s(buf, L"%u × %u", W, H);
-        d.Info(L"Taille réelle", buf);
+        d.Info(CYIMG_TR("plugin.classic.info.real_size", L"Taille réelle"), buf);
     }
     return Emit(d, img, false);
 }

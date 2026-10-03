@@ -12,6 +12,7 @@
 //  Options : /S (installation silencieuse), --uninstall [/S].
 
 #include "../src/common.h"
+#include "../src/i18n.h"
 #include "../src/updater.h"
 #include "../src/version.h"
 
@@ -72,7 +73,7 @@ bool CreateShortcut(const std::wstring& lnk, const std::wstring& target, const s
     if (FAILED(CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&sl)))) return false;
     sl->SetPath(target.c_str());
     sl->SetWorkingDirectory(dir.c_str());
-    sl->SetDescription(L"Visionneuse d'images rapide");
+    sl->SetDescription(T("setup.shortcut.desc"));
     sl->SetIconLocation(target.c_str(), 0);
     return SUCCEEDED(sl.As(&pf)) && SUCCEEDED(pf->Save(lnk.c_str(), TRUE));
 }
@@ -116,7 +117,7 @@ void DeleteTree(const std::wstring& dir) {
 bool ExtractPayload(const std::wstring& self, const std::wstring& zipOut, uint64_t& stubSize, std::wstring& error) {
     HANDLE f = CreateFileW(self.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
     if (f == INVALID_HANDLE_VALUE) {
-        error = L"lecture de l'installeur impossible";
+        error = T("setup.err.read_installer");
         return false;
     }
     LARGE_INTEGER sz{};
@@ -132,7 +133,7 @@ bool ExtractPayload(const std::wstring& self, const std::wstring& zipOut, uint64
     ok = ok && zipSize > 0 && zipSize < uint64_t(sz.QuadPart) - 16;
     if (!ok) {
         CloseHandle(f);
-        error = L"installeur incomplet (archive absente)";
+        error = T("setup.err.incomplete");
         return false;
     }
     stubSize = uint64_t(sz.QuadPart) - 16 - zipSize;
@@ -146,7 +147,7 @@ bool ExtractPayload(const std::wstring& self, const std::wstring& zipOut, uint64
     DWORD w = 0;
     ok = o != INVALID_HANDLE_VALUE && WriteFile(o, zip.data(), DWORD(zip.size()), &w, nullptr) && w == zip.size();
     if (o != INVALID_HANDLE_VALUE) CloseHandle(o);
-    if (!ok) error = L"écriture du fichier temporaire impossible";
+    if (!ok) error = T("setup.err.temp_write");
     return ok;
 }
 
@@ -179,7 +180,7 @@ void RegisterApp(const std::wstring& dir, bool desktop) {
     const std::wstring classes = L"Software\\Classes\\";
 
     // ProgID + « Ouvrir avec »
-    SetString(HKEY_CURRENT_USER, classes + kProgId, nullptr, L"Image (CyImgView)");
+    SetString(HKEY_CURRENT_USER, classes + kProgId, nullptr, T("setup.progid.name"));
     SetString(HKEY_CURRENT_USER, classes + kProgId + L"\\DefaultIcon", nullptr, L"\"" + exe + L"\",0");
     SetString(HKEY_CURRENT_USER, classes + kProgId + L"\\shell\\open\\command", nullptr, open);
     const std::wstring app = classes + L"Applications\\CyImgView.exe";
@@ -187,7 +188,7 @@ void RegisterApp(const std::wstring& dir, bool desktop) {
     SetString(HKEY_CURRENT_USER, app + L"\\shell\\open\\command", nullptr, open);
     const std::wstring caps = L"Software\\CyImgView\\Capabilities";
     SetString(HKEY_CURRENT_USER, caps, L"ApplicationName", L"CyImgView");
-    SetString(HKEY_CURRENT_USER, caps, L"ApplicationDescription", L"Visionneuse d'images rapide (photos, RAW, textures Unreal)");
+    SetString(HKEY_CURRENT_USER, caps, L"ApplicationDescription", T("setup.app.desc"));
     for (const wchar_t* e : kExts) {
         std::wstring ext = std::wstring(L".") + e;
         SetString(HKEY_CURRENT_USER, app + L"\\SupportedTypes", ext.c_str(), L"");
@@ -323,13 +324,13 @@ int Install(bool silent) {
     BOOL desktop = TRUE;
 
     if (!silent) {
-        std::wstring content = L"Dossier : " + dir + L"\n\nAucun droit administrateur n'est nécessaire.";
-        if (*installed) content += std::wstring(L"\nVersion installée : ") + installed;
-        std::wstring label = std::wstring(*installed ? L"Mettre à jour" : L"Installer") +
-                             L"\nRaccourci dans le Menu Démarrer, « Ouvrir avec » pour les images, photos RAW et textures Unreal";
+        std::wstring content = Tf("setup.install.content", dir.c_str());
+        if (*installed) content += L"\n" + Tf("setup.install.installed_version", installed);
+        std::wstring label = std::wstring(T(*installed ? "setup.install.update" : "setup.install.install")) + L"\n" +
+                             T("setup.install.details");
         TASKDIALOG_BUTTON b[] = {{100, label.c_str()}};
-        std::wstring main = L"Installer CyImgView " CYIMG_VERSION_WSTR;
-        if (Dialog(main.c_str(), content, b, 1, TDCBF_CANCEL_BUTTON, nullptr, L"Créer un raccourci sur le Bureau", &desktop) != 100)
+        std::wstring main = Tf("setup.install.title", CYIMG_VERSION_WSTR);
+        if (Dialog(main.c_str(), content, b, 1, TDCBF_CANCEL_BUTTON, nullptr, T("setup.install.desktop"), &desktop) != 100)
             return 1;
         if (AppRunningFrom(dir)) CloseRunningApp(dir);  // l'ancienne version ouverte est fermée proprement
     }
@@ -346,7 +347,7 @@ int Install(bool silent) {
     DeleteFileW(zip.c_str());
     if (ok && !CopyStub(self, stubSize, dir + L"\\uninstall.exe")) {
         ok = false;
-        error = L"création du désinstalleur impossible";
+        error = T("setup.err.uninstaller");
     }
     if (ok) {
         CleanupUpdateLeftovers(dir);
@@ -355,14 +356,12 @@ int Install(bool silent) {
     SetCursor(old);
 
     if (!ok) {
-        if (!silent) Dialog(L"L'installation a échoué", error, nullptr, 0, TDCBF_CLOSE_BUTTON, TD_ERROR_ICON);
+        if (!silent) Dialog(T("setup.install.failed"), error, nullptr, 0, TDCBF_CLOSE_BUTTON, TD_ERROR_ICON);
         return 2;
     }
     if (silent) return 0;
-    TASKDIALOG_BUTTON b[] = {{100, L"Lancer CyImgView"},
-                             {101, L"Choisir CyImgView comme visionneuse par défaut\nOuvre les paramètres « Applications par défaut » de Windows"}};
-    int c = Dialog(L"CyImgView est installé", L"Vous le trouverez dans le Menu Démarrer. Les mises à jour se feront automatiquement.",
-                   b, 2, TDCBF_CLOSE_BUTTON, nullptr);
+    TASKDIALOG_BUTTON b[] = {{100, T("setup.done.launch")}, {101, T("setup.done.default")}};
+    int c = Dialog(T("setup.done.title"), T("setup.done.content"), b, 2, TDCBF_CLOSE_BUTTON, nullptr);
     if (c == 101) ShellExecuteW(nullptr, L"open", L"ms-settings:defaultapps", nullptr, nullptr, SW_SHOWNORMAL);
     if (c == 100 || c == 101) ShellExecuteW(nullptr, L"open", (dir + L"\\CyImgView.exe").c_str(), nullptr, dir.c_str(), SW_SHOWNORMAL);
     return 0;
@@ -384,8 +383,7 @@ int UninstallRun(const std::wstring& dir, DWORD parentPid, bool removeSettings, 
     if (removeSettings) DeleteTree(KnownFolder(FOLDERID_RoamingAppData) + L"\\CyImgView");
     if (notify) {
         bool gone = GetFileAttributesW(dir.c_str()) == INVALID_FILE_ATTRIBUTES;
-        std::wstring msg = gone ? L"CyImgView a été désinstallé."
-                                : L"CyImgView a été désinstallé, mais certains fichiers n'ont pas pu être supprimés :\n" + dir;
+        std::wstring msg = gone ? std::wstring(T("setup.uninstall.done")) : Tf("setup.uninstall.partial", dir.c_str());
         MessageBoxW(nullptr, msg.c_str(), kTitle, gone ? MB_ICONINFORMATION : MB_ICONWARNING);
     }
     // Auto-suppression de cette copie temporaire
@@ -405,9 +403,9 @@ int Uninstall(bool silent) {
     const std::wstring self = SelfPath(), dir = ParentOf(self);
     BOOL removeSettings = FALSE;
     if (!silent) {
-        TASKDIALOG_BUTTON b[] = {{100, L"Désinstaller"}};
-        if (Dialog(L"Désinstaller CyImgView ?", L"Le programme et ses raccourcis seront supprimés de " + dir + L".", b, 1,
-                   TDCBF_CANCEL_BUTTON, nullptr, L"Supprimer aussi mes réglages", &removeSettings, false) != 100)
+        TASKDIALOG_BUTTON b[] = {{100, T("setup.uninstall.btn")}};
+        if (Dialog(T("setup.uninstall.title"), Tf("setup.uninstall.content", dir.c_str()), b, 1, TDCBF_CANCEL_BUTTON, nullptr,
+                   T("setup.uninstall.remove_settings"), &removeSettings, false) != 100)
             return 1;
     }
     // Copie temporaire qui pourra effacer le dossier (un exe ne peut pas se supprimer lui-même)
@@ -429,6 +427,7 @@ int Uninstall(bool silent) {
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    i18n::Init(L"", L"");  // langue de Windows (textes intégrés à l'exe, désinstalleur compris)
     int argc = 0;
     LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
     std::vector<std::wstring> args(argv + 1, argv + argc);

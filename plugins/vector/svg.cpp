@@ -378,14 +378,14 @@ int DecodeSvg(const Call& c, const std::vector<uint8_t>& data, bool gz) {
     std::vector<Attr> attrs;
     for (size_t i = 0;;) {
         i = s.find('<', i);
-        if (i == std::string::npos) return c.Fail(L"SVG invalide : élément racine <svg> introuvable");
+        if (i == std::string::npos) return c.Fail(CYIMG_TR("plugin.vector.svg.err.no_root", L"SVG invalide : élément racine <svg> introuvable"));
         const size_t skip = SkipMarkup(s, i);
         if (skip != i) {
             i = skip;
             continue;
         }
         if (!ParseTag(s, i, name, attrs, rootEnd) || name != "svg")
-            return c.Fail(L"SVG invalide : élément racine <svg> introuvable");
+            return c.Fail(CYIMG_TR("plugin.vector.svg.err.no_root", L"SVG invalide : élément racine <svg> introuvable"));
         root = i;
         break;
     }
@@ -424,31 +424,31 @@ int DecodeSvg(const Call& c, const std::vector<uint8_t>& data, bool gz) {
         s.replace(root, rootEnd - root, tag);
     }
 
-    if (!D2DFactory()) return c.Fail(L"Direct2D indisponible");
+    if (!D2DFactory()) return c.Fail(CYIMG_TR("plugin.vector.err.d2d", L"Direct2D indisponible"));
     WicTarget t;
-    if (!t.Create(rw, rh)) return c.Fail(L"Création de la surface de rendu impossible");
+    if (!t.Create(rw, rh)) return c.Fail(CYIMG_TR("plugin.vector.err.surface", L"Création de la surface de rendu impossible"));
     ComPtr<ID2D1DeviceContext5> dc5;
-    if (!t.dc || FAILED(t.dc.As(&dc5))) return c.Fail(L"Le rendu SVG demande Windows 10 version 1703 ou plus récente");
+    if (!t.dc || FAILED(t.dc.As(&dc5))) return c.Fail(CYIMG_TR("plugin.vector.svg.err.windows_version", L"Le rendu SVG demande Windows 10 version 1703 ou plus récente"));
 
     ComPtr<IStream> stream;
     stream.Attach(SHCreateMemStream(reinterpret_cast<const BYTE*>(s.data()), UINT(s.size())));
     if (!stream) return CYIMG_E_OUTOFMEMORY;
     ComPtr<ID2D1SvgDocument> doc;
     HRESULT hr = dc5->CreateSvgDocument(stream.Get(), D2D1::SizeF(float(rw), float(rh)), &doc);
-    if (FAILED(hr)) return c.Fail(Fmt(L"SVG mal formé (XML invalide ou tronqué) ou non pris en charge par Direct2D (erreur 0x%08X)", unsigned(hr)).c_str());
+    if (FAILED(hr)) return c.Fail(Fmt(CYIMG_TR("plugin.vector.svg.err.malformed", L"SVG mal formé (XML invalide ou tronqué) ou non pris en charge par Direct2D (erreur 0x%08X)"), unsigned(hr)).c_str());
     if (c.Cancelled()) return CYIMG_E_CANCELLED;
 
     dc5->BeginDraw();
     dc5->Clear(D2D1::ColorF(0, 0, 0, 0));
     dc5->DrawSvgDocument(doc.Get());
     hr = dc5->EndDraw();
-    if (FAILED(hr)) return c.Fail(Fmt(L"Rendu SVG impossible (erreur 0x%08X)", unsigned(hr)).c_str());
+    if (FAILED(hr)) return c.Fail(Fmt(CYIMG_TR("plugin.vector.svg.err.render", L"Rendu SVG impossible (erreur 0x%08X)"), unsigned(hr)).c_str());
 
     const int r = t.Deliver(c, false);
     if (r != CYIMG_OK) return r;
-    c.host->set_format(c.ctx, gz ? L"SVGZ (SVG compressé)" : L"SVG");
-    c.Info(L"Taille d'origine", Fmt(L"%.0f × %.0f px", w, h));
-    c.Info(L"Rendu", L"Direct2D (sans texte ni filtres)");
+    c.host->set_format(c.ctx, gz ? CYIMG_TR("plugin.vector.format.svgz", L"SVGZ (SVG compressé)") : L"SVG");
+    c.Info(CYIMG_TR("plugin.vector.info.original_size", L"Taille d'origine"), Fmt(L"%.0f × %.0f px", w, h));
+    c.Info(CYIMG_TR("plugin.vector.info.render", L"Rendu"), CYIMG_TR("plugin.vector.svg.render_value", L"Direct2D (sans texte ni filtres)"));
     return CYIMG_OK;
 }
 

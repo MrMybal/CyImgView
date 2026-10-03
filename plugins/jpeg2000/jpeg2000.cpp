@@ -8,6 +8,7 @@
 //   bits, signées, alpha (cdef), palette (pclr appliquée par OpenJPEG).
 
 #include "cyimg_plugin.h"
+#include "cyimg_plugin_i18n.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -162,10 +163,11 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         return CYIMG_E_FAIL;
     };
 
+    cyimg_tr_begin(host, ctx);
     std::vector<uint8_t> file;
-    if (!ReadAll(path, file)) return fail(L"Lecture du fichier JPEG 2000 impossible");
+    if (!ReadAll(path, file)) return fail(CYIMG_TR("plugin.jpeg2000.err.read", L"Lecture du fichier JPEG 2000 impossible"));
     const int codecId = DetectCodec(file.data(), file.size());
-    if (codecId < 0) return fail(L"Fichier JPEG 2000 non reconnu (signature JP2 ou J2K absente)");
+    if (codecId < 0) return fail(CYIMG_TR("plugin.jpeg2000.err.unknown", L"Fichier JPEG 2000 non reconnu (signature JP2 ou J2K absente)"));
 
     Opj o;
     std::string err, warn;
@@ -177,7 +179,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
 
     opj_dparameters_t params;
     opj_set_default_decoder_parameters(&params);
-    if (!opj_setup_decoder(o.codec, &params)) return fail(L"Initialisation du décodeur JPEG 2000 impossible", err);
+    if (!opj_setup_decoder(o.codec, &params)) return fail(CYIMG_TR("plugin.jpeg2000.err.init", L"Initialisation du décodeur JPEG 2000 impossible"), err);
     // Fichiers tronqués : décoder ce qui est disponible plutôt qu'échouer
     opj_decoder_set_strict_mode(o.codec, OPJ_FALSE);
 
@@ -197,10 +199,10 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     opj_stream_set_seek_function(o.stream, MemSeek);
 
     if (!opj_read_header(o.stream, o.codec, &o.image) || !o.image)
-        return fail(L"En-tête JPEG 2000 invalide", err);
+        return fail(CYIMG_TR("plugin.jpeg2000.err.header", L"En-tête JPEG 2000 invalide"), err);
     const opj_image_t* img = o.image;
     if (img->numcomps == 0 || !img->comps || img->x1 <= img->x0 || img->y1 <= img->y0)
-        return fail(L"Image JPEG 2000 vide ou invalide");
+        return fail(CYIMG_TR("plugin.jpeg2000.err.empty", L"Image JPEG 2000 vide ou invalide"));
     const uint32_t fullW = img->x1 - img->x0, fullH = img->y1 - img->y0;
 
     // Structure du codestream : niveaux de résolution, couches, tuiles
@@ -231,7 +233,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     }
 
     if (host->is_cancelled(ctx)) return CYIMG_E_CANCELLED;
-    if (!opj_decode(o.codec, o.stream, o.image)) return fail(L"Décodage JPEG 2000 impossible", err);
+    if (!opj_decode(o.codec, o.stream, o.image)) return fail(CYIMG_TR("plugin.jpeg2000.err.decode", L"Décodage JPEG 2000 impossible"), err);
     opj_end_decompress(o.codec, o.stream);
     if (host->is_cancelled(ctx)) return CYIMG_E_CANCELLED;
 
@@ -248,7 +250,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     std::vector<uint32_t> color;  // composantes de couleur, dans l'ordre
     for (uint32_t i = 0; i < nc; ++i)
         if (int(i) != alphaIdx) color.push_back(i);
-    if (color.empty()) return fail(L"Aucune composante de couleur dans l'image JPEG 2000");
+    if (color.empty()) return fail(CYIMG_TR("plugin.jpeg2000.err.no_color", L"Aucune composante de couleur dans l'image JPEG 2000"));
 
     OPJ_COLOR_SPACE cs = img->color_space;
     if (cs == OPJ_CLRSPC_CMYK && color.size() < 4) cs = OPJ_CLRSPC_UNSPECIFIED;
@@ -276,12 +278,12 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         W = std::max(W, img->comps[i].w);
         H = std::max(H, img->comps[i].h);
     }
-    if (!W || !H || uint64_t(W) * H > (1ull << 30)) return fail(L"Dimensions JPEG 2000 non gérées");
+    if (!W || !H || uint64_t(W) * H > (1ull << 30)) return fail(CYIMG_TR("plugin.jpeg2000.err.dimensions", L"Dimensions JPEG 2000 non gérées"));
 
     Plane planes[4], alpha;
     const size_t used = std::min(needed, color.size());
     for (size_t k = 0; k < used; ++k)
-        if (!planes[k].Init(img->comps[color[k]], W)) return fail(L"Données JPEG 2000 incomplètes", err);
+        if (!planes[k].Init(img->comps[color[k]], W)) return fail(CYIMG_TR("plugin.jpeg2000.err.incomplete", L"Données JPEG 2000 incomplètes"), err);
     const bool hasAlpha = alphaIdx >= 0 && alpha.Init(img->comps[alphaIdx], W);
 
     uint32_t stride = 0;
@@ -333,38 +335,42 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     bool sgnd = false;
     for (uint32_t i = 0; i < nc; ++i) prec = std::max(prec, img->comps[i].prec), sgnd |= img->comps[i].sgnd != 0;
     swprintf_s(buf, L"%ux%u", fullW, fullH);
-    host->set_info(ctx, L"Dimensions d'origine", buf);
+    host->set_info(ctx, CYIMG_TR("plugin.jpeg2000.info.orig_size", L"Dimensions d'origine"), buf);
     swprintf_s(buf, L"%u", nc);
-    host->set_info(ctx, L"Composantes", buf);
-    swprintf_s(buf, L"%u bits%ls", prec, sgnd ? L" signés" : L"");
-    host->set_info(ctx, L"Profondeur", buf);
-    const wchar_t* csName = cs == OPJ_CLRSPC_GRAY ? L"Niveaux de gris" : cs == OPJ_CLRSPC_SYCC ? L"sYCC"
-                          : cs == OPJ_CLRSPC_EYCC ? L"e-YCC" : cs == OPJ_CLRSPC_CMYK ? L"CMJN" : L"RVB";
-    host->set_info(ctx, L"Espace couleur", csName);
-    if (img->icc_profile_len) host->set_info(ctx, L"Profil ICC", L"présent (non appliqué)");
+    host->set_info(ctx, CYIMG_TR("plugin.jpeg2000.info.components", L"Composantes"), buf);
+    swprintf_s(buf, sgnd ? CYIMG_TR("plugin.jpeg2000.depth.signed", L"%u bits signés") : CYIMG_TR("plugin.jpeg2000.depth.bits", L"%u bits"), prec);
+    host->set_info(ctx, CYIMG_TR("plugin.jpeg2000.info.depth", L"Profondeur"), buf);
+    const wchar_t* csName = cs == OPJ_CLRSPC_GRAY   ? CYIMG_TR("plugin.jpeg2000.cs.gray", L"Niveaux de gris")
+                            : cs == OPJ_CLRSPC_SYCC ? L"sYCC"
+                            : cs == OPJ_CLRSPC_EYCC ? L"e-YCC"
+                            : cs == OPJ_CLRSPC_CMYK ? CYIMG_TR("plugin.jpeg2000.cs.cmyk", L"CMJN")
+                                                    : CYIMG_TR("plugin.jpeg2000.cs.rgb", L"RVB");
+    host->set_info(ctx, CYIMG_TR("plugin.jpeg2000.info.colorspace", L"Espace couleur"), csName);
+    if (img->icc_profile_len) host->set_info(ctx, CYIMG_TR("plugin.jpeg2000.info.icc", L"Profil ICC"), CYIMG_TR("plugin.jpeg2000.icc.present", L"présent (non appliqué)"));
     if (numRes) {
         swprintf_s(buf, L"%u", numRes);
-        host->set_info(ctx, L"Niveaux de résolution", buf);
+        host->set_info(ctx, CYIMG_TR("plugin.jpeg2000.info.resolutions", L"Niveaux de résolution"), buf);
     }
     if (numLayers) {
         swprintf_s(buf, L"%u", numLayers);
-        host->set_info(ctx, L"Couches de qualité", buf);
+        host->set_info(ctx, CYIMG_TR("plugin.jpeg2000.info.layers", L"Couches de qualité"), buf);
     }
     if (o.info && (o.info->tw > 1 || o.info->th > 1)) {
         swprintf_s(buf, L"%u x %u (%ux%u px)", o.info->tw, o.info->th, o.info->tdx, o.info->tdy);
-        host->set_info(ctx, L"Tuiles", buf);
+        host->set_info(ctx, CYIMG_TR("plugin.jpeg2000.info.tiles", L"Tuiles"), buf);
     }
     if (o.info && o.info->m_default_tile_info.tccp_info)
-        host->set_info(ctx, L"Ondelette", o.info->m_default_tile_info.tccp_info[0].qmfbid == 1
-                                              ? L"5/3 réversible (sans perte)" : L"9/7 irréversible");
+        host->set_info(ctx, CYIMG_TR("plugin.jpeg2000.info.wavelet", L"Ondelette"), o.info->m_default_tile_info.tccp_info[0].qmfbid == 1
+                                    ? CYIMG_TR("plugin.jpeg2000.wavelet.53", L"5/3 réversible (sans perte)")
+                                    : CYIMG_TR("plugin.jpeg2000.wavelet.97", L"9/7 irréversible"));
     if (!warn.empty()) {  // ex. flux tronqué : image décodée partiellement
         std::wstring w;
         for (char ch : warn) w += wchar_t(uint8_t(ch));
-        host->set_info(ctx, L"Avertissement", w.c_str());
+        host->set_info(ctx, CYIMG_TR("plugin.jpeg2000.info.warning", L"Avertissement"), w.c_str());
     }
     if (reduce) {
         swprintf_s(buf, L"1/%u", 1u << reduce);
-        host->set_info(ctx, L"Résolution décodée", buf);
+        host->set_info(ctx, CYIMG_TR("plugin.jpeg2000.info.decoded_res", L"Résolution décodée"), buf);
     }
     return CYIMG_OK;
 }

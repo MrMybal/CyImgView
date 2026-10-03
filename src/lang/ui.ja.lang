@@ -1,0 +1,152 @@
+# CyImgView — ui (日本語)
+@code = ja
+@name = 日本語
+
+# コンテキスト メニュー (右クリック): テキスト\tショートカット
+menu.copy = 画像をコピー\tCtrl+C
+menu.copy_path = ファイルのパスをコピー\tCtrl+Shift+C
+menu.open = 開く…\tCtrl+O
+menu.save_as = 名前を付けて保存…\tCtrl+S
+menu.edit = 編集\tE
+menu.reveal = エクスプローラーで表示
+menu.channels = 表示チャンネル\tC
+menu.channel.rgb = RGB (すべての色)\tCtrl+2
+menu.channel.red = レッド\tCtrl+3
+menu.channel.green = グリーン\tCtrl+4
+menu.channel.blue = ブルー\tCtrl+5
+menu.channel.alpha = アルファ (透明度)\tCtrl+6
+menu.filter = フィルタリング
+menu.filter.raw = ピクセルそのまま\tN
+menu.play = 再生\tSpace
+menu.pause = 一時停止\tSpace
+menu.rotate = 回転\tR
+menu.slideshow = スライドショー\tD
+menu.slideshow_stop = スライドショーを終了\tEsc
+menu.fullscreen = 全画面表示\tF
+menu.info = 情報\tI
+menu.settings = 設定\tP
+
+# クリップボード
+clip.err.read = 画像を読み取れません
+clip.loading = 画像を読み込んでいます…
+clip.none = コピーする画像がありません
+clip.err.memory = メモリが不足しています
+clip.busy = クリップボードが使用中です。もう一度お試しください
+clip.copied = 画像をコピーしました
+clip.failed = コピーできませんでした
+clip.path_copied = パスをコピーしました
+
+# チャンネル パネル
+channels.title = チャンネル
+channels.rgb = RGB
+channels.rgba = RGBA
+channels.letter.r = R
+channels.letter.g = G
+channels.letter.b = B
+channels.letter.a = A
+channels.desc.red = レッド
+channels.desc.green = グリーン
+channels.desc.blue = ブルー
+channels.desc.alpha = アルファ
+channels.row.rgb = RGB
+channels.row.red = レッド
+channels.row.green = グリーン
+channels.row.blue = ブルー
+channels.row.alpha = アルファ
+channels.hint = チェックボックス: チャンネルを合成
+channels.no_alpha = この画像には透明部分がありません
+channels.toast.rgb = チャンネル: RGB
+channels.toast.red = レッド チャンネル
+channels.toast.green = グリーン チャンネル
+channels.toast.blue = ブルー チャンネル
+channels.toast.alpha = アルファ チャンネル
+channels.toast.mix = チャンネル: %ls
+
+# 画像のフィルタリング
+filter.auto = 自動
+filter.raw = ピクセルそのまま
+filter.linear = リニア
+filter.cubic = キュービック
+filter.cubic_hq = キュービック HQ
+filter.anisotropic = 異方性
+filter.toast = フィルタリング: %ls
+
+# スライドショーとアニメーション再生
+slide.delay = %d 秒
+slide.toast.delay = スライドショー: 1 枚あたり %ls
+slide.toast.start = スライドショー · 1 枚あたり %ls · Esc で終了
+slide.err.two_images = フォルダーに 2 枚以上の画像が必要です
+slide.toast.paused = スライドショーを一時停止しました
+slide.toast.playing = スライドショーを再生中
+slide.tip.prev = 前へ (←)
+slide.tip.play = 再生 (Space)
+slide.tip.pause = 一時停止 (Space)
+slide.tip.next = 次へ (→)
+slide.tip.less = 表示時間を短く (↓)
+slide.tip.more = 表示時間を長く (↑)
+slide.tip.shuffle = シャッフル
+slide.tip.exit = スライドショーを終了 (Esc)
+slide.anim.frame = フレーム %d / %d
+slide.anim.play = 再生中
+slide.anim.pause = 一時停止中
+
+# 編集モード: ツール
+edit.tool.hand = 表示を移動 (M、または Space を押したまま)
+edit.tool.brush = ブラシ (B) — 右クリック: 第 2 色
+edit.tool.eraser = 消しゴム (G)
+edit.tool.line = 直線 (L) — Shift: 45° 単位
+edit.tool.arrow = 矢印 (A)
+edit.tool.rect = 四角形 (R) — Shift: 正方形
+edit.tool.ellipse = 楕円 (O) — Shift: 正円
+edit.tool.text = テキスト (T)
+edit.tool.fill = 塗りつぶし (F)
+edit.tool.picker = スポイト (K)
+edit.tool.crop = トリミング (C) — Enter で確定
+
+# 編集モード: 上部バー、色、サイズ変更メニュー
+edit.title = 編集
+edit.modified = 変更あり
+edit.btn.done = 完了
+edit.tip.done = 編集モードを終了 (E / Esc)
+edit.btn.save_as = 名前を付けて保存
+edit.btn.save_as_dirty = 名前を付けて保存 •
+edit.tip.save_as = 名前を付けて保存… (Ctrl+S)
+edit.tip.flip_v = 上下反転
+edit.tip.flip_h = 左右反転
+edit.tip.rot_right = 右に回転
+edit.tip.rot_left = 左に回転
+edit.tip.resize = サイズ変更
+edit.tip.fill_on = 塗りつぶし図形 (クリック: 輪郭)
+edit.tip.fill_off = 輪郭のみの図形 (クリック: 塗りつぶし)
+edit.tip.font_size = 文字サイズ ( [ と ] )
+edit.tip.thickness = 太さ ( [ と ] )
+edit.label.font = フォント
+edit.label.size = サイズ
+edit.tip.undo = 元に戻す (Ctrl+Z)
+edit.tip.redo = やり直し (Ctrl+Y)
+edit.tip.swap_colors = 描画色と背景色を入れ替え
+edit.tip.palette = クリック: 描画色 — 右クリック: 背景色
+edit.tip.custom_color = その他の色…
+edit.resize.percent = %d%%
+edit.resize.long_side = 長辺 %d px
+edit.crop.apply = トリミング
+edit.tip.crop_apply = トリミングを確定 (Enter)
+edit.tip.crop_cancel = キャンセル (Esc)
+
+# 編集モード: メッセージ
+edit.loading = 画像を読み込んでいます…
+edit.no_image = 編集する画像がありません
+edit.err.read = 画像を読み取れません
+edit.err.memory = メモリが不足しています
+edit.err.vram = ビデオ メモリが不足しています
+edit.err.too_big = 画像が大きすぎて編集できません
+edit.ask.title = 変更を保存しますか?
+edit.ask.content = 画像は変更されています。保存しないと変更内容は失われます。
+edit.ask.save = 名前を付けて保存…
+edit.ask.discard = 保存しない
+
+# 名前を付けて保存
+edit.save.no_image = 保存する画像がありません
+edit.save.no_encoder = 使用できる画像エンコーダーがありません。
+edit.save.failed = 保存できませんでした:\n%ls
+edit.save.done = 保存しました: %ls

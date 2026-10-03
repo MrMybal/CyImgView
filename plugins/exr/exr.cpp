@@ -9,7 +9,7 @@
 //   niveau de mipmap adapté si le fichier en contient.
 // - Pleine résolution : blocs répartis entre plusieurs threads (lecture thread-safe d'OpenEXRCore).
 
-#include "cyimg_plugin.h"
+#include "cyimg_plugin_i18n.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -182,21 +182,21 @@ Pick ChooseChannels(const exr_attr_chlist_t* cl) {
 
 const wchar_t* CompressionName(exr_compression_t c) {
     switch (c) {
-    case EXR_COMPRESSION_NONE: return L"aucune";
+    case EXR_COMPRESSION_NONE: return CYIMG_TR("plugin.exr.comp.none", L"aucune");
     case EXR_COMPRESSION_RLE: return L"RLE";
-    case EXR_COMPRESSION_ZIPS: return L"ZIPS (1 ligne)";
-    case EXR_COMPRESSION_ZIP: return L"ZIP (16 lignes)";
+    case EXR_COMPRESSION_ZIPS: return CYIMG_TR("plugin.exr.comp.zips", L"ZIPS (1 ligne)");
+    case EXR_COMPRESSION_ZIP: return CYIMG_TR("plugin.exr.comp.zip", L"ZIP (16 lignes)");
     case EXR_COMPRESSION_PIZ: return L"PIZ";
     case EXR_COMPRESSION_PXR24: return L"PXR24";
     case EXR_COMPRESSION_B44: return L"B44";
     case EXR_COMPRESSION_B44A: return L"B44A";
     case EXR_COMPRESSION_DWAA: return L"DWAA";
     case EXR_COMPRESSION_DWAB: return L"DWAB";
-    case EXR_COMPRESSION_HTJ2K256: return L"HTJ2K (256 lignes)";
-    case EXR_COMPRESSION_HTJ2K32: return L"HTJ2K (32 lignes)";
-    case EXR_COMPRESSION_LJ2K: return L"HTJ2K avec pertes";
+    case EXR_COMPRESSION_HTJ2K256: return CYIMG_TR("plugin.exr.comp.htj2k256", L"HTJ2K (256 lignes)");
+    case EXR_COMPRESSION_HTJ2K32: return CYIMG_TR("plugin.exr.comp.htj2k32", L"HTJ2K (32 lignes)");
+    case EXR_COMPRESSION_LJ2K: return CYIMG_TR("plugin.exr.comp.lj2k", L"HTJ2K avec pertes");
     case EXR_COMPRESSION_ZSTD: return L"ZSTD";
-    default: return L"inconnue";
+    default: return CYIMG_TR("plugin.exr.comp.unknown", L"inconnue");
     }
 }
 
@@ -364,6 +364,7 @@ struct ExrContext {
 };
 
 int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
+    cyimg_tr_begin(host, ctx);
     static std::once_flag quiet;  // OpenJPH (HTJ2K) écrit ses erreurs sur stderr : on les coupe
     std::call_once(quiet, [] {
         ojph::set_error_stream(nullptr);
@@ -375,8 +376,8 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         return CYIMG_E_FAIL;
     };
     Mapped file;
-    if (!file.Open(path)) return fail(L"Lecture du fichier EXR impossible");
-    if (!Probe(file.data, size_t(std::min<uint64_t>(file.size, 4)))) return fail(L"Fichier OpenEXR non reconnu");
+    if (!file.Open(path)) return fail(CYIMG_TR("plugin.exr.err.read", L"Lecture du fichier EXR impossible"));
+    if (!Probe(file.data, size_t(std::min<uint64_t>(file.size, 4)))) return fail(CYIMG_TR("plugin.exr.err.unrecognized", L"Fichier OpenEXR non reconnu"));
 
     Io io{file.data, file.size, {}, {}};
     exr_context_initializer_t init = EXR_DEFAULT_CONTEXT_INITIALIZER;
@@ -386,14 +387,14 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     init.error_handler_fn = ErrorFn;
     ExrContext ec;
     if (exr_start_read(&ec.c, "image.exr", &init) != EXR_ERR_SUCCESS)
-        return fail(L"En-tête EXR invalide" + (io.firstError.empty() ? L"" : L" (" + Widen(io.firstError) + L")"));
+        return fail(CYIMG_TR("plugin.exr.err.header", L"En-tête EXR invalide") + (io.firstError.empty() ? L"" : L" (" + Widen(io.firstError) + L")"));
 
     int parts = 0;
     exr_get_count(ec.c, &parts);
     exr_storage_t storage = EXR_STORAGE_SCANLINE;
-    if (exr_get_storage(ec.c, 0, &storage) != EXR_ERR_SUCCESS) return fail(L"Partie EXR illisible");
+    if (exr_get_storage(ec.c, 0, &storage) != EXR_ERR_SUCCESS) return fail(CYIMG_TR("plugin.exr.err.part", L"Partie EXR illisible"));
     if (storage == EXR_STORAGE_DEEP_SCANLINE || storage == EXR_STORAGE_DEEP_TILED)
-        return fail(L"EXR « deep » (plusieurs échantillons par pixel) non géré");
+        return fail(CYIMG_TR("plugin.exr.err.deep", L"EXR « deep » (plusieurs échantillons par pixel) non géré"));
 
     Job job;
     job.exr = ec.c;
@@ -405,11 +406,11 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     exr_compression_t comp = EXR_COMPRESSION_NONE;
     if (exr_get_data_window(ec.c, 0, &job.dw) != EXR_ERR_SUCCESS || exr_get_channels(ec.c, 0, &cl) != EXR_ERR_SUCCESS ||
         !cl || cl->num_channels <= 0)
-        return fail(L"En-tête EXR incomplet (dataWindow ou canaux)");
+        return fail(CYIMG_TR("plugin.exr.err.header_incomplete", L"En-tête EXR incomplet (dataWindow ou canaux)"));
     exr_get_display_window(ec.c, 0, &dispw);
     exr_get_compression(ec.c, 0, &comp);
     const int64_t fullW = int64_t(job.dw.max.x) - job.dw.min.x + 1, fullH = int64_t(job.dw.max.y) - job.dw.min.y + 1;
-    if (fullW <= 0 || fullH <= 0 || fullW > (1 << 30) || fullH > (1 << 30)) return fail(L"Fenêtre de données EXR invalide");
+    if (fullW <= 0 || fullH <= 0 || fullW > (1 << 30) || fullH > (1 << 30)) return fail(CYIMG_TR("plugin.exr.err.data_window", L"Fenêtre de données EXR invalide"));
 
     job.pick = ChooseChannels(cl);
     for (int k = 0; k < 4; ++k) {
@@ -432,7 +433,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
         exr_tile_round_mode_t rm = EXR_TILE_ROUND_DOWN;
         if (exr_get_tile_descriptor(ec.c, 0, &tsx, &tsy, &lm, &rm) != EXR_ERR_SUCCESS || !tsx || !tsy || tsx > (1u << 20) ||
             tsy > (1u << 20))
-            return fail(L"Description des tuiles EXR invalide");
+            return fail(CYIMG_TR("plugin.exr.err.tile_desc", L"Description des tuiles EXR invalide"));
         job.tileW = int(tsx), job.tileH = int(tsy);
         int32_t nlx = 1, nly = 1;
         if (target > 0 && lm != EXR_TILE_ONE_LEVEL && exr_get_tile_levels(ec.c, 0, &nlx, &nly) == EXR_ERR_SUCCESS) {
@@ -453,7 +454,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
             }
         }
     } else if (exr_get_scanlines_per_chunk(ec.c, 0, &lpc) != EXR_ERR_SUCCESS || lpc <= 0) {
-        return fail(L"Organisation des lignes EXR invalide");
+        return fail(CYIMG_TR("plugin.exr.err.lines", L"Organisation des lignes EXR invalide"));
     }
     const int64_t big = std::max(LW, LH);
     if (target > 0 && big > int64_t(target)) job.N = int(big / target);
@@ -466,7 +467,7 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     if (job.tiled) {
         int32_t cx = 0, cy = 0;
         if (exr_get_tile_counts(ec.c, 0, job.lx, job.ly, &cx, &cy) != EXR_ERR_SUCCESS || cx <= 0 || cy <= 0)
-            return fail(L"Nombre de tuiles EXR invalide");
+            return fail(CYIMG_TR("plugin.exr.err.tile_count", L"Nombre de tuiles EXR invalide"));
         for (int y = 0; y < cy; ++y) {
             if (!rowsUseful(int64_t(y) * job.tileH, job.tileH)) continue;
             for (int x = 0; x < cx; ++x)
@@ -502,26 +503,27 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
     for (auto& t : threads) t.join();
     if (job.cancelled) return CYIMG_E_CANCELLED;
     if (!job.chunks.empty() && job.failed.load() == int(job.chunks.size()))
-        return fail(L"Données EXR illisibles" + (io.firstError.empty() ? L"" : L" (" + Widen(io.firstError) + L")"));
+        return fail(CYIMG_TR("plugin.exr.err.data", L"Données EXR illisibles") + (io.firstError.empty() ? L"" : L" (" + Widen(io.firstError) + L")"));
 
     // Format et informations
-    host->set_format(ctx, job.tiled ? L"OpenEXR (tuiles)" : L"OpenEXR");
-    wchar_t buf[160];
-    host->set_info(ctx, L"Compression", CompressionName(comp));
+    host->set_format(ctx, job.tiled ? CYIMG_TR("plugin.exr.format.tiled", L"OpenEXR (tuiles)") : L"OpenEXR");
+    wchar_t buf[256];
+    host->set_info(ctx, CYIMG_TR("plugin.exr.info.compression", L"Compression"), CompressionName(comp));
     std::wstring chans;
     for (int i = 0; i < cl->num_channels && i < 16; ++i) {
         if (i) chans += L", ";
         chans += Widen(std::string(cl->entries[i].name.str, size_t(cl->entries[i].name.length)));
     }
     if (cl->num_channels > 16) {
-        swprintf_s(buf, L", … (%d au total)", cl->num_channels);
+        swprintf_s(buf, CYIMG_TR("plugin.exr.info.channels_total", L"… (%d au total)"), cl->num_channels);
+        chans += L", ";
         chans += buf;
     }
-    host->set_info(ctx, L"Canaux", chans.c_str());
+    host->set_info(ctx, CYIMG_TR("plugin.exr.info.channels", L"Canaux"), chans.c_str());
     std::wstring shown;
     for (int k = 0; k < 4; ++k)
         if (!job.names[k].empty()) shown += (shown.empty() ? L"" : L", ") + Widen(job.names[k]);
-    host->set_info(ctx, L"Canaux affichés", shown.c_str());
+    host->set_info(ctx, CYIMG_TR("plugin.exr.info.shown_channels", L"Canaux affichés"), shown.c_str());
     bool types[3] = {};
     for (int k = 0; k < 4; ++k)
         if (job.pick.idx[k] >= 0) {
@@ -529,34 +531,38 @@ int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
             if (t >= 0 && t < 3) types[t] = true;
         }
     std::wstring ty;
-    const wchar_t* tn[3] = {L"uint 32 bits", L"half (16 bits)", L"float (32 bits)"};
+    const wchar_t* tn[3] = {CYIMG_TR("plugin.exr.type.uint", L"uint 32 bits"), CYIMG_TR("plugin.exr.type.half", L"half (16 bits)"), CYIMG_TR("plugin.exr.type.float", L"float (32 bits)")};
     for (int t = 0; t < 3; ++t)
         if (types[t]) ty += (ty.empty() ? L"" : L" + ") + std::wstring(tn[t]);
-    host->set_info(ctx, L"Type de données", ty.c_str());
+    host->set_info(ctx, CYIMG_TR("plugin.exr.info.data_type", L"Type de données"), ty.c_str());
     if (parts > 1) {
         const char* name = nullptr;
         exr_get_name(ec.c, 0, &name);
-        swprintf_s(buf, L"%d (partie 0 affichée%ls%ls)", parts, name ? L" : " : L"", name ? Widen(name).c_str() : L"");
-        host->set_info(ctx, L"Parties", buf);
+        if (name) swprintf_s(buf, CYIMG_TR("plugin.exr.info.parts_named", L"%d (partie 0 affichée : %ls)"), parts, Widen(name).c_str());
+        else swprintf_s(buf, CYIMG_TR("plugin.exr.info.parts_value", L"%d (partie 0 affichée)"), parts);
+        host->set_info(ctx, CYIMG_TR("plugin.exr.info.parts", L"Parties"), buf);
     }
     swprintf_s(buf, L"(%d,%d) - (%d,%d)", job.dw.min.x, job.dw.min.y, job.dw.max.x, job.dw.max.y);
-    host->set_info(ctx, L"Fenêtre de données", buf);
+    host->set_info(ctx, CYIMG_TR("plugin.exr.info.data_window", L"Fenêtre de données"), buf);
     if (dispw.min.x != job.dw.min.x || dispw.min.y != job.dw.min.y || dispw.max.x != job.dw.max.x ||
         dispw.max.y != job.dw.max.y) {
         swprintf_s(buf, L"(%d,%d) - (%d,%d)", dispw.min.x, dispw.min.y, dispw.max.x, dispw.max.y);
-        host->set_info(ctx, L"Fenêtre d'affichage", buf);
+        host->set_info(ctx, CYIMG_TR("plugin.exr.info.display_window", L"Fenêtre d'affichage"), buf);
     }
     if (job.tiled) {
         int32_t nlx = 1, nly = 1;
         exr_get_tile_levels(ec.c, 0, &nlx, &nly);
-        swprintf_s(buf, L"%dx%d, %d niveau(x)%ls", job.tileW, job.tileH, std::max(nlx, nly), job.lx ? L" (vignette : niveau réduit)" : L"");
-        host->set_info(ctx, L"Tuiles", buf);
+        swprintf_s(buf, job.lx ? CYIMG_TR("plugin.exr.info.tiles_reduced", L"%dx%d, %d niveau(x) (vignette : niveau réduit)")
+                               : CYIMG_TR("plugin.exr.info.tiles_value", L"%dx%d, %d niveau(x)"),
+                   job.tileW, job.tileH, std::max(nlx, nly));
+        host->set_info(ctx, CYIMG_TR("plugin.exr.info.tiles", L"Tuiles"), buf);
     }
-    swprintf_s(buf, L"%.4g%ls", double(job.maxLum), job.N > 1 ? L" (échantillonnée)" : L"");
-    host->set_info(ctx, L"Luminance max", buf);
+    if (job.N > 1) swprintf_s(buf, CYIMG_TR("plugin.exr.info.maxlum_sampled", L"%.4g (échantillonnée)"), double(job.maxLum));
+    else swprintf_s(buf, L"%.4g", double(job.maxLum));
+    host->set_info(ctx, CYIMG_TR("plugin.exr.info.maxlum", L"Luminance max"), buf);
     if (job.failed > 0) {
-        swprintf_s(buf, L"%d bloc(s) illisible(s) sur %zu (fichier tronqué ?)", job.failed.load(), job.chunks.size());
-        host->set_info(ctx, L"Avertissement", buf);
+        swprintf_s(buf, CYIMG_TR("plugin.exr.info.unreadable", L"%d bloc(s) illisible(s) sur %zu (fichier tronqué ?)"), job.failed.load(), job.chunks.size());
+        host->set_info(ctx, CYIMG_TR("plugin.exr.info.warning", L"Avertissement"), buf);
     }
     return CYIMG_OK;
 }

@@ -1,0 +1,6 @@
+# CyImgView — core (日本語)
+@code = ja
+@name = 日本語
+settings.language = 表示言語
+settings.language.desc = 「自動」では Windows の表示言語に従います。
+settings.language.auto = 自動 (%ls)

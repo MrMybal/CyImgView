@@ -43,8 +43,13 @@ Version portable : l'archive `CyImgView-<version>-win64.zip` contient l'exe et l
 - **Animations** : GIF, WebP, JPEG XL, séquences HEIF/AVIF et DICOM multi-images sont lus en boucle.
   Espace : lecture / pause ; `,` et `.` : image par image.
 - **Couches** (comme Photoshop) : le bouton « RVB » ouvre un panneau avec l'aperçu de chaque canal
-  (rouge, vert, bleu, alpha) ; un clic affiche ce canal seul en niveaux de gris. Raccourcis : C,
-  Ctrl+2 à Ctrl+6.
+  (rouge, vert, bleu, alpha). Un clic sur une ligne affiche ce canal seul en niveaux de gris ; les
+  cases à cocher combinent plusieurs canaux (en couleur). Décocher l'alpha montre les couleurs
+  cachées sous les zones transparentes. Raccourcis : C, Ctrl+2 à Ctrl+6.
+- **Multilingue** : français, English, Deutsch, Español, Italiano, Português, Nederlands, Polski,
+  Русский, 日本語, 简体中文, 한국어. Langue de Windows par défaut, changement instantané dans les
+  Paramètres. Pour ajouter ou corriger une langue, déposez un fichier `.lang` dans un dossier `lang`
+  à côté de l'exe (format décrit dans [`src/i18n.h`](src/i18n.h), modèles dans `src/lang/`).
 - **Diaporama** (D) : plein écran, interface masquée, fondu enchaîné entre les images, durée par
   image réglable (1 à 60 s, ↑ / ↓ pendant le diaporama), ordre aléatoire en option.
 - **Presse-papier** : Ctrl+C copie l'image affichée (transparence conservée), Ctrl+Maj+C le chemin
@@ -234,6 +239,7 @@ Les métadonnées EXIF ne sont pas recopiées dans le fichier enregistré.
   fonctionne aussi quand plusieurs fichiers sont ouverts d'un coup.
 - **Afficher la pellicule.**
 - **Rechercher les mises à jour automatiquement**, plus un bouton pour rechercher tout de suite.
+- **Langue de l'interface** : Automatique (langue de Windows) ou l'une des 12 langues.
 - **Diaporama** : ordre aléatoire, durée par image.
 - **Filtrage de l'image** : Automatique (pixel exact à 100 %, lissé en réduction, net au-delà de
   300 %), Pixels bruts (aucun lissage, pour le pixel art), Linéaire, Cubique, Cubique HQ, Anisotrope.
@@ -290,6 +296,11 @@ extern "C" __declspec(dllexport) const CyImgPlugin* CyImg_GetPlugin(void) { retu
 
 - **Animation** : après `alloc_bgra` (image 0), `host->add_frame()` ajoute chaque image suivante
   déjà composée et `host->set_frame_delay()` fixe sa durée.
+- **Traduction** : `host->translate()` (aide : [`include/cyimg_plugin_i18n.h`](include/cyimg_plugin_i18n.h))
+  cherche un texte dans les fichiers de langue de CyImgView, avec un texte par défaut si la clé
+  est inconnue.
+- **Robustesse** : un plugin qui plante sur un fichier ne ferme pas la visionneuse ; le fichier
+  affiche un message d'erreur.
 
 Pour compiler un nouveau plugin, créez `plugins/<nom>/plugin.cmake` sur le modèle de `plugins/tga`
 (`cyimg_add_plugin(<nom> sources...)`) : il est inclus automatiquement.

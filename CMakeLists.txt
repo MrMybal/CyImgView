@@ -14,10 +14,28 @@ set(OUT_DIR ${CMAKE_BINARY_DIR}/bin)
 
 # --- Code partagé (application, installeur, plugins) -----------------------------------------
 # deflate/zlib, archives zip, décodage des formats GPU par blocs (BC1 à BC7)
-add_library(cyimg_support STATIC src/inflate.cpp src/zip.cpp src/gpu_decode.cpp)
+add_library(cyimg_support STATIC src/inflate.cpp src/zip.cpp src/gpu_decode.cpp src/i18n.cpp)
 target_compile_options(cyimg_support PRIVATE ${CYIMG_WARNINGS})
 target_include_directories(cyimg_support PUBLIC src include)
 target_link_libraries(cyimg_support PUBLIC d3d11)
+
+# --- Langues ---------------------------------------------------------------------------------
+# Tous les fichiers src/lang/*.lang sont intégrés comme ressources « LANG » (voir src/i18n.h) :
+# gen/lang.rc est régénéré à chaque configuration, et les .rc sont recompilés quand un .lang change.
+file(GLOB CYIMG_LANG_FILES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/src/lang/*.lang)
+set(CYIMG_LANG_RC "")
+set(lang_id 1)
+foreach(f ${CYIMG_LANG_FILES})
+    file(TO_NATIVE_PATH "${f}" native)
+    string(REPLACE "\\" "\\\\" native "${native}")
+    string(APPEND CYIMG_LANG_RC "${lang_id} LANG \"${native}\"
+")
+    math(EXPR lang_id "${lang_id} + 1")
+endforeach()
+file(WRITE ${CMAKE_BINARY_DIR}/gen/lang.rc.tmp "${CYIMG_LANG_RC}")
+file(COPY_FILE ${CMAKE_BINARY_DIR}/gen/lang.rc.tmp ${CMAKE_BINARY_DIR}/gen/lang.rc ONLY_IF_DIFFERENT)
+set_source_files_properties(src/app.rc installer/setup.rc tools/bench.rc PROPERTIES
+    OBJECT_DEPENDS "${CYIMG_LANG_FILES};${CMAKE_BINARY_DIR}/gen/lang.rc")
 
 # --- Application -----------------------------------------------------------------------------
 add_executable(CyImgView WIN32
@@ -38,12 +56,14 @@ add_executable(CyImgView WIN32
 target_compile_options(CyImgView PRIVATE ${CYIMG_WARNINGS})
 target_link_libraries(CyImgView PRIVATE cyimg_support d2d1 d3d11 dxgi dwrite windowscodecs shlwapi dwmapi shell32
     ole32 propsys comctl32 comdlg32 winhttp bcrypt dxguid)
+target_include_directories(CyImgView PRIVATE ${CMAKE_BINARY_DIR}/gen)
 set_target_properties(CyImgView PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR})
 
 # Banc d'essai console du décodage (mesure des temps, conversions, tests des mises à jour)
-add_executable(cyimg_bench tools/bench.cpp src/decoder.cpp src/folder.cpp src/save.cpp src/updater.cpp)
+add_executable(cyimg_bench tools/bench.cpp tools/bench.rc src/decoder.cpp src/folder.cpp src/save.cpp src/updater.cpp)
 target_compile_options(cyimg_bench PRIVATE ${CYIMG_WARNINGS})
 target_link_libraries(cyimg_bench PRIVATE cyimg_support windowscodecs shlwapi ole32 propsys winhttp bcrypt)
+target_include_directories(cyimg_bench PRIVATE ${CMAKE_BINARY_DIR}/gen)
 set_target_properties(cyimg_bench PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR})
 
 # --- Installeur ------------------------------------------------------------------------------
@@ -52,6 +72,7 @@ set_target_properties(cyimg_bench PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR}
 add_executable(CyImgViewSetup WIN32 installer/setup.cpp installer/setup.rc installer/setup.manifest src/updater.cpp)
 target_compile_options(CyImgViewSetup PRIVATE ${CYIMG_WARNINGS})
 target_link_libraries(CyImgViewSetup PRIVATE cyimg_support comctl32 shell32 ole32 advapi32 winhttp bcrypt)
+target_include_directories(CyImgViewSetup PRIVATE ${CMAKE_BINARY_DIR}/gen)
 set_target_properties(CyImgViewSetup PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR} OUTPUT_NAME setup-stub)
 
 # --- Plugins ---------------------------------------------------------------------------------

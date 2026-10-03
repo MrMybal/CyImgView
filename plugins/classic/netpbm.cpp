@@ -52,14 +52,14 @@ int DecodePfm(Dec& d) {
     Reader r{d.d, d.n, 2};
     uint32_t w = 0, h = 0;
     std::string scaleStr;
-    if (!r.Uint(w) || !r.Uint(h) || !r.Word(scaleStr)) return d.Fail(L"En-tête PFM invalide");
-    if (!SizeOk(w, h)) return d.Fail(L"Dimensions PFM invalides");
+    if (!r.Uint(w) || !r.Uint(h) || !r.Word(scaleStr)) return d.Fail(CYIMG_TR("plugin.classic.pfm.err.header", L"En-tête PFM invalide"));
+    if (!SizeOk(w, h)) return d.Fail(CYIMG_TR("plugin.classic.pfm.err.dimensions", L"Dimensions PFM invalides"));
     const double scale = atof(scaleStr.c_str());
     const bool le = scale < 0;
     size_t pos = r.pos + 1;  // un seul blanc après l'échelle
     const size_t ch = color ? 3 : 1;
     const size_t need = size_t(w) * h * ch * 4;
-    if (pos > d.n || d.n - pos < need) return d.Fail(L"Fichier PFM tronqué");
+    if (pos > d.n || d.n - pos < need) return d.Fail(CYIMG_TR("plugin.classic.pfm.err.truncated", L"Fichier PFM tronqué"));
     std::vector<float> rgb(size_t(w) * h * 3);
     float maxv = 0.f;
     for (uint32_t y = 0; y < h; ++y) {
@@ -78,11 +78,11 @@ int DecodePfm(Dec& d) {
     Rgba img;
     const bool hdr = maxv > 1.f;  // valeurs > 1 : vraie image HDR, sinon simple écrêtage
     const double ev = ToneMap(rgb.data(), w, h, img, hdr);
-    d.Format(color ? L"PFM (RVB flottant)" : L"PFM (gris flottant)");
+    d.Format(color ? CYIMG_TR("plugin.classic.pfm.format_rgb", L"PFM (RVB flottant)") : CYIMG_TR("plugin.classic.pfm.format_gray", L"PFM (gris flottant)"));
     if (hdr) {
-        wchar_t buf[64];
-        swprintf_s(buf, L"%+.2f IL (automatique)", ev);
-        d.Info(L"Exposition", buf);
+        wchar_t buf[256];
+        swprintf_s(buf, CYIMG_TR("plugin.classic.pfm.exposure_value", L"%+.2f IL (automatique)"), ev);
+        d.Info(CYIMG_TR("plugin.classic.info.exposure", L"Exposition"), buf);
     }
     return Emit(d, img, false);
 }
@@ -113,15 +113,15 @@ int DecodePam(Dec& d) {
         else if (key == "MAXVAL") maxval = uint32_t(v);
         else if (key == "TUPLTYPE") tupl += (tupl.empty() ? "" : " ") + val;
     }
-    if (!end) return d.Fail(L"En-tête PAM invalide (ENDHDR absent)");
-    if (!SizeOk(w, h)) return d.Fail(L"Dimensions PAM invalides");
-    if (depth < 1 || depth > 64 || maxval < 1 || maxval > 65535) return d.Fail(L"En-tête PAM invalide");
+    if (!end) return d.Fail(CYIMG_TR("plugin.classic.pam.err.no_endhdr", L"En-tête PAM invalide (ENDHDR absent)"));
+    if (!SizeOk(w, h)) return d.Fail(CYIMG_TR("plugin.classic.pam.err.dimensions", L"Dimensions PAM invalides"));
+    if (depth < 1 || depth > 64 || maxval < 1 || maxval > 65535) return d.Fail(CYIMG_TR("plugin.classic.pam.err.header", L"En-tête PAM invalide"));
     const bool bw = tupl.rfind("BLACKANDWHITE", 0) == 0;
     const bool alpha = depth == 2 || depth >= 4 || tupl.find("_ALPHA") != std::string::npos;
     const bool gray = depth <= 2;
     const size_t bps = maxval > 255 ? 2 : 1;
     const size_t need = size_t(w) * h * depth * bps;
-    if (pos > d.n || d.n - pos < need) return d.Fail(L"Fichier PAM tronqué");
+    if (pos > d.n || d.n - pos < need) return d.Fail(CYIMG_TR("plugin.classic.pam.err.truncated", L"Fichier PAM tronqué"));
     Rgba img;
     img.Init(w, h, 255);
     const uint8_t* s = d.d + pos;
@@ -139,7 +139,7 @@ int DecodePam(Dec& d) {
     }
     std::wstring fmt = L"PAM";
     if (!tupl.empty()) fmt += L" " + Widen(tupl);
-    if (bps == 2) fmt += L", 16 bits";
+    if (bps == 2) fmt += std::wstring(L", ") + CYIMG_TR("plugin.classic.netpbm.16bit", L"16 bits");
     d.Format(fmt.c_str());
     return Emit(d, img, alpha);
 }
@@ -147,18 +147,18 @@ int DecodePam(Dec& d) {
 }  // namespace
 
 int DecodeNetpbm(Dec& d) {
-    if (d.n < 3 || d.d[0] != 'P') return d.Fail(L"Fichier Netpbm non reconnu");
+    if (d.n < 3 || d.d[0] != 'P') return d.Fail(CYIMG_TR("plugin.classic.netpbm.err.unrecognized", L"Fichier Netpbm non reconnu"));
     const char kind = char(d.d[1]);
     if (kind == 'F' || kind == 'f') return DecodePfm(d);
     if (kind == '7') return DecodePam(d);
-    if (kind < '1' || kind > '6') return d.Fail(L"Fichier Netpbm non reconnu");
+    if (kind < '1' || kind > '6') return d.Fail(CYIMG_TR("plugin.classic.netpbm.err.unrecognized", L"Fichier Netpbm non reconnu"));
     const int k = kind - '0';
     const bool bit = k == 1 || k == 4, color = k == 3 || k == 6, ascii = k <= 3;
     Reader r{d.d, d.n, 2};
     uint32_t w = 0, h = 0, maxval = 1;
-    if (!r.Uint(w) || !r.Uint(h) || (!bit && !r.Uint(maxval))) return d.Fail(L"En-tête Netpbm invalide");
-    if (!SizeOk(w, h)) return d.Fail(L"Dimensions Netpbm invalides");
-    if (maxval < 1 || maxval > 65535) return d.Fail(L"Valeur maximale Netpbm invalide");
+    if (!r.Uint(w) || !r.Uint(h) || (!bit && !r.Uint(maxval))) return d.Fail(CYIMG_TR("plugin.classic.netpbm.err.header", L"En-tête Netpbm invalide"));
+    if (!SizeOk(w, h)) return d.Fail(CYIMG_TR("plugin.classic.netpbm.err.dimensions", L"Dimensions Netpbm invalides"));
+    if (maxval < 1 || maxval > 65535) return d.Fail(CYIMG_TR("plugin.classic.netpbm.err.maxval", L"Valeur maximale Netpbm invalide"));
     Rgba img;
     img.Init(w, h, 255);
     const size_t count = size_t(w) * h;
@@ -170,10 +170,10 @@ int DecodeNetpbm(Dec& d) {
             for (size_t c = 0; c < ch; ++c) {
                 if (bit) {  // P1 : chiffres pas forcément séparés
                     r.SkipSpace();
-                    if (r.pos >= r.n || (r.p[r.pos] != '0' && r.p[r.pos] != '1')) return d.Fail(L"Fichier PBM tronqué ou invalide");
+                    if (r.pos >= r.n || (r.p[r.pos] != '0' && r.p[r.pos] != '1')) return d.Fail(CYIMG_TR("plugin.classic.netpbm.err.pbm_invalid", L"Fichier PBM tronqué ou invalide"));
                     v[c] = r.p[r.pos++] - '0';
                 } else if (!r.Uint(v[c])) {
-                    return d.Fail(L"Fichier Netpbm tronqué ou invalide");
+                    return d.Fail(CYIMG_TR("plugin.classic.netpbm.err.invalid", L"Fichier Netpbm tronqué ou invalide"));
                 }
             }
             if (bit) o[0] = o[1] = o[2] = v[0] ? 0 : 255;
@@ -183,12 +183,12 @@ int DecodeNetpbm(Dec& d) {
         }
     } else {
         const size_t pos = r.pos + 1;  // un seul blanc avant les données binaires
-        if (pos > d.n) return d.Fail(L"Fichier Netpbm tronqué");
+        if (pos > d.n) return d.Fail(CYIMG_TR("plugin.classic.netpbm.err.truncated", L"Fichier Netpbm tronqué"));
         const uint8_t* s = d.d + pos;
         const size_t avail = d.n - pos;
         if (bit) {
             const size_t rowBytes = (size_t(w) + 7) / 8;
-            if (avail < rowBytes * h) return d.Fail(L"Fichier PBM tronqué");
+            if (avail < rowBytes * h) return d.Fail(CYIMG_TR("plugin.classic.netpbm.err.pbm_truncated", L"Fichier PBM tronqué"));
             for (uint32_t y = 0; y < h; ++y) {
                 uint8_t* o = img.Row(y);
                 const uint8_t* row = s + y * rowBytes;
@@ -196,7 +196,7 @@ int DecodeNetpbm(Dec& d) {
             }
         } else {
             const size_t bps = maxval > 255 ? 2 : 1;
-            if (avail / bps / ch < count) return d.Fail(L"Fichier Netpbm tronqué");
+            if (avail / bps / ch < count) return d.Fail(CYIMG_TR("plugin.classic.netpbm.err.truncated", L"Fichier Netpbm tronqué"));
             for (size_t px = 0; px < count; ++px) {
                 uint8_t* o = img.px.data() + px * 4;
                 const uint8_t* p = s + px * ch * bps;
@@ -210,9 +210,11 @@ int DecodeNetpbm(Dec& d) {
             }
         }
     }
-    static const wchar_t* names[] = {L"", L"PBM (texte)", L"PGM (texte)", L"PPM (texte)", L"PBM", L"PGM", L"PPM"};
+    const wchar_t* const names[] = {L"", CYIMG_TR("plugin.classic.netpbm.pbm_text", L"PBM (texte)"),
+                                    CYIMG_TR("plugin.classic.netpbm.pgm_text", L"PGM (texte)"),
+                                    CYIMG_TR("plugin.classic.netpbm.ppm_text", L"PPM (texte)"), L"PBM", L"PGM", L"PPM"};
     std::wstring fmt = names[k];
-    if (maxval > 255) fmt += L", 16 bits";
+    if (maxval > 255) fmt += std::wstring(L", ") + CYIMG_TR("plugin.classic.netpbm.16bit", L"16 bits");
     d.Format(fmt.c_str());
     return Emit(d, img, false);
 }

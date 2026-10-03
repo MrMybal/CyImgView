@@ -1,0 +1,152 @@
+# CyImgView — ui (简体中文)
+@code = zh
+@name = 简体中文
+
+# 右键菜单：文本\t快捷键
+menu.copy = 复制图像\tCtrl+C
+menu.copy_path = 复制文件路径\tCtrl+Shift+C
+menu.open = 打开…\tCtrl+O
+menu.save_as = 另存为…\tCtrl+S
+menu.edit = 编辑\tE
+menu.reveal = 在资源管理器中显示
+menu.channels = 显示的通道\tC
+menu.channel.rgb = RGB（所有颜色）\tCtrl+2
+menu.channel.red = 红\tCtrl+3
+menu.channel.green = 绿\tCtrl+4
+menu.channel.blue = 蓝\tCtrl+5
+menu.channel.alpha = Alpha（透明度）\tCtrl+6
+menu.filter = 过滤
+menu.filter.raw = 原始像素\tN
+menu.play = 播放\t空格
+menu.pause = 暂停\t空格
+menu.rotate = 旋转\tR
+menu.slideshow = 幻灯片放映\tD
+menu.slideshow_stop = 退出幻灯片放映\tEsc
+menu.fullscreen = 全屏\tF
+menu.info = 信息\tI
+menu.settings = 设置\tP
+
+# 剪贴板
+clip.err.read = 无法读取图像
+clip.loading = 图像正在加载…
+clip.none = 没有可复制的图像
+clip.err.memory = 内存不足
+clip.busy = 剪贴板被占用，请重试
+clip.copied = 图像已复制
+clip.failed = 复制失败
+clip.path_copied = 路径已复制
+
+# 通道面板
+channels.title = 通道
+channels.rgb = RGB
+channels.rgba = RGBA
+channels.letter.r = R
+channels.letter.g = G
+channels.letter.b = B
+channels.letter.a = A
+channels.desc.red = 红
+channels.desc.green = 绿
+channels.desc.blue = 蓝
+channels.desc.alpha = Alpha
+channels.row.rgb = RGB
+channels.row.red = 红
+channels.row.green = 绿
+channels.row.blue = 蓝
+channels.row.alpha = Alpha
+channels.hint = 复选框：组合多个通道
+channels.no_alpha = 此图像没有透明度
+channels.toast.rgb = 通道：RGB
+channels.toast.red = 红通道
+channels.toast.green = 绿通道
+channels.toast.blue = 蓝通道
+channels.toast.alpha = Alpha 通道
+channels.toast.mix = 通道：%ls
+
+# 图像过滤
+filter.auto = 自动
+filter.raw = 原始像素
+filter.linear = 线性
+filter.cubic = 双三次
+filter.cubic_hq = 双三次 HQ
+filter.anisotropic = 各向异性
+filter.toast = 过滤：%ls
+
+# 幻灯片放映和动画播放
+slide.delay = %d 秒
+slide.toast.delay = 幻灯片放映：每张 %ls
+slide.toast.start = 幻灯片放映 · 每张 %ls · 按 Esc 退出
+slide.err.two_images = 文件夹中至少需要两张图像
+slide.toast.paused = 幻灯片放映已暂停
+slide.toast.playing = 正在放映幻灯片
+slide.tip.prev = 上一张 (←)
+slide.tip.play = 播放（空格）
+slide.tip.pause = 暂停（空格）
+slide.tip.next = 下一张 (→)
+slide.tip.less = 缩短每张的时间 (↓)
+slide.tip.more = 延长每张的时间 (↑)
+slide.tip.shuffle = 随机播放
+slide.tip.exit = 退出幻灯片放映 (Esc)
+slide.anim.frame = 第 %d / %d 帧
+slide.anim.play = 正在播放
+slide.anim.pause = 已暂停
+
+# 编辑模式：工具
+edit.tool.hand = 平移视图（M，或按住空格）
+edit.tool.brush = 画笔 (B) — 右键：第二种颜色
+edit.tool.eraser = 橡皮擦 (G)
+edit.tool.line = 直线 (L) — Shift：45° 角
+edit.tool.arrow = 箭头 (A)
+edit.tool.rect = 矩形 (R) — Shift：正方形
+edit.tool.ellipse = 椭圆 (O) — Shift：圆形
+edit.tool.text = 文本 (T)
+edit.tool.fill = 填充 (F)
+edit.tool.picker = 吸管 (K)
+edit.tool.crop = 裁剪 (C) — 按 Enter 应用
+
+# 编辑模式：顶部栏、颜色、“调整大小”菜单
+edit.title = 编辑
+edit.modified = 已修改
+edit.btn.done = 完成
+edit.tip.done = 退出编辑模式 (E / Esc)
+edit.btn.save_as = 另存为
+edit.btn.save_as_dirty = 另存为 •
+edit.tip.save_as = 另存为… (Ctrl+S)
+edit.tip.flip_v = 垂直翻转
+edit.tip.flip_h = 水平翻转
+edit.tip.rot_right = 向右旋转
+edit.tip.rot_left = 向左旋转
+edit.tip.resize = 调整大小
+edit.tip.fill_on = 填充形状（单击：轮廓）
+edit.tip.fill_off = 轮廓形状（单击：填充）
+edit.tip.font_size = 文字大小 ( [ 和 ] )
+edit.tip.thickness = 粗细 ( [ 和 ] )
+edit.label.font = 字体
+edit.label.size = 大小
+edit.tip.undo = 撤消 (Ctrl+Z)
+edit.tip.redo = 重做 (Ctrl+Y)
+edit.tip.swap_colors = 交换主色 / 辅色
+edit.tip.palette = 单击：主色 — 右键：辅色
+edit.tip.custom_color = 更多颜色…
+edit.resize.percent = %d%%
+edit.resize.long_side = 长边 %d px
+edit.crop.apply = 裁剪
+edit.tip.crop_apply = 应用裁剪 (Enter)
+edit.tip.crop_cancel = 取消 (Esc)
+
+# 编辑模式：消息
+edit.loading = 图像正在加载…
+edit.no_image = 没有可编辑的图像
+edit.err.read = 无法读取图像
+edit.err.memory = 内存不足
+edit.err.vram = 显存不足
+edit.err.too_big = 图像太大，无法编辑
+edit.ask.title = 是否保存更改？
+edit.ask.content = 图像已修改。如果不保存，所做的更改将丢失。
+edit.ask.save = 另存为…
+edit.ask.discard = 不保存
+
+# 另存为
+edit.save.no_image = 没有可保存的图像
+edit.save.no_encoder = 没有可用的图像编码器。
+edit.save.failed = 保存失败：\n%ls
+edit.save.done = 已保存：%ls

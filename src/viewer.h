@@ -193,10 +193,14 @@ private:
     void CopyPathToClipboard();
     void ShowContextMenu(POINT client);
     void RevealInExplorer();
-    void SetChannel(int ch);
+    void SetChannel(int ch);      // canal seul : 0 = toutes les couleurs, 1..4 = R, V, B, alpha
+    void ToggleChannel(int bit);  // case à cocher : combine les canaux (bit 0..3 = R, V, B, alpha)
     void CycleChannel(int delta);
-    static const wchar_t* ChannelName(int ch);
-    void DrawTile(ID2D1Bitmap* bmp, const D2D1_RECT_F& dst, D2D1_INTERPOLATION_MODE mode, int channel = -1);
+    bool ChannelFull(uint32_t mask) const;       // affichage normal (rien à filtrer)
+    bool ChannelKeepsAlpha(uint32_t mask) const;  // transparence appliquée à l'affichage
+    std::wstring ChannelLabel(uint32_t mask) const;
+    std::wstring ChannelDescription(uint32_t mask) const;
+    void DrawTile(ID2D1Bitmap* bmp, const D2D1_RECT_F& dst, D2D1_INTERPOLATION_MODE mode, int mask = -1);
     void DrawChannelPanel(float cw, float ch);
     void UpdateChannelPreview();
     void SyncGpuFrame(GpuImage* g);
@@ -354,7 +358,8 @@ private:
     std::vector<SaveFormat> m_saveFormats;
 
     // Vue d'un canal seul (0 = RVB, 1 = R, 2 = V, 3 = B, 4 = alpha), en niveaux de gris
-    int m_channel = 0;
+    std::wstring m_chanLabel;
+    uint32_t m_chanMask = 15;  // canaux affichés : 1 rouge, 2 vert, 4 bleu, 8 alpha
     ComPtr<ID2D1Effect> m_channelFx;
     ComPtr<ID2D1Bitmap> m_logo;
     bool m_showChannels = false;  // panneau « Couches » : aperçu de chaque canal, clic pour choisir

@@ -1,0 +1,130 @@
+# CyImgView — viewer (日本語)
+@code = ja
+@name = 日本語
+
+# 数値と単位
+viewer.decimal = .
+viewer.unit.bytes = %llu バイト
+viewer.unit.kb = %.1f KB
+viewer.unit.mb = %.1f MB
+viewer.unit.gb = %.2f GB
+viewer.zoom.pct1 = %.1f%%
+viewer.zoom.pct0 = %.0f%%
+
+# エラー、中央のメッセージ、通知
+viewer.err.direct2d = Direct2D を使用できません。
+viewer.msg.open_failed = このファイルを開けません
+viewer.msg.drop = ここに画像をドロップ
+viewer.msg.drop_sub = または Ctrl+O を押してファイルを開きます
+viewer.toast.device_lost = グラフィックス ドライバーがリセットされました: 変更は失われました
+viewer.toast.fit = ウィンドウに合わせる
+viewer.toast.not_found = ファイルが見つかりません
+viewer.toast.no_images = このフォルダーに画像がありません
+viewer.toast.first = 最初の画像
+viewer.toast.last = 最後の画像
+viewer.toast.shuffle_on = シャッフル
+viewer.toast.shuffle_off = フォルダーの順序
+
+# 「開く」ダイアログ
+viewer.dlg.images = 画像
+viewer.dlg.all_files = すべてのファイル
+viewer.dlg.open_title = 画像を開く
+
+# ツール バーのヒント
+viewer.btn.open = 開く (Ctrl+O)
+viewer.btn.save_as = 名前を付けて保存 / 変換 (Ctrl+S)
+viewer.btn.edit = 編集 (E)
+viewer.btn.zoom_out = 縮小 (-)
+viewer.btn.zoom_in = 拡大 (+)
+viewer.btn.fit = ウィンドウに合わせる (0)
+viewer.btn.actual = 実際のサイズ (1)
+viewer.btn.rotate = 回転 (R)
+viewer.btn.channels = チャンネル: 表示または合成 (C)
+viewer.btn.strip = フィルムストリップ (T)
+viewer.btn.info = 情報 (I)
+viewer.btn.help = ショートカット (H)
+viewer.btn.slideshow = 全画面スライドショー (D)
+viewer.btn.settings = 設定 (P)
+viewer.btn.fullscreen = 全画面表示 (F)
+viewer.btn.update = 新しいバージョンがあります (Ctrl+U)
+viewer.update.badge = 更新 %ls
+
+# ステータス行
+viewer.status.raw = RAW 現像中…
+viewer.status.frame = フレーム %d/%d
+viewer.status.paused = (一時停止)
+viewer.status.channels = チャンネル %ls
+
+# 情報パネル
+viewer.info.title = 情報
+viewer.info.file = ファイル
+viewer.info.folder = フォルダー
+viewer.info.size = サイズ
+viewer.info.modified = 更新日時
+viewer.info.dimensions = 大きさ
+viewer.info.dims = %d × %d  (%.1f MP)
+viewer.info.format = フォーマット
+viewer.info.decode = デコード
+
+# ショートカット パネル (k = キー、d = 説明)
+viewer.help.title = ショートカット
+viewer.help.plugins = 読み込まれたプラグイン (%d)
+viewer.help.no_plugins = なし (「plugins」フォルダーが空です)
+viewer.help.k.nav = ← → / Space / Backspace
+viewer.help.d.nav = 前 / 次の画像
+viewer.help.d.filter = ピクセルそのまま / フィルタリング (方式は設定で選択)
+viewer.help.d.slideshow = 全画面スライドショー (↑ ↓: 表示時間、Space: 一時停止)
+viewer.help.k.copy = Ctrl+C / 右クリック
+viewer.help.d.copy = 画像をコピー (Ctrl+Shift+C: パス)
+viewer.help.k.channels = RGB ボタン / C / Ctrl+2…6
+viewer.help.d.channels = チャンネル: 単一チャンネル (レッド、グリーン、ブルー、アルファ)
+viewer.help.k.anim = Space / , / .
+viewer.help.d.anim = アニメーション: 再生・一時停止 / 前・次のフレーム
+viewer.help.k.home_end = Home / End
+viewer.help.d.home_end = 最初 / 最後の画像
+viewer.help.k.zoom = ホイール / + / -
+viewer.help.d.zoom = ズーム (マウス位置を中心)
+viewer.help.k.drag = ドラッグ
+viewer.help.d.drag = 拡大した画像を移動
+viewer.help.k.dblclick = ダブルクリック / Z
+viewer.help.d.dblclick = ウィンドウに合わせる ↔ 実際のサイズ
+viewer.help.d.fit = ウィンドウに合わせる / 100%
+viewer.help.k.rotate = R / Shift+R
+viewer.help.d.rotate = 右 / 左に回転
+viewer.help.k.fullscreen = F / F11 / Enter
+viewer.help.d.fullscreen = 全画面表示
+viewer.help.d.strip = フィルムストリップの表示 / 非表示
+viewer.help.d.info = 情報パネル
+viewer.help.d.open = ファイルを開く (またはドラッグ アンド ドロップ)
+viewer.help.d.save_as = 名前を付けて保存 / フォーマット変換
+viewer.help.d.update = 更新を確認
+viewer.help.d.settings = 設定 (単一ウィンドウ、フィルムストリップ、更新)
+viewer.help.d.edit = 編集モード (ブラシ、図形、テキスト、トリミング…)
+viewer.help.d.reload = フォルダーを再読み込み
+viewer.help.k.mouse_side = マウスのサイド ボタン
+viewer.help.d.mouse_side = 前 / 次の画像
+viewer.help.k.esc = Esc
+viewer.help.d.esc = パネルを閉じる / 終了
+
+# 設定パネル (settings.language* キーは core.*.lang にあります)
+settings.title = 設定
+settings.single_window = ファイルを既存のウィンドウで開く
+settings.single_window.desc = オフの場合、ファイルごとに新しいウィンドウが開きます。
+settings.strip = フィルムストリップを表示
+settings.strip.desc = フォルダー内の画像のサムネイルを下部に表示します (T キー)。
+settings.auto_update = 更新を自動的に確認する
+settings.auto_update.desc = 1 日に 1 回まで、CyImgView の GitHub リリースを確認します。
+settings.shuffle = スライドショー: ランダムな順序
+settings.shuffle.desc = オフの場合、フォルダーの順序で表示します (D キー)。
+settings.filter = 画像のフィルタリング
+settings.filter.desc.auto = 100% ではシャープ、縮小時は滑らか、300% 超ではくっきりしたピクセル。
+settings.filter.desc.raw = 補間なし: ピクセル アート、細部の確認 (N キー)。
+settings.filter.desc.linear = シンプルで高速な補間。
+settings.filter.desc.cubic = バイキュービック: リニアよりシャープ。
+settings.filter.desc.cubic_hq = 最高品質の縮小、やや低速。
+settings.filter.desc.anisotropic = 柔らかい縮小、ジャギーが少ない。
+settings.slide_delay = スライドショー: 1 枚あたりの表示時間
+settings.slide_delay.desc = スライドショー中も ↑ と ↓ で調整できます。
+settings.update.install = 更新 %ls をインストール
+settings.update.check = 更新を確認
+settings.ini_path = 設定ファイル: %ls

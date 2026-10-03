@@ -1,6 +1,7 @@
 #include "updater.h"
 
 #include "common.h"
+#include "i18n.h"
 #include "inflate.h"
 #include "zip.h"
 #include "version.h"
@@ -47,7 +48,7 @@ bool HttpGet(const std::wstring& url, const wchar_t* accept,
     uc.lpszExtraInfo = extra;
     uc.dwExtraInfoLength = ARRAYSIZE(extra);
     if (!WinHttpCrackUrl(url.c_str(), 0, 0, &uc) || uc.nScheme != INTERNET_SCHEME_HTTPS) {
-        error = L"adresse invalide";
+        error = T("updater.err.bad_url");
         return false;
     }
     std::wstring object = std::wstring(path) + extra;
@@ -57,7 +58,7 @@ bool HttpGet(const std::wstring& url, const wchar_t* accept,
     if (!session.h) session.h = WinHttpOpen(L"CyImgView", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME,
                                             WINHTTP_NO_PROXY_BYPASS, 0);
     if (!session.h) {
-        error = L"WinHTTP indisponible";
+        error = T("updater.err.no_winhttp");
         return false;
     }
     WinHttpSetTimeouts(session.h, 10000, 10000, 15000, 30000);
@@ -66,21 +67,19 @@ bool HttpGet(const std::wstring& url, const wchar_t* accept,
                                                WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE)
                           : nullptr;
     if (!request.h) {
-        error = L"connexion impossible";
+        error = T("updater.err.connect");
         return false;
     }
     std::wstring headers = std::wstring(L"Accept: ") + accept + L"\r\nX-GitHub-Api-Version: 2022-11-28\r\n";
     if (!WinHttpSendRequest(request.h, headers.c_str(), DWORD(-1), WINHTTP_NO_REQUEST_DATA, 0, 0, 0) ||
         !WinHttpReceiveResponse(request.h, nullptr)) {
-        error = L"pas de connexion à GitHub";
+        error = T("updater.err.no_github");
         return false;
     }
     DWORD status = 0, sz = sizeof(status);
     WinHttpQueryHeaders(request.h, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, nullptr, &status, &sz, nullptr);
     if (status != 200) {
-        wchar_t b[64];
-        swprintf_s(b, status == 404 ? L"aucune release publiée (HTTP 404)" : L"réponse HTTP %lu", status);
-        error = b;
+        error = status == 404 ? std::wstring(T("updater.err.no_release")) : Tf("updater.err.http", status);
         return false;
     }
     wchar_t len[32] = {};
@@ -91,12 +90,12 @@ bool HttpGet(const std::wstring& url, const wchar_t* accept,
     for (;;) {
         DWORD got = 0;
         if (!WinHttpReadData(request.h, buf.data(), DWORD(buf.size()), &got)) {
-            error = L"téléchargement interrompu";
+            error = T("updater.err.interrupted");
             return false;
         }
         if (got == 0) break;
         if (!sink(buf.data(), got, total)) {
-            if (error.empty()) error = L"annulé";
+            if (error.empty()) error = T("updater.err.cancelled");
             return false;
         }
     }
@@ -315,13 +314,13 @@ struct ZipEntry {
 };
 
 bool ReadZip(const std::vector<uint8_t>& z, std::vector<ZipEntry>& out, std::wstring& error) {
-    error = L"archive de mise à jour invalide";
+    error = T("updater.err.bad_archive");
     std::vector<ZipEntryInfo> list;
     if (!ZipList(z.data(), z.size(), list)) return false;
     for (auto& info : list) {
         const std::string& name = info.name;
         if (name.find("..") != std::string::npos || name[0] == '/' || name.find(':') != std::string::npos) {
-            error = L"archive suspecte (chemin hors du dossier)";
+            error = T("updater.err.suspicious");
             return false;
         }
         if (info.size > (512u << 20)) return false;
@@ -362,7 +361,7 @@ int CompareVersions(const std::wstring& a, const std::wstring& b) {
 UpdateStatus CheckForUpdate(const std::wstring& repo, const std::wstring& currentVersion, ReleaseInfo& out,
                             std::wstring& error) {
     if (repo.empty() || repo.find(L'/') == std::wstring::npos) {
-        error = L"dépôt de mise à jour non configuré";
+        error = T("updater.err.no_repo");
         return UpdateStatus::Error;
     }
     std::string body;
@@ -375,7 +374,7 @@ UpdateStatus CheckForUpdate(const std::wstring& repo, const std::wstring& curren
         return UpdateStatus::Error;
     Json j;
     if (!JsonParser(body).Parse(j) || j.type != Json::Object) {
-        error = L"réponse de GitHub illisible";
+        error = T("updater.err.bad_response");
         return UpdateStatus::Error;
     }
     out = ReleaseInfo();
@@ -404,17 +403,17 @@ UpdateStatus CheckForUpdate(const std::wstring& repo, const std::wstring& curren
         out.sha256 = digest.rfind("sha256:", 0) == 0 ? Lower(Utf8ToWide(digest.substr(7))) : L"";
     }
     if (out.version.empty()) {
-        error = L"release sans numéro de version";
+        error = T("updater.err.no_version");
         return UpdateStatus::Error;
     }
     if (CompareVersions(out.version, currentVersion) <= 0) return UpdateStatus::UpToDate;
     if (out.assetUrl.empty()) {
-        error = L"la release " + out.tag + L" ne contient pas d'archive .zip";
+        error = Tf("updater.err.no_zip", out.tag.c_str());
         return UpdateStatus::Error;
     }
     // Seules les adresses de téléchargement de GitHub sont acceptées
     if (out.assetUrl.rfind(L"https://github.com/", 0) != 0) {
-        error = L"adresse de téléchargement inattendue";
+        error = T("updater.err.bad_download_url");
         return UpdateStatus::Error;
     }
     return UpdateStatus::Available;
@@ -424,7 +423,7 @@ bool DownloadUpdate(const ReleaseInfo& rel, const std::wstring& destFile,
                     const std::function<bool(uint64_t, uint64_t)>& progress, std::wstring& error) {
     HANDLE f = CreateFileW(destFile.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, nullptr);
     if (f == INVALID_HANDLE_VALUE) {
-        error = L"impossible de créer le fichier temporaire";
+        error = T("updater.err.temp_file");
         return false;
     }
     uint64_t done = 0;
@@ -432,7 +431,7 @@ bool DownloadUpdate(const ReleaseInfo& rel, const std::wstring& destFile,
                       [&](const uint8_t* d, size_t n, uint64_t total) {
                           DWORD w = 0;
                           if (!WriteFile(f, d, DWORD(n), &w, nullptr) || w != n) {
-                              error = L"écriture impossible (disque plein ?)";
+                              error = T("updater.err.disk_full");
                               return false;
                           }
                           done += n;
@@ -441,13 +440,13 @@ bool DownloadUpdate(const ReleaseInfo& rel, const std::wstring& destFile,
                       error);
     CloseHandle(f);
     if (ok && rel.assetSize && done != rel.assetSize) {
-        error = L"téléchargement incomplet";
+        error = T("updater.err.incomplete");
         ok = false;
     }
     if (ok && !rel.sha256.empty()) {
         std::wstring hex;
         if (!Sha256File(destFile, hex) || hex != rel.sha256) {
-            error = L"somme de contrôle SHA-256 incorrecte : fichier corrompu ou modifié";
+            error = T("updater.err.checksum");
             ok = false;
         }
     }
@@ -463,7 +462,7 @@ bool InstallUpdate(const std::wstring& zipFile, const std::wstring& appDir, std:
         LARGE_INTEGER sz{};
         if (f == INVALID_HANDLE_VALUE || !GetFileSizeEx(f, &sz) || sz.QuadPart > (1ll << 30)) {
             if (f != INVALID_HANDLE_VALUE) CloseHandle(f);
-            error = L"archive illisible";
+            error = T("updater.err.unreadable");
             return false;
         }
         zip.resize(size_t(sz.QuadPart));
@@ -471,7 +470,7 @@ bool InstallUpdate(const std::wstring& zipFile, const std::wstring& appDir, std:
         bool ok = ReadFile(f, zip.data(), DWORD(zip.size()), &got, nullptr) && got == zip.size();
         CloseHandle(f);
         if (!ok) {
-            error = L"archive illisible";
+            error = T("updater.err.unreadable");
             return false;
         }
     }
@@ -494,14 +493,14 @@ bool InstallUpdate(const std::wstring& zipFile, const std::wstring& appDir, std:
         if (_stricmp(e.name.c_str(), "CyImgView.exe") == 0) hasExe = true;
     }
     if (!hasExe) {
-        error = L"l'archive ne contient pas CyImgView.exe";
+        error = T("updater.err.no_exe");
         return false;
     }
 
     // Test d'écriture dans le dossier de l'application
     std::wstring probe = appDir + L"\\.cyimg-write-test";
     if (!WriteAll(probe, nullptr, 0)) {
-        error = L"le dossier de l'application n'est pas accessible en écriture (" + appDir + L")";
+        error = Tf("updater.err.read_only", appDir.c_str());
         return false;
     }
     DeleteFileW(probe.c_str());
@@ -514,7 +513,7 @@ bool InstallUpdate(const std::wstring& zipFile, const std::wstring& appDir, std:
         std::wstring target = appDir + L"\\" + rel;
         if (!EnsureDir(ParentOf(target)) || !WriteAll(target + L".new", e.data.data(), e.data.size())) {
             for (auto& t : targets) DeleteFileW((t + L".new").c_str());
-            error = L"écriture impossible : " + rel;
+            error = Tf("updater.err.write", rel.c_str());
             return false;
         }
         targets.push_back(target);
@@ -526,7 +525,7 @@ bool InstallUpdate(const std::wstring& zipFile, const std::wstring& appDir, std:
         bool ok = (!existed || MoveFileExW(t.c_str(), (t + L".old").c_str(), MOVEFILE_REPLACE_EXISTING)) &&
                   MoveFileExW((t + L".new").c_str(), t.c_str(), MOVEFILE_REPLACE_EXISTING);
         if (!ok) {
-            error = L"remplacement impossible : " + FileNameOf(t);
+            error = Tf("updater.err.replace", FileNameOf(t).c_str());
             if (existed && GetFileAttributesW(t.c_str()) == INVALID_FILE_ATTRIBUTES)
                 MoveFileExW((t + L".old").c_str(), t.c_str(), 0);
             for (auto it = done.rbegin(); it != done.rend(); ++it) {

@@ -1,6 +1,7 @@
 // Mises à jour via GitHub Releases : recherche en arrière-plan, dialogue, téléchargement avec
 // progression, installation et redémarrage.
 
+#include "i18n.h"
 #include "version.h"
 #include "viewer.h"
 #include "viewer_util.h"
@@ -16,12 +17,12 @@ using namespace ui;
 void Viewer::StartUpdateCheck(bool manual) {
     const std::wstring repo = CYIMG_UPDATE_REPO;
     if (repo.empty()) {
-        if (manual) ShowToast(L"Mises à jour : dépôt GitHub non configuré");
+        if (manual) ShowToast(T("update.toast.no_repo"));
         return;
     }
     if (m_updateChecking) return;
     m_updateChecking = true;
-    if (manual) ShowToast(L"Recherche de mises à jour…");
+    if (manual) ShowToast(T("update.toast.checking"));
     HWND hwnd = m_hwnd;
     std::thread([hwnd, repo, manual] {
         auto* r = new UpdateResult{};
@@ -46,14 +47,14 @@ void Viewer::OnUpdateResult(UpdateResult* raw) {
         m_updateAvailable = true;
         Invalidate();
         if (r->manual) ShowUpdateDialog();
-        else ShowToast(L"Mise à jour " + m_release.version + L" disponible");
+        else ShowToast(Tf("update.toast.available", m_release.version.c_str()));
         break;
     }
     case UpdateStatus::UpToDate:
-        if (r->manual) ShowToast(L"CyImgView est à jour (" CYIMG_VERSION_WSTR L")");
+        if (r->manual) ShowToast(Tf("update.toast.up_to_date", CYIMG_VERSION_WSTR));
         break;
     default:
-        if (r->manual) MessageBoxW(m_hwnd, (L"Recherche de mise à jour impossible :\n" + r->error).c_str(), L"CyImgView", MB_ICONWARNING);
+        if (r->manual) MessageBoxW(m_hwnd, Tf("update.err.check", r->error.c_str()).c_str(), L"CyImgView", MB_ICONWARNING);
         break;
     }
 }
@@ -62,29 +63,29 @@ void Viewer::ShowUpdateDialog() {
     if (!m_updateAvailable) return;
     std::wstring notes = m_release.notes;
     if (notes.size() > 1500) notes = notes.substr(0, 1500) + L"\n…";
-    if (notes.empty()) notes = L"(pas de notes de version)";
-    wchar_t size[64] = L"";
-    if (m_release.assetSize) swprintf_s(size, L"%.1f Mo", m_release.assetSize / (1024.0 * 1024.0));
-    std::wstring installLabel = std::wstring(L"Installer et redémarrer\nTélécharge ") + size + L" puis relance CyImgView";
-    std::wstring main = L"CyImgView " + m_release.version + L" est disponible";
-    std::wstring sub = L"Version installée : " CYIMG_VERSION_WSTR;
+    if (notes.empty()) notes = T("update.no_notes");
+    std::wstring size;
+    if (m_release.assetSize) size = Tf("update.size_mb", m_release.assetSize / (1024.0 * 1024.0));
+    std::wstring installLabel = Tf("update.btn.install", size.c_str());
+    std::wstring main = Tf("update.available", m_release.version.c_str());
+    std::wstring sub = Tf("update.installed_version", CYIMG_VERSION_WSTR);
 
     TASKDIALOG_BUTTON buttons[] = {
         {100, installLabel.c_str()},
-        {101, L"Voir la release sur GitHub"},
-        {102, L"Ignorer cette version"},
+        {101, T("update.btn.release_page")},
+        {102, T("update.btn.skip")},
     };
     TASKDIALOGCONFIG tc{sizeof(tc)};
     tc.hwndParent = m_hwnd;
     tc.dwFlags = TDF_USE_COMMAND_LINKS | TDF_ALLOW_DIALOG_CANCELLATION | TDF_POSITION_RELATIVE_TO_WINDOW |
                  TDF_EXPAND_FOOTER_AREA;
-    tc.pszWindowTitle = L"Mise à jour de CyImgView";
+    tc.pszWindowTitle = T("update.title");
     tc.pszMainIcon = TD_INFORMATION_ICON;
     tc.pszMainInstruction = main.c_str();
     tc.pszContent = sub.c_str();
     tc.pszExpandedInformation = notes.c_str();
-    tc.pszExpandedControlText = L"Masquer les nouveautés";
-    tc.pszCollapsedControlText = L"Voir les nouveautés";
+    tc.pszExpandedControlText = T("update.notes.hide");
+    tc.pszCollapsedControlText = T("update.notes.show");
     tc.cButtons = ARRAYSIZE(buttons);
     tc.pButtons = buttons;
     tc.dwCommonButtons = TDCBF_CLOSE_BUTTON;
@@ -138,10 +139,9 @@ HRESULT CALLBACK InstallDialogProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM, LONG_
     case TDN_TIMER: {
         uint64_t d = job->done, t = job->total;
         if (t) SendMessageW(hwnd, TDM_SET_PROGRESS_BAR_POS, WPARAM(d * 1000 / t), 0);
-        wchar_t b[128];
-        if (job->installing) swprintf_s(b, L"Installation…");
-        else swprintf_s(b, L"%.1f Mo sur %.1f Mo", d / 1048576.0, t / 1048576.0);
-        SendMessageW(hwnd, TDM_SET_ELEMENT_TEXT, TDE_CONTENT, reinterpret_cast<LPARAM>(b));
+        const std::wstring b = job->installing ? std::wstring(T("update.installing"))
+                                               : Tf("update.progress", d / 1048576.0, t / 1048576.0);
+        SendMessageW(hwnd, TDM_SET_ELEMENT_TEXT, TDE_CONTENT, reinterpret_cast<LPARAM>(b.c_str()));
         if (job->installing) SendMessageW(hwnd, TDM_ENABLE_BUTTON, IDCANCEL, FALSE);
         if (job->finished) SendMessageW(hwnd, TDM_CLICK_BUTTON, IDCANCEL, 0);  // ferme le dialogue
         break;
@@ -169,13 +169,13 @@ void Viewer::InstallUpdateNow() {
     job.zip = std::wstring(tmp) + L"CyImgView-update-" + m_release.version + L".zip";
     job.appDir = m_exeDir;
 
-    std::wstring main = L"Mise à jour vers CyImgView " + m_release.version;
+    std::wstring main = Tf("update.updating_to", m_release.version.c_str());
     TASKDIALOGCONFIG tc{sizeof(tc)};
     tc.hwndParent = m_hwnd;
     tc.dwFlags = TDF_SHOW_PROGRESS_BAR | TDF_CALLBACK_TIMER | TDF_POSITION_RELATIVE_TO_WINDOW;
-    tc.pszWindowTitle = L"Mise à jour de CyImgView";
+    tc.pszWindowTitle = T("update.title");
     tc.pszMainInstruction = main.c_str();
-    tc.pszContent = L"Connexion à GitHub…";
+    tc.pszContent = T("update.connecting");
     tc.dwCommonButtons = TDCBF_CANCEL_BUTTON;
     tc.pfCallback = InstallDialogProc;
     tc.lpCallbackData = reinterpret_cast<LONG_PTR>(&job);
@@ -184,9 +184,8 @@ void Viewer::InstallUpdateNow() {
     if (job.worker.joinable()) job.worker.join();
 
     if (!job.ok) {
-        if (!job.error.empty() && job.error != L"annulé")
-            MessageBoxW(m_hwnd, (L"La mise à jour a échoué :\n" + job.error + L"\n\nAucun fichier n'a été modifié.").c_str(),
-                        L"CyImgView", MB_ICONERROR);
+        if (!job.error.empty() && job.error != T("updater.err.cancelled"))
+            MessageBoxW(m_hwnd, Tf("update.err.failed", job.error.c_str()).c_str(), L"CyImgView", MB_ICONERROR);
         return;
     }
 
@@ -209,7 +208,7 @@ void Viewer::InstallUpdateNow() {
         CloseHandle(pi.hThread);
         CloseHandle(pi.hProcess);
     } else {
-        MessageBoxW(m_hwnd, L"Mise à jour installée. Relancez CyImgView pour l'utiliser.", L"CyImgView", MB_ICONINFORMATION);
+        MessageBoxW(m_hwnd, T("update.done_restart"), L"CyImgView", MB_ICONINFORMATION);
     }
     m_updateAvailable = false;
     PostMessageW(m_hwnd, WM_CLOSE, 0, 0);

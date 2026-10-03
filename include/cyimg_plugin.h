@@ -83,6 +83,12 @@ typedef struct CyImgHost {
        set_frame_delay fixe la durée d'affichage d'une image, en millisecondes. */
     uint8_t* (*add_frame)(CyImgContext* ctx, uint32_t* stride);
     void (*set_frame_delay)(CyImgContext* ctx, uint32_t frame_index, uint32_t delay_ms);
+
+    /* Traduction dans la langue de l'interface. key : identifiant ASCII (convention
+       « plugin.<nom>.<texte> »), cherché dans les fichiers de langue de CyImgView ; fallback est
+       renvoyé si la clé est inconnue. Le pointeur renvoyé reste valable jusqu'à la fin du programme.
+       Voir cyimg_plugin_i18n.h pour une aide pratique. */
+    const wchar_t* (*translate)(CyImgContext* ctx, const char* key, const wchar_t* fallback);
 } CyImgHost;
 
 #define CYIMG_HOST_HAS(host, field) \

@@ -1,0 +1,113 @@
+# CyImgView — core2 (简体中文)
+@code = zh
+@name = 简体中文
+
+# 更新窗口
+update.toast.no_repo = 更新：未配置 GitHub 仓库
+update.toast.checking = 正在检查更新…
+update.toast.available = 有可用更新 %ls
+update.toast.up_to_date = CyImgView 已是最新版本 (%ls)
+update.err.check = 无法检查更新：\n%ls
+update.no_notes = （无发行说明）
+update.size_mb = %.1f MB
+update.btn.install = 安装并重启\n下载 %ls，然后重启 CyImgView
+update.available = CyImgView %ls 现已推出
+update.installed_version = 已安装版本：%ls
+update.btn.release_page = 在 GitHub 上查看此版本
+update.btn.skip = 跳过此版本
+update.title = CyImgView 更新
+update.notes.hide = 隐藏新功能
+update.notes.show = 查看新功能
+update.installing = 正在安装…
+update.progress = %.1f MB / %.1f MB
+update.updating_to = 正在更新到 CyImgView %ls
+update.connecting = 正在连接 GitHub…
+update.err.failed = 更新失败：\n%ls\n\n未更改任何文件。
+update.done_restart = 更新已安装。请重启 CyImgView 以使用新版本。
+
+# 另存为
+save.title = 图像另存为
+save.quality = 质量 (JPEG、HEIF、WebP)：
+save.quality.item = %d%%
+save.quality.recommended = %d%%（推荐）
+save.err.no_wic = WIC 不可用
+save.err.memory = 内存不足
+save.err.no_encoder = “%ls”编码器不可用
+save.err.cannot_write = 无法写入此文件夹
+save.err.encoding = 编码时出错
+save.err.replace = 无法替换文件（是否已在其他程序中打开？）
+
+# 解码
+decoder.err.file_access = 无法访问文件
+decoder.err.read = 无法读取文件
+decoder.err.unreadable = 无法读取图像
+decoder.err.dimensions = 尺寸无效
+decoder.err.conversion = 格式转换失败
+decoder.err.memory = 内存不足
+decoder.err.decode = 解码错误
+decoder.err.unknown_format = 无法识别的格式
+decoder.err.cancelled = 已取消
+decoder.err.plugin_failed = 插件“%ls”无法解码此文件
+decoder.err.no_wic = WIC 不可用
+decoder.format.image = 图像
+decoder.format.animated_gif = 动态 GIF
+decoder.info.camera = 相机
+decoder.info.lens = 镜头
+decoder.info.exposure = 曝光时间
+decoder.info.aperture = 光圈
+decoder.info.focal = 焦距
+decoder.info.date_taken = 拍摄日期
+
+# 下载和安装更新
+updater.err.bad_url = 地址无效
+updater.err.no_winhttp = WinHTTP 不可用
+updater.err.connect = 连接失败
+updater.err.no_github = 无法连接到 GitHub
+updater.err.no_release = 没有已发布的版本 (HTTP 404)
+updater.err.http = HTTP 响应 %lu
+updater.err.interrupted = 下载已中断
+updater.err.cancelled = 已取消
+updater.err.bad_archive = 更新包无效
+updater.err.suspicious = 可疑的压缩包（路径位于文件夹之外）
+updater.err.no_repo = 未配置更新仓库
+updater.err.bad_response = 无法解析 GitHub 的响应
+updater.err.no_version = 此版本没有版本号
+updater.err.no_zip = 版本 %ls 不包含 .zip 压缩包
+updater.err.bad_download_url = 下载地址异常
+updater.err.temp_file = 无法创建临时文件
+updater.err.disk_full = 写入失败（磁盘已满？）
+updater.err.incomplete = 下载不完整
+updater.err.checksum = SHA-256 校验和不匹配：文件已损坏或被修改
+updater.err.unreadable = 无法读取压缩包
+updater.err.no_exe = 压缩包中不包含 CyImgView.exe
+updater.err.read_only = 应用程序文件夹不可写 (%ls)
+updater.err.write = 写入失败：%ls
+updater.err.replace = 替换失败：%ls
+
+# 安装程序 / 卸载程序
+setup.shortcut.desc = 快速图像查看器
+setup.progid.name = 图像 (CyImgView)
+setup.app.desc = 快速图像查看器（照片、RAW、Unreal 纹理）
+setup.err.read_installer = 无法读取安装程序
+setup.err.incomplete = 安装程序不完整（缺少压缩包）
+setup.err.temp_write = 无法写入临时文件
+setup.err.uninstaller = 无法创建卸载程序
+setup.install.title = 安装 CyImgView %ls
+setup.install.content = 文件夹：%ls\n\n无需管理员权限。
+setup.install.installed_version = 已安装版本：%ls
+setup.install.install = 安装
+setup.install.update = 更新
+setup.install.details = “开始”菜单快捷方式，以及图像、RAW 照片和 Unreal 纹理的“打开方式”
+setup.install.desktop = 创建桌面快捷方式
+setup.install.failed = 安装失败
+setup.done.title = CyImgView 已安装
+setup.done.content = 可在“开始”菜单中找到它。更新将自动安装。
+setup.done.launch = 启动 CyImgView
+setup.done.default = 将 CyImgView 设为默认图像查看器\n打开 Windows“默认应用”设置
+setup.uninstall.title = 要卸载 CyImgView 吗？
+setup.uninstall.content = 将从 %ls 中删除程序及其快捷方式。
+setup.uninstall.btn = 卸载
+setup.uninstall.remove_settings = 同时删除我的设置
+setup.uninstall.done = CyImgView 已卸载。
+setup.uninstall.partial = CyImgView 已卸载，但部分文件无法删除：\n%ls
+decoder.err.plugin_crashed = 插件“%ls”在处理此文件时崩溃 (%ls)
