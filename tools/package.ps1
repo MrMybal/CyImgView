@@ -13,7 +13,9 @@ $ver = '{0}.{1}.{2}' -f ([regex]::Match($h, 'VERSION_MAJOR (\d+)').Groups[1].Val
                         ([regex]::Match($h, 'VERSION_PATCH (\d+)').Groups[1].Value)
 
 if (-not $NoBuild) {
-    & cmd /c "`"$root\build.cmd`""
+    # Compilation complète : une compilation incrémentale peut garder un objet compilé avec une
+    # ancienne version d'un en-tête (modifié pendant une compilation) -> plantages imprévisibles.
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'build.ps1') -Clean
     if ($LASTEXITCODE -ne 0) { throw 'La compilation a échoué.' }
 }
 
