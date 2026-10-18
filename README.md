@@ -1,139 +1,125 @@
 <p align="center">
-  <img src="docs/logo.png" alt="Logo CyImgView" width="160">
+  <img src="docs/logo.png" alt="CyImgView logo" width="160">
 </p>
 
 <h1 align="center">CyImgView</h1>
 
-Visionneuse d'images pour Windows, pensée pour la vitesse : C++ natif, Direct2D (rendu GPU), WIC,
-aucune dépendance externe. L'exécutable fait environ 600 Ko et n'a besoin d'aucun runtime.
+**English** · [Français](README.fr.md)
+
+A Windows image viewer built for speed: native C++, Direct2D GPU rendering, WIC and no
+external dependencies for the main executable. The executable is about 600 KB and needs no runtime.
 
 ## Installation
 
-Téléchargez `CyImgView-<version>-Setup.exe` depuis les
-[releases](https://github.com/MrMybal/CyImgView/releases/latest) et lancez-le.
+Download `CyImgView-<version>-Setup.exe` from
+[releases](https://github.com/MrMybal/CyImgView/releases/latest) and run it.
 
-- **Sans droits administrateur** : installation dans `%LOCALAPPDATA%\Programs\CyImgView`.
-- **Intégration Windows** :
-  - raccourci dans le Menu Démarrer, et sur le Bureau en option ;
-  - entrée « Ouvrir avec » pour les images, photos RAW et textures Unreal ;
-  - CyImgView proposé dans *Paramètres > Applications par défaut*.
-- **Mises à jour** : automatiques depuis GitHub.
-- **Désinstallation** : *Paramètres > Applications*, ou `uninstall.exe` dans le dossier d'installation.
-- **Installation silencieuse** : `CyImgView-<version>-Setup.exe /S`.
+- **No administrator rights**: installs in `%LOCALAPPDATA%\Programs\CyImgView`.
+- **Windows integration**: Start menu shortcut, optional desktop shortcut, “Open with” entries
+  for images, RAW photos and Unreal textures, and CyImgView listed in *Settings > Default apps*.
+- **Updates**: automatic through GitHub.
+- **Uninstall**: *Settings > Apps*, or `uninstall.exe` in the installation folder.
+- **Silent installation**: `CyImgView-<version>-Setup.exe /S`.
 
-Version portable : l'archive `CyImgView-<version>-win64.zip` contient l'exe et le dossier
-`plugins`.
+Portable version: `CyImgView-<version>-win64.zip` contains the executable and `plugins` folder.
 
-## Fonctionnalités
+<a id="fonctionnalités"></a>
 
-- **Formats** : tout est intégré, aucun codec Windows supplémentaire n'est nécessaire.
+## Features
 
-  | Famille | Formats | Plugin |
+- **Formats**: all support is bundled; no additional Windows codecs are needed for viewing.
+
+  | Family | Formats | Plugin |
   |---|---|---|
-  | Courants (WIC) | JPEG, PNG, GIF (animé), BMP, TIFF, ICO, JPEG XR | — |
-  | Web / modernes | WebP (animé), HEIC / HEIF, AVIF (et leurs séquences animées), JPEG XL (animé), JPEG 2000 (jp2, j2k, jpx…) | `webp`, `heif`, `jxl`, `jpeg2000` |
-  | Vectoriels | SVG / SVGZ, PDF et AI (1re page), WMF / EMF, DXF (2D) | `vector` |
-  | Fichiers de travail | PSD / PSB (image fusionnée), XCF (GIMP, calques recomposés), KRA / ORA, CLIP, et l'aperçu intégré des INDD, EPS, CDR, Affinity (afphoto, afdesign, afpub) | `psd`, `docs` |
-  | Spéciaux | EXR, HDR (Radiance), DDS (BC1 à BC7, HDR, cubemaps), TGA, FITS, DICOM (multi-images), ICNS | `exr`, `classic`, `dds`, `tga`, `dicom` |
-  | Anciens | PCX, PICT, IFF / ILBM (HAM, EHB), Netpbm (pbm, pgm, ppm, pam, pfm), XBM / XPM | `classic` |
+  | Common (WIC) | JPEG, PNG, animated GIF, BMP, TIFF, ICO, JPEG XR | — |
+  | Web / modern | Animated WebP, HEIC / HEIF, AVIF (including animated sequences), animated JPEG XL, JPEG 2000 (jp2, j2k, jpx…) | `webp`, `heif`, `jxl`, `jpeg2000` |
+  | Vector | SVG / SVGZ, PDF and AI (first page), WMF / EMF, DXF (2D) | `vector` |
+  | Working documents | PSD / PSB (merged image), XCF (GIMP, recomposited layers), KRA / ORA, CLIP, and embedded previews from INDD, EPS, CDR, Affinity (afphoto, afdesign, afpub) | `psd`, `docs` |
+  | Specialized | EXR, HDR (Radiance), DDS (BC1–BC7, HDR, cubemaps), TGA, FITS, multiframe DICOM, ICNS | `exr`, `classic`, `dds`, `tga`, `dicom` |
+  | Legacy | PCX, PICT, IFF / ILBM (HAM, EHB), Netpbm (pbm, pgm, ppm, pam, pfm), XBM / XPM | `classic` |
 
-  Les images HDR (EXR, HDR, PFM, DDS float) sont ramenées à l'écran par un tone mapping simple.
-  Pour les fichiers de travail, c'est l'image fusionnée ou l'aperçu enregistré par le logiciel qui est
-  affiché (pas de recomposition des calques, sauf XCF).
-- **Animations** : GIF, WebP, JPEG XL, séquences HEIF/AVIF et DICOM multi-images sont lus en boucle.
-  Espace : lecture / pause ; `,` et `.` : image par image.
-- **Couches** (comme Photoshop) : le bouton « RVB » ouvre un panneau avec l'aperçu de chaque canal
-  (rouge, vert, bleu, alpha). Un clic sur une ligne affiche ce canal seul en niveaux de gris ; les
-  cases à cocher combinent plusieurs canaux (en couleur). Décocher l'alpha montre les couleurs
-  cachées sous les zones transparentes. Raccourcis : C, Ctrl+2 à Ctrl+6.
-- **Multilingue** : français, English, Deutsch, Español, Italiano, Português, Nederlands, Polski,
-  Русский, 日本語, 简体中文, 한국어. Langue de Windows par défaut, changement instantané dans les
-  Paramètres. Pour ajouter ou corriger une langue, déposez un fichier `.lang` dans un dossier `lang`
-  à côté de l'exe (format décrit dans [`src/i18n.h`](src/i18n.h), modèles dans `src/lang/`).
-- **Diaporama** (D) : plein écran, interface masquée, fondu enchaîné entre les images, durée par
-  image réglable (1 à 60 s, ↑ / ↓ pendant le diaporama), ordre aléatoire en option.
-- **Presse-papier** : Ctrl+C copie l'image affichée (transparence conservée), Ctrl+Maj+C le chemin
-  du fichier. Le clic droit ouvre un menu avec les actions courantes.
-- **RAW** : tous les formats gérés par [LibRaw](https://www.libraw.org) (~1000 boîtiers : CR3, CR2,
-  CRW, NEF, ARW, RAF, RW2, ORF, DNG, PEF, SRW, IIQ, 3FR…) via le plugin `raw`. L'affichage est
-  progressif :
-  1. L'aperçu JPEG embarqué par le boîtier s'affiche en 5 à 50 ms. Il est en pleine résolution sur
-     la plupart des Canon (CR2, CR3) et des Nikon.
-  2. Si cet aperçu est plus petit que le capteur (ARW, RAF, RW2…), LibRaw développe le RAW en
-     arrière-plan (0,3 à 2 s). La version développée remplace l'aperçu, avec une tonalité calée sur
-     le JPEG de l'appareil pour éviter un saut de luminosité.
-- **Textures Unreal Engine** (`.uasset` non cookés, UE 4.x à 5.8) via le plugin `uasset` :
-  - **Filtrage** : dans un dossier `Content`, seuls les `.uasset` qui sont des textures sont listés
-    (Texture2D, TextureCube…) ; matériaux, meshes et blueprints sont ignorés.
-  - **Pleine résolution** : les pixels source sont lus dans tous les cas connus (PNG, JPEG, brut,
-    zlib, UEDELTA, données Oodle) et dans tous les formats (BGRA8, G8, G16, RGBA16, RGBA16F,
-    RGBA32F, R16F, R32F, BGRE8). Les cubemaps s'affichent avec leurs 6 faces côte à côte.
-  - **Oodle** : le décompresseur est chargé automatiquement depuis une installation d'Unreal
-    (registre Epic). À défaut, copiez `oo2core_9_win64.dll` dans `plugins\`.
-  - **Vignettes** : la miniature enregistrée par l'éditeur.
-  - **Infos** : classe, format source, réglage de compression, sRGB, version du moteur.
-  - **Textures cookées** (jeux packagés, `Saved/Cooked`) : `.uasset` + `.uexp` + `.ubulk`/`.uptnl`,
-    de UE 4.25 à 5.8.
-    - La version du moteur est déduite de la structure du fichier.
-    - Formats GPU BC1 à BC7 (dont BC6H HDR) décodés par Direct3D (WARP), ainsi que les formats non
-      compressés. Les normal maps BC5 sont affichées avec le Z reconstruit.
-    - Vignettes : la plus petite mip suffisante, lue directement.
-  - **Limites** : textures mobiles (ASTC/ETC), textures virtuelles (VT), données virtualisées hors
-    du fichier, packages IoStore (`.utoc`/`.ucas`, à extraire d'abord, avec FModel par exemple).
-- **Zoom fluide** centré sur la souris, avec crans sur « ajusté » et 100 %. Rendu pixel-exact à
-  100 %, filtrage bicubique haute qualité en réduction et pixels nets au-delà de 300 %.
-- **Navigation dans le dossier** (tri naturel comme l'Explorateur), avec une pellicule de
-  vignettes en bas de l'écran.
-- **Vitesse** :
-  - décodage multithread ;
-  - préchargement des images voisines dans le sens de lecture ;
-  - envoi anticipé au GPU ;
-  - vignettes rapides (miniature EXIF, réduction DCT du JPEG) qui servent d'aperçu immédiat pendant
-    le décodage ;
-  - cache mémoire limité à 20 % de la RAM ;
-  - aucune consommation CPU au repos.
-- Orientation EXIF, rotation manuelle, plein écran, panneau d'infos EXIF (appareil, objectif,
-  exposition, ouverture, ISO, focale, date) et damier sous les images transparentes.
-- **Enregistrer sous / convertir** (Ctrl+S) : JPEG (qualité réglable dans la boîte de dialogue),
-  PNG, TIFF, BMP, GIF, JPEG XR, ainsi que HEIF si l'extension HEVC est installée.
-  - La rotation affichée est appliquée aux pixels.
-  - La transparence est conservée si le format la gère, sinon l'image est composée sur fond blanc.
-  - L'écriture passe par un fichier temporaire, donc le fichier remplacé ne peut pas être corrompu.
-  - Un RAW s'enregistre dans sa version développée.
-- **Mode édition** (E), façon Paint, avec les outils suivants :
-  - pinceau, gomme (transparente sur les images qui gèrent la transparence) ;
-  - ligne, flèche, rectangle, ellipse, en contour ou plein ;
-  - texte, pot de peinture, pipette ;
-  - recadrage avec grille des tiers ;
-  - rotation, miroirs, redimensionnement (pourcentage ou grand côté) ;
-  - palette de couleurs + couleur personnalisée, annuler / rétablir.
+  HDR images (EXR, HDR, PFM, floating-point DDS) use simple tone mapping for display.
+  Working documents show the merged image or preview saved by their originating application,
+  without layer recomposition except for XCF.
+- **Animation**: GIF, WebP, JPEG XL, HEIF/AVIF sequences and multiframe DICOM loop.
+  Space: play/pause; `,` and `.`: step through frames.
+- **Channels**, like Photoshop: the RGB button opens a panel with red, green, blue and alpha
+  previews. Click a row to show that channel in grayscale; checkboxes combine channels in color.
+  Uncheck alpha to show colors hidden beneath transparent areas. Shortcuts: C, Ctrl+2 through Ctrl+6.
+- **Languages**: Français, English, Deutsch, Español, Italiano, Português, Nederlands, Polski,
+  Русский, 日本語, 简体中文, 한국어. Defaults to the Windows language, with instant switching
+  in Settings. Add or correct a language by placing a `.lang` file in a `lang` folder beside
+  the executable; see [`src/i18n.h`](src/i18n.h) for the format and `src/lang/` for examples.
+- **Slideshow** (D): fullscreen with hidden interface, crossfades, adjustable duration
+  (1–60 seconds, ↑/↓ during playback) and optional random order.
+- **Clipboard**: Ctrl+C copies the displayed image with transparency; Ctrl+Shift+C copies
+  its path. Right-click opens common actions.
+- **RAW**: all formats supported by [LibRaw](https://www.libraw.org) (about 1,000 cameras:
+  CR3, CR2, CRW, NEF, ARW, RAF, RW2, ORF, DNG, PEF, SRW, IIQ, 3FR…) through `raw`.
+  Display is progressive: the camera's embedded JPEG appears in 5–50 ms, at full resolution
+  on most Canon CR2/CR3 and Nikon cameras. If smaller than the sensor (ARW, RAF, RW2…),
+  LibRaw develops the RAW in the background (0.3–2 seconds) and replaces the preview,
+  with tonality matched to the camera JPEG to avoid a brightness jump.
+- **Unreal Engine textures** (uncooked `.uasset`, UE 4.x–5.8) through `uasset`:
+  - In `Content` folders, only texture `.uasset` files (Texture2D, TextureCube…) are listed;
+    materials, meshes and Blueprints are ignored.
+  - Full-resolution source pixels are read in all known cases (PNG, JPEG, raw, zlib,
+    UEDELTA, Oodle data) and formats (BGRA8, G8, G16, RGBA16, RGBA16F, RGBA32F, R16F,
+    R32F, BGRE8). Cubemaps show all six faces side by side.
+  - Oodle is loaded automatically from an Unreal installation through the Epic registry;
+    otherwise copy `oo2core_9_win64.dll` into `plugins\`.
+  - Thumbnails use the editor-saved preview. Information includes class, source format,
+    compression setting, sRGB and engine version.
+  - Cooked textures (packaged games, `Saved/Cooked`), UE 4.25–5.8:
+    `.uasset` + `.uexp` + `.ubulk`/`.uptnl`. Engine version is inferred from file structure.
+    BC1–BC7 GPU formats, including BC6H HDR, are decoded by Direct3D WARP, alongside
+    uncompressed formats. BC5 normal maps reconstruct Z. Thumbnails directly read the
+    smallest sufficient mip.
+  - Limitations: mobile ASTC/ETC, virtual textures (VT), externally virtualized data and
+    IoStore packages (`.utoc`/`.ucas`, which must first be extracted, for example with FModel).
+- **Smooth mouse-centered zoom**, with stops at fit and 100%. Pixel-exact at 100%, high-quality
+  bicubic downscaling and sharp pixels above 300%.
+- **Folder navigation** with Explorer-style natural sorting and a thumbnail filmstrip below.
+- **Speed**: multithreaded decoding, neighboring-image preloading in the browsing direction,
+  early GPU upload, fast EXIF/JPEG-DCT thumbnails as immediate previews while decoding,
+  a cache capped at 20% of RAM and no CPU use at idle.
+- EXIF orientation, manual rotation, fullscreen, EXIF information (camera, lens, exposure,
+  aperture, ISO, focal length, date) and a checkerboard under transparency.
+- **Save as / convert** (Ctrl+S): JPEG (quality adjustable in the dialog), PNG, TIFF, BMP,
+  GIF, JPEG XR and HEIF if the HEVC extension is installed. Displayed rotation is applied
+  to pixels. Transparency is preserved where supported, otherwise composited on white.
+  Writes use a temporary file to avoid corrupting the file being replaced.
+  RAW images save their developed version.
+- **Paint-style editing** (E): brush, eraser (transparent on formats with transparency),
+  line, arrow, rectangle, ellipse (outline or filled), text, flood fill, eyedropper,
+  crop with thirds grid, rotation, mirroring, resizing by percentage or long edge,
+  color palette/custom color and undo/redo. Drawing uses GPU antialiasing.
+- **Plugins**: DLLs in `plugins\` add formats, effects, tools, editing modes and “Open with”
+  actions. Bundled: extra effects (noise, threshold, duotone, chromatic aberration), screenshot
+  annotation (numbered marker, highlighter, masking blur, text bubble), Black & White mode,
+  Print and Open in browser actions.
 
-  Le dessin est fait par le GPU avec antialiasing.
-- **Plugins** : des DLL déposées dans `plugins\` ajoutent de nouveaux formats, et des effets, outils,
-  modes d'édition et actions « Ouvrir avec » (plugins d'édition). Fournis : effets supplémentaires
-  (bruit, seuil, bichromie, aberration chromatique), annotation de captures d'écran (pastille
-  numérotée, surligneur, flou de masquage, bulle de texte), mode Noir & blanc, actions Imprimer et
-  Ouvrir dans le navigateur.
+<a id="compiler"></a>
 
-## Compiler
+## Build
 
-Prérequis : Visual Studio 2022 avec la charge de travail « Développement Desktop en C++ ».
-CMake et Ninja sont fournis par Visual Studio.
+Requirement: Visual Studio 2022 with the “Desktop development with C++” workload.
+CMake and Ninja are supplied by Visual Studio.
 
 ```bat
 build.cmd            :: Release -> build\Release\bin\CyImgView.exe
 build.cmd Debug
 ```
 
-Contenu du dossier `build\Release\bin` :
+Contents of `build\Release\bin`:
 
 ```
 CyImgView.exe
-cyimg_bench.exe       banc d'essai du décodage (console)
-plugins\raw.dll        plugin RAW (LibRaw intégré)
-plugins\vcomp140.dll   runtime OpenMP de Microsoft (LibRaw multithread)
-plugins\uasset.dll     plugin textures Unreal Engine
-plugins\tga.dll        plugin TGA
+cyimg_bench.exe       decoding benchmark (console)
+plugins\raw.dll        RAW (bundled LibRaw)
+plugins\vcomp140.dll   Microsoft OpenMP runtime (multithreaded LibRaw)
+plugins\uasset.dll     Unreal Engine textures
+plugins\tga.dll        TGA
 plugins\webp.dll       WebP (libwebp)
 plugins\heif.dll       HEIC / HEIF / AVIF (libheif, libde265, dav1d)
 plugins\jxl.dll        JPEG XL (libjxl, highway)
@@ -145,342 +131,332 @@ plugins\docs.dll       XCF, KRA, ORA, CLIP, INDD, EPS, CDR, Affinity
 plugins\dds.dll        DirectDraw Surface
 plugins\dicom.dll      DICOM
 plugins\classic.dll    Netpbm, PCX, XBM, XPM, IFF, HDR, FITS, ICNS, PICT
-plugins\fx_extra.dll   plugin d'édition : effets supplémentaires (bruit, seuil, bichromie, aberration)
-plugins\annotate.dll   plugin d'édition : outils d'annotation (pastille, surligneur, flou de masquage, bulle)
-plugins\bw_mode.dll    plugin d'édition : mode Noir & blanc
-plugins\share_actions.dll  plugin d'édition : Ouvrir avec → Imprimer…, Ouvrir dans le navigateur
+plugins\fx_extra.dll   editing: noise, threshold, duotone, aberration
+plugins\annotate.dll   editing: marker, highlighter, masking blur, bubble
+plugins\bw_mode.dll    editing: Black & White mode
+plugins\share_actions.dll  editing: Open with → Print…, Open in browser
 ```
 
-`-DCYIMG_TEST_PLUGINS=ON` compile en plus `bin\testplugins\crashtest.dll`, un plugin d'édition
-volontairement défaillant pour tester la robustesse de l'hôte (jamais livré : `tools\package.ps1` ne
-prend que `bin\plugins`). `python tools\check_lang.py` vérifie les fichiers de langue (clés,
-spécificateurs printf, listes de choix).
+`-DCYIMG_TEST_PLUGINS=ON` additionally builds `bin\testplugins\crashtest.dll`, a deliberately
+faulty editing plugin for host robustness testing. It is never shipped:
+`tools\package.ps1` takes only `bin\plugins`. `python tools\check_lang.py` checks language
+files (keys, printf specifiers and choice lists).
 
-Chaque plugin a son dossier `plugins\<nom>\` avec un `plugin.cmake`, inclus automatiquement. Pour
-ne compiler que certains plugins : `-DCYIMG_ONLY_PLUGINS="webp;psd"`.
+Each plugin has `plugins\<name>\plugin.cmake`, included automatically. To build only selected
+plugins, use `-DCYIMG_ONLY_PLUGINS="webp;psd"`. Deploy `CyImgView.exe` with its `plugins` folder.
 
-Pour déployer l'application, copiez `CyImgView.exe` et le dossier `plugins`.
+LibRaw 0.22.2 sources are in `third_party/LibRaw`, dual-licensed LGPL 2.1 / CDDL 1.0.
+They are used under LGPL 2.1, compatible with the project's GPL-3.0.
+`tools\package.ps1` produces the installer (`setup-stub.exe` + archive).
 
-Les sources de LibRaw 0.22.2 se trouvent dans `third_party/LibRaw` (double licence LGPL 2.1 /
-CDDL 1.0). Elles sont utilisées sous LGPL 2.1, compatible avec la GPL-3.0 du projet.
+<a id="mises-à-jour-github-releases"></a>
 
-L'installeur (`setup-stub.exe` + archive) est produit par `tools\package.ps1`.
+## Updates (GitHub Releases)
 
-## Mises à jour (GitHub Releases)
+CyImgView checks for new versions a few seconds after startup, at most once every 20 hours,
+or manually with **Ctrl+U**. An “Update X.Y.Z” badge appears in the top bar. Choose to install
+and restart, view the release or skip that version. Installation downloads the release's
+`*-win64.zip`, verifies SHA-256 when supplied by GitHub, replaces files including the running
+executable, then restarts on the same image. On failure, everything is restored.
+Disable with `auto=0` in `[update]` in `%APPDATA%\CyImgView\settings.ini`.
 
-CyImgView vérifie lui-même s'il existe une nouvelle version :
-- **Quand** : quelques secondes après le démarrage, au plus une fois toutes les 20 h, ou à la demande
-  avec **Ctrl+U**. Une pastille « Mise à jour X.Y.Z » apparaît alors dans la barre du haut.
-- **Choix proposés** : installer et redémarrer, voir la release, ignorer cette version.
-- **Installation** :
-  - téléchargement de l'archive `*-win64.zip` de la release, avec contrôle SHA-256 quand GitHub le
-    fournit ;
-  - remplacement des fichiers, y compris l'exe en cours d'exécution, puis redémarrage sur la même
-    image ;
-  - en cas d'échec, tout est remis en état.
-- **Désactiver** : `auto=0` dans la section `[update]` de `%APPDATA%\CyImgView\settings.ini`.
+Configure the repository in `src/version.h`: `#define CYIMG_UPDATE_REPO L"owner/repository"`.
+The feature is disabled while that field is empty.
 
-**Configuration** : indiquer le dépôt dans `src/version.h` :
-`#define CYIMG_UPDATE_REPO L"propriétaire/dépôt"`. Tant que ce champ est vide, la fonction est
-désactivée.
+To publish a version:
 
-**Publier une version :**
-1. Augmenter `CYIMG_VERSION_MAJOR/MINOR/PATCH` dans `src/version.h` et committer.
-2. `git tag v1.3.0 && git push origin v1.3.0`. Le workflow `.github/workflows/release.yml` compile,
-   empaquette et crée la release avec le zip.
+1. Increment `CYIMG_VERSION_MAJOR/MINOR/PATCH` in `src/version.h` and commit.
+2. Run `git tag v1.3.0 && git push origin v1.3.0`. The `.github/workflows/release.yml`
+   workflow builds, packages and creates the release with the ZIP.
 
-Sans GitHub Actions, `tools\package.ps1` produit `dist\CyImgView-<version>-win64.zip`, à joindre à
-une release étiquetée `v<version>`.
+Without GitHub Actions, `tools\package.ps1` produces `dist\CyImgView-<version>-win64.zip`
+for attachment to a release tagged `v<version>`.
 
-Oodle (`oo2core_*.dll`) n'est jamais inclus dans l'archive : il appartient à Epic et reste chargé
-depuis l'installation d'Unreal de l'utilisateur.
+Oodle (`oo2core_*.dll`) is never included: it belongs to Epic and is loaded from the user's Unreal installation.
 
-## Utilisation
+<a id="utilisation"></a>
 
-`CyImgView.exe [fichier|dossier]`. Vous pouvez aussi glisser-déposer un fichier, utiliser Ctrl+O, ou
-passer par « Ouvrir avec » / l'association de fichiers.
+## Usage
 
-| Touche | Action |
+`CyImgView.exe [file|folder]`. You can also drag and drop, use Ctrl+O, or use “Open with” / file associations.
+
+| Key | Action |
 |---|---|
-| ← → / Espace / Retour arrière / Page préc. / Page suiv. | Image précédente / suivante |
-| Début / Fin | Première / dernière image |
-| Molette, + / -, ↑ / ↓ | Zoom (centré sur la souris pour la molette) |
-| Glisser | Déplacer l'image zoomée |
-| Double-clic / Z | Basculer entre « ajusté » et taille réelle |
-| 0 / 1 | Ajuster / 100 % |
-| R / Maj+R | Pivoter |
-| F / F11 / Entrée / clic molette | Plein écran |
-| T | Pellicule |
-| I | Informations |
-| H / F1 | Aide |
-| F5 | Recharger le dossier |
-| Boutons latéraux de la souris | Image précédente / suivante |
-| Échap | Fermer le panneau, quitter le plein écran, puis quitter |
-| Ctrl+C / Ctrl+Maj+C | Copier l'image / le chemin du fichier |
-| Clic droit | Menu (copier, enregistrer, couches, diaporama…) |
-| C / Ctrl+2 à Ctrl+6 | Couches : RVB, rouge, vert, bleu, alpha |
-| Espace / , / . | Animation : lecture-pause / image précédente / suivante |
-| N | Pixels bruts (sans lissage) / filtrage choisi |
-| D | Diaporama (↑ ↓ : durée par image, Espace : pause, Échap : quitter) |
-| Ctrl+S | Enregistrer sous / convertir |
-| Ctrl+U | Rechercher une mise à jour |
-| P | Paramètres |
-| E | Mode édition |
+| ← → / Space / Backspace / Page Up / Page Down | Previous / next image |
+| Home / End | First / last image |
+| Wheel, + / -, ↑ / ↓ | Zoom (mouse-centered with wheel) |
+| Drag | Pan the zoomed image |
+| Double-click / Z | Toggle fit / actual size |
+| 0 / 1 | Fit / 100% |
+| R / Shift+R | Rotate |
+| F / F11 / Enter / middle-click | Fullscreen |
+| T | Filmstrip |
+| I | Information |
+| H / F1 | Help |
+| F5 | Reload folder |
+| Mouse side buttons | Previous / next image |
+| Escape | Close panel, leave fullscreen, then exit |
+| Ctrl+C / Ctrl+Shift+C | Copy image / file path |
+| Right-click | Menu (copy, save, channels, slideshow…) |
+| C / Ctrl+2 through Ctrl+6 | Channels: RGB, red, green, blue, alpha |
+| Space / , / . | Animation: play-pause / previous / next frame |
+| N | Raw pixels (no smoothing) / selected filtering |
+| D | Slideshow (↑ ↓: image duration, Space: pause, Escape: exit) |
+| Ctrl+S | Save as / convert |
+| Ctrl+U | Check for updates |
+| P | Settings |
+| E | Editing mode |
 
-### Mode édition
+<a id="mode-édition"></a>
 
-| Touche | Outil / action |
+### Editing mode
+
+| Key | Tool / action |
 |---|---|
-| B / G | Pinceau / gomme (clic droit : 2e couleur) |
-| L / A / R / O | Ligne / flèche / rectangle / ellipse (Maj : 45°, carré, cercle) |
-| T | Texte (Entrée : valider, Maj+Entrée : nouvelle ligne, Échap : annuler) |
-| F / K | Remplissage / pipette |
-| C | Recadrer (Entrée ou double-clic pour valider) |
-| M, Espace maintenu, clic molette | Déplacer la vue |
-| [ / ] | Taille du trait ou de la police |
-| Ctrl+Z / Ctrl+Y | Annuler / rétablir |
-| E / Échap | Quitter l'édition (l'enregistrement est proposé s'il y a des modifications) |
+| B / G | Brush / eraser (right-click: secondary color) |
+| L / A / R / O | Line / arrow / rectangle / ellipse (Shift: 45°, square, circle) |
+| T | Text (Enter: confirm, Shift+Enter: newline, Escape: cancel) |
+| F / K | Fill / eyedropper |
+| C | Crop (Enter or double-click to confirm) |
+| M, held Space, middle-click | Pan |
+| [ / ] | Stroke or font size |
+| Ctrl+Z / Ctrl+Y | Undo / redo |
+| E / Escape | Leave editing (offers to save changes) |
 
-Les tailles d'outil sont en pixels de l'image et s'adaptent à sa définition.
+Tool sizes use image pixels and adapt to its resolution.
+EXIF metadata is not copied to the saved file.
 
-Les métadonnées EXIF ne sont pas recopiées dans le fichier enregistré.
+<a id="paramètres-touche-p-ou-bouton-engrenage"></a>
 
-### Paramètres (touche P ou bouton engrenage)
+### Settings (P or gear button)
 
-- **Ouvrir les fichiers dans la fenêtre existante** (désactivé par défaut) : une image ouverte depuis
-  l'Explorateur remplace celle de la fenêtre déjà ouverte au lieu d'en créer une nouvelle. Ça
-  fonctionne aussi quand plusieurs fichiers sont ouverts d'un coup.
-- **Afficher la pellicule.**
-- **Rechercher les mises à jour automatiquement**, plus un bouton pour rechercher tout de suite.
-- **Langue de l'interface** : Automatique (langue de Windows) ou l'une des 12 langues.
-- **Diaporama** : ordre aléatoire, durée par image.
-- **Filtrage de l'image** : Automatique (pixel exact à 100 %, lissé en réduction, net au-delà de
-  300 %), Pixels bruts (aucun lissage, pour le pixel art), Linéaire, Cubique, Cubique HQ, Anisotrope.
-  Aussi dans le menu du clic droit ; la touche N bascule en pixels bruts.
+- **Open files in the existing window** (off by default): an image opened from Explorer replaces
+  the existing window's image instead of creating a new window, including when opening several files.
+- **Show filmstrip**.
+- **Check for updates automatically**, plus a button to check immediately.
+- **Interface language**: Automatic (Windows language) or one of the 12 languages.
+- **Slideshow**: random order and image duration.
+- **Image filtering**: Automatic (pixel-exact at 100%, smoothed when downscaling, sharp above 300%),
+  Raw pixels (no smoothing, for pixel art), Linear, Cubic, HQ Cubic, Anisotropic.
+  Also in the context menu; N toggles raw pixels.
 
-Les réglages, ainsi que la position de la fenêtre, sont enregistrés dans
-`%APPDATA%\CyImgView\settings.ini`.
+Settings and window position are saved in `%APPDATA%\CyImgView\settings.ini`.
 
-## Écrire un plugin
+<a id="écrire-un-plugin"></a>
 
-L'API C est décrite dans [`include/cyimg_plugin.h`](include/cyimg_plugin.h). Un plugin est une DLL
-qui exporte une seule fonction :
+## Write a plugin
+
+The C API is in [`include/cyimg_plugin.h`](include/cyimg_plugin.h).
+A plugin is a DLL exporting one function:
 
 ```cpp
 #include "cyimg_plugin.h"
 
 static int Decode(const CyImgHost* host, CyImgContext* ctx, const wchar_t* path) {
-    // Option 1 : pixels décodés par le plugin
+    // Option 1: pixels decoded by the plugin
     uint32_t stride;
     uint8_t* px = host->alloc_bgra(ctx, width, height, /*has_alpha*/ 0, &stride);
-    // ... remplir px (BGRA 8 bits, alpha prémultiplié) ...
+    // ... fill px (8-bit BGRA, premultiplied alpha) ...
 
-    // Option 2 : confier à l'hôte un flux JPEG/PNG/TIFF embarqué
+    // Option 2: pass an embedded JPEG/PNG/TIFF stream to the host
     // return host->decode_encoded(ctx, data, size);
 
-    host->set_format(ctx, L"Mon format");
+    host->set_format(ctx, L"My format");
     return CYIMG_OK;
 }
 
 static const CyImgPlugin plugin = {
-    CYIMG_API_VERSION, L"Mon plugin", L"1.0", L"ext1;ext2",
-    nullptr,  // probe (optionnel) : reconnaissance par l'en-tête
+    CYIMG_API_VERSION, L"My plugin", L"1.0", L"ext1;ext2",
+    nullptr,  // optional probe: header recognition
     Decode,
 };
 
 extern "C" __declspec(dllexport) const CyImgPlugin* CyImg_GetPlugin(void) { return &plugin; }
 ```
 
-- `decode` est appelée en parallèle depuis plusieurs threads, donc sans état global modifiable.
-- Si `host->target_size(ctx)` est différent de 0, l'hôte demande une vignette : le plugin peut alors
-  renvoyer une image plus petite.
-- Les plugins passent avant WIC pour les extensions qu'ils déclarent.
-- **Affichage progressif** : un plugin lent peut d'abord rendre un aperçu rapide, puis appeler
-  `host->set_refinable(ctx)`. L'hôte affiche l'aperçu, puis rappelle `decode` en arrière-plan avec
-  `host->quality(ctx) == 1` pour obtenir la version complète. Ces deux fonctions ont été ajoutées
-  après la première version de l'API : testez leur présence avec `CYIMG_HOST_HAS(host, quality)`.
-- `host->set_error(ctx, message)` : message affiché quand le fichier est refusé (ex. « ce .uasset
-  est un Material »).
-- **Filtre de dossier** (export optionnel) :
-  `extern "C" __declspec(dllexport) int CyImg_Accept(const wchar_t* path)`. Il retourne 0 pour
-  masquer un fichier de la liste du dossier ; c'est ainsi que le plugin `uasset` ne garde que les
-  textures. Il doit être rapide, car il est appelé pour chaque fichier du dossier.
-- Si un plugin rend une image plus grande que la vignette demandée, l'hôte la réduit lui-même.
+- `decode` runs concurrently on several threads; use no mutable global state.
+- A nonzero `host->target_size(ctx)` requests a thumbnail; the plugin may return a smaller image.
+- Plugins take precedence over WIC for declared extensions.
+- **Progressive display**: a slow plugin may return a fast preview and call `host->set_refinable(ctx)`.
+  The host shows it, then calls `decode` in the background with `host->quality(ctx) == 1` for
+  the full version. These functions were added after the initial API: check with `CYIMG_HOST_HAS(host, quality)`.
+- `host->set_error(ctx, message)` supplies the rejection message, such as “this .uasset is a Material”.
+- **Folder filter**, optional export:
+  `extern "C" __declspec(dllexport) int CyImg_Accept(const wchar_t* path)` returns 0 to hide a file.
+  The `uasset` plugin uses it to retain only textures. It must be fast: it runs for every folder file.
+- If a plugin returns an image larger than the requested thumbnail, the host downsizes it.
+- **Animation**: after `alloc_bgra` for frame 0, `host->add_frame()` adds each already-composited
+  subsequent frame, and `host->set_frame_delay()` sets duration.
+- **Translation**: `host->translate()` (helper:
+  [`include/cyimg_plugin_i18n.h`](include/cyimg_plugin_i18n.h)) searches CyImgView language files,
+  falling back to default text when the key is unknown.
+- **Robustness**: a plugin crash on a file does not close the viewer; the file shows an error.
 
-- **Animation** : après `alloc_bgra` (image 0), `host->add_frame()` ajoute chaque image suivante
-  déjà composée et `host->set_frame_delay()` fixe sa durée.
-- **Traduction** : `host->translate()` (aide : [`include/cyimg_plugin_i18n.h`](include/cyimg_plugin_i18n.h))
-  cherche un texte dans les fichiers de langue de CyImgView, avec un texte par défaut si la clé
-  est inconnue.
-- **Robustesse** : un plugin qui plante sur un fichier ne ferme pas la visionneuse ; le fichier
-  affiche un message d'erreur.
+To build a new plugin, create `plugins/<name>/plugin.cmake` following `plugins/tga`
+(`cyimg_add_plugin(<name> sources...)`); it is included automatically.
 
-Pour compiler un nouveau plugin, créez `plugins/<nom>/plugin.cmake` sur le modèle de `plugins/tga`
-(`cyimg_add_plugin(<nom> sources...)`) : il est inclus automatiquement.
+<a id="écrire-un-plugin-dédition"></a>
 
-## Écrire un plugin d'édition
+## Write an editing plugin
 
-L'API C est décrite dans [`include/cyimg_edit_plugin.h`](include/cyimg_edit_plugin.h). Un plugin
-d'édition est une DLL du même dossier `plugins\` qui exporte `CyImg_GetEditPlugin` (une DLL peut
-exporter aussi `CyImg_GetPlugin` et décoder des formats). Il déclare des tableaux de quatre sortes
-d'extensions ; l'hôte s'occupe de l'interface, de l'aperçu, de la sélection, de l'annulation et des
-traductions.
+The C API is in [`include/cyimg_edit_plugin.h`](include/cyimg_edit_plugin.h).
+An editing plugin is a DLL in the same `plugins\` folder exporting `CyImg_GetEditPlugin`.
+It can also export `CyImg_GetPlugin` to decode formats. It declares arrays of four extension
+types; the host handles interface, preview, selection, undo and translation.
 
-**Effet** (menu Effets de la Retouche, même panneau de réglages et même aperçu que les effets
-intégrés) :
+**Effect**, in the Retouch Effects menu, using the same settings panel and preview as built-in effects:
 
 ```cpp
 #include "cyimg_edit_plugin.h"
 
 static const CyImgParam kParams[] = {
-    CYIMG_SLIDER("plugin.monplugin.level", L"Niveau", 1, 254, 128, 1, nullptr),
-    CYIMG_CHECK("plugin.monplugin.invert", L"Inverser", 0),
+    CYIMG_SLIDER("plugin.myplugin.level", L"Level", 1, 254, 128, 1, nullptr),
+    CYIMG_CHECK("plugin.myplugin.invert", L"Invert", 0),
 };
 
-// Thread de travail : modifier img->data dans img->sel (BGRA 8 bits prémultiplié)
+// Worker thread: modify img->data within img->sel (premultiplied 8-bit BGRA)
 static int Process(const CyImgEditHost* host, CyImgEditCtx* ctx, CyImgImage* img, const double* v) {
     for (uint32_t y = 0; y < img->sel.h; ++y) {
         if (host->is_cancelled(ctx)) return CYIMG_E_CANCELLED;
         uint8_t* p = img->data + size_t(img->sel.y + y) * img->stride + size_t(img->sel.x) * 4;
         for (uint32_t x = 0; x < img->sel.w; ++x, p += 4) {
             const bool white = 0.114 * p[0] + 0.587 * p[1] + 0.299 * p[2] >= v[0] * p[3] / 255;
-            p[0] = p[1] = p[2] = (white != (v[1] != 0)) ? p[3] : 0;  // blanc prémultiplié = alpha
+            p[0] = p[1] = p[2] = (white != (v[1] != 0)) ? p[3] : 0;  // premultiplied white = alpha
         }
     }
     return CYIMG_OK;
 }
 
-static const CyImgEffect kEffect = {sizeof(CyImgEffect), "threshold", "plugin.monplugin.threshold", L"Seuil",
+static const CyImgEffect kEffect = {sizeof(CyImgEffect), "threshold", "plugin.myplugin.threshold", L"Threshold",
                                     nullptr, nullptr, kParams, 2, Process};
 static const CyImgEffect* const kEffects[] = {&kEffect};
-static const CyImgEditPlugin kPlugin = {CYIMG_EDIT_API_VERSION, sizeof(CyImgEditPlugin), "monplugin", nullptr,
-                                        L"Mon plugin", L"1.0", kEffects, 1, nullptr, 0, nullptr, 0, nullptr, 0};
+static const CyImgEditPlugin kPlugin = {CYIMG_EDIT_API_VERSION, sizeof(CyImgEditPlugin), "myplugin", nullptr,
+                                        L"My plugin", L"1.0", kEffects, 1, nullptr, 0, nullptr, 0, nullptr, 0};
 
 extern "C" __declspec(dllexport) const CyImgEditPlugin* CyImg_GetEditPlugin(const CyImgEditHost*) { return &kPlugin; }
 ```
 
-Pendant les réglages, `process` reçoit une copie réduite à la taille de l'écran (`img->scale` < 1 :
-multiplier les distances en pixels par `scale`) ; peu après le dernier réglage, puis à « Appliquer »,
-la pleine résolution. `img->source` donne les pixels d'origine (effets qui lisent les voisins).
+While adjusting settings, `process` receives a screen-sized copy (`img->scale` < 1: multiply
+pixel distances by `scale`), then full resolution shortly after the last adjustment and on Apply.
+`img->source` supplies original pixels for effects reading neighbors.
 
-**Outil** (colonne d'outils, après les outils intégrés ; paramètres dans la barre d'options) :
+**Tool**, after built-in tools in the tools column, with parameters in the options bar:
 
 ```cpp
 static int Down(const CyImgEditHost* h, CyImgEditCtx* c, const CyImgToolEvent* ev) {
-    const double r = h->param(c, 0) / 2;  // paramètre 0 : taille
-    h->draw_ellipse(c, ev->x, ev->y, r, r, 0, 0xFF000000u | h->primary_color(c));  // sur le calque actif
-    return 0;  // 1 : suivre le glissement (mouse_move puis mouse_up)
+    const double r = h->param(c, 0) / 2;  // parameter 0: size
+    h->draw_ellipse(c, ev->x, ev->y, r, r, 0, 0xFF000000u | h->primary_color(c));  // active layer
+    return 0;  // 1: follow dragging (mouse_move then mouse_up)
 }
-static const CyImgParam kToolParams[] = {CYIMG_SLIDER("plugin.monplugin.size", L"Taille", 4, 200, 30, 1, L"px")};
-static const CyImgTool kTool = {sizeof(CyImgTool), "dot", "plugin.monplugin.dot", L"Point", nullptr, nullptr,
-                                0xE7C8 /* icône Segoe MDL2 */, nullptr, 0, 'J', kToolParams, 1,
+static const CyImgParam kToolParams[] = {CYIMG_SLIDER("plugin.myplugin.size", L"Size", 4, 200, 30, 1, L"px")};
+static const CyImgTool kTool = {sizeof(CyImgTool), "dot", "plugin.myplugin.dot", L"Dot", nullptr, nullptr,
+                                0xE7C8 /* Segoe MDL2 icon */, nullptr, 0, 'J', kToolParams, 1,
                                 Down, nullptr, nullptr, nullptr, nullptr, nullptr};
 ```
 
-Les primitives de l'hôte (`draw_line`, `draw_polyline`, `draw_rect`, `draw_ellipse`, `fill_polygon`,
-`draw_text`, `measure_text`, `begin_group` / `end_group` avec opacité et mode produit) dessinent sur
-le calque actif avec Direct2D, limitées à la sélection ; appelées dans `draw_overlay`, elles dessinent
-un aperçu à l'écran sans rien modifier. `lock_pixels` / `unlock_pixels` donnent accès aux pixels d'un
-rectangle (flou, pixellisation...). Chaque geste fait une entrée d'annulation (`begin_edit`, appelée
-automatiquement au premier dessin). `input_text` ouvre une petite boîte de saisie, `set_param` met à
-jour un paramètre affiché (compteur), `screen_pixel` donne la taille d'un pixel de l'écran.
+Host primitives (`draw_line`, `draw_polyline`, `draw_rect`, `draw_ellipse`, `fill_polygon`,
+`draw_text`, `measure_text`, `begin_group` / `end_group` with opacity and multiply mode)
+draw on the active layer through Direct2D, clipped to selection. From `draw_overlay` they draw
+an on-screen preview without modifying anything. `lock_pixels` / `unlock_pixels` access a pixel
+rectangle for blur, pixelation and similar effects. Each gesture creates an undo entry through
+`begin_edit`, called automatically on first drawing. `input_text` opens a small input dialog,
+`set_param` updates a displayed parameter (counter), and `screen_pixel` gives one screen pixel's size.
 
-**Mode d'édition** (onglet à côté de Retouche et Développement) : `controls` décrit le panneau de
-droite (sections repliables `CYIMG_SECTION`, curseurs, cases, listes, couleurs, boutons
-`CYIMG_BUTTON`, textes, séparateurs ; `visible_if` affiche un contrôle selon la valeur d'un autre) et
-`process` calcule le résultat à partir de `img->source`. Le mode est non destructif comme le
-Développement : aperçu réduit pendant les réglages, rendu complet à l'arrêt, résultat intégré au
-calque (une entrée d'historique) au retour en Retouche, à « Terminer » ou à l'enregistrement.
-`on_button` reçoit les valeurs et peut les modifier (préréglages).
+**Editing mode**, a tab beside Retouch and Develop: `controls` describes the right panel
+(collapsible `CYIMG_SECTION` sections, sliders, checkboxes, lists, colors, `CYIMG_BUTTON` buttons,
+text and separators; `visible_if` shows a control based on another value). `process` computes
+the result from `img->source`. Like Develop, it is nondestructive: reduced preview during
+adjustment, full render at rest, then integration into the layer as one history entry when
+returning to Retouch, finishing or saving. `on_button` receives and can modify values for presets.
 
-**Action « Ouvrir avec »** :
+**“Open with” action**:
 
 ```cpp
 static int Run(const CyImgEditHost*, CyImgEditCtx*, const wchar_t* path, void* hwnd) {
     return INT_PTR(ShellExecuteW(HWND(hwnd), L"print", path, nullptr, nullptr, SW_SHOWNORMAL)) > 32;
 }
-static const CyImgAction kPrint = {sizeof(CyImgAction), "print", "plugin.monplugin.print", L"Imprimer…",
-                                   nullptr, 0xE749, nullptr /* toutes les extensions */, Run, nullptr, nullptr};
-// Ou un programme externe, sans code : program = L"%ProgramFiles%\\Outil\\outil.exe", args = L"\"%1\""
+static const CyImgAction kPrint = {sizeof(CyImgAction), "print", "plugin.myplugin.print", L"Print…",
+                                   nullptr, 0xE749, nullptr /* all extensions */, Run, nullptr, nullptr};
+// Or an external application without code: program = L"%ProgramFiles%\\Tool\\tool.exe", args = L"\"%1\""
 ```
 
-Les actions apparaissent dans le groupe des plugins du menu « Ouvrir avec » : en visualisation avec
-le fichier affiché, en édition avec un PNG temporaire de l'image modifiée.
+Actions appear in the plugin group of “Open with”: using the displayed file in viewer mode,
+or a temporary PNG of the modified image in editing mode.
 
-Règles :
+Rules:
 
-- **Threads** : `process` tourne sur des threads de travail, parfois deux à la fois (aperçu et rendu
-  complet) : pas d'état global modifiable, seulement `translate` et `is_cancelled` de l'hôte, à tester
-  régulièrement. Les autres rappels (outils, boutons, actions) sont sur le thread de l'interface, un à
-  la fois.
-- **Pixels** : BGRA 8 bits à alpha prémultiplié (couleur ≤ alpha).
-- **Protection** : chaque appel vers le plugin est protégé ; une fonction qui plante est désactivée
-  pour la session avec un message, sans fermer l'application ni perdre le document.
-- **Traduction** : textes donnés par une clé (`plugin.<nom>.<texte>`) et un texte par défaut ; les
-  listes de choix se traduisent par la clé suivie de `.choices` (`Un|Deux|Trois`). Les plugins livrés
-  ont leurs textes dans `src/lang/editplugins.<code>.lang`.
-- **Versions** : chaque structure commence par `struct_size` ; `CYIMG_EDIT_HOST_HAS(host, champ)`
-  teste la présence d'une fonction de l'hôte ajoutée plus tard.
-- **Chargement** à la première entrée en mode édition, à la première ouverture du menu « Ouvrir
-  avec » ou de l'aide (aucun effet sur le démarrage) ; la liste est dans l'aide (H), section
-  « Plugins d'édition ».
+- **Threads**: `process` runs on workers, sometimes two concurrently (preview/full render).
+  No mutable global state; only host `translate` and `is_cancelled` are allowed, checking
+  cancellation regularly. Other callbacks (tools, buttons, actions) run one at a time on the UI thread.
+- **Pixels**: premultiplied-alpha 8-bit BGRA (color ≤ alpha).
+- **Protection**: each plugin call is protected; a crashing function is disabled for the
+  session with a message, without closing the application or losing the document.
+- **Translation**: a key (`plugin.<name>.<text>`) and default text; choice lists use the key
+  plus `.choices` (`One|Two|Three`). Bundled plugins have text in `src/lang/editplugins.<code>.lang`.
+- **Versions**: each structure starts with `struct_size`; `CYIMG_EDIT_HOST_HAS(host, field)`
+  checks for a host function added later.
+- **Loading**: on first entering editing, opening “Open with” or Help, with no startup effect.
+  The list is in Help (H), under Editing plugins.
 
-Les plugins livrés servent de modèles commentés : [`plugins/fx_extra`](plugins/fx_extra) (effets),
-[`plugins/annotate`](plugins/annotate) (outils), [`plugins/bw_mode`](plugins/bw_mode) (mode),
-[`plugins/share_actions`](plugins/share_actions) (actions). Ils se compilent comme les autres, avec un
-`plugin.cmake` (`cyimg_add_plugin(<nom> sources...)`).
+Bundled plugins are commented examples: [`plugins/fx_extra`](plugins/fx_extra) (effects),
+[`plugins/annotate`](plugins/annotate) (tools), [`plugins/bw_mode`](plugins/bw_mode) (mode),
+[`plugins/share_actions`](plugins/share_actions) (actions). They build like other plugins,
+with `plugin.cmake` (`cyimg_add_plugin(<name> sources...)`).
 
-## Mesurer les performances
+<a id="mesurer-les-performances"></a>
+
+## Measure performance
 
 ```bat
-build\Release\bin\cyimg_bench.exe D:\Photos\MonDossier
-build\Release\bin\cyimg_bench.exe D:\Photos\MonDossier 160 best
+build\Release\bin\cyimg_bench.exe D:\Photos\MyFolder
+build\Release\bin\cyimg_bench.exe D:\Photos\MyFolder 160 best
 ```
 
-Cette commande affiche les temps de décodage en pleine résolution et en vignette, plus les EXIF.
-Avec `best`, elle mesure aussi le développement RAW complet, même quand l'aperçu suffit.
+This displays full-resolution/thumbnail decode times and EXIF. With `best`, it also measures
+full RAW development even when the preview is sufficient.
 
-Conversion en ligne de commande (le format de sortie est déduit de l'extension) :
+Command-line conversion, with output format inferred from the extension:
 
 ```bat
 build\Release\bin\cyimg_bench.exe convert photo.CR3 photo.jpg 90
 ```
 
-Si la variable d'environnement `CYIMG_TRACE=1` est définie, le démarrage de la visionneuse est
-chronométré dans `%TEMP%\cyimg_trace.txt`.
+With `CYIMG_TRACE=1` in the environment, viewer startup is timed in `%TEMP%\cyimg_trace.txt`.
 
-## Confidentialité
+<a id="confidentialité"></a>
 
-- **Aucune télémétrie**, aucun compte, aucune publicité.
-- **Seule connexion réseau** : la recherche de mise à jour, qui interroge l'API publique de GitHub
-  (`api.github.com/repos/MrMybal/CyImgView/releases/latest`) au plus une fois toutes les 20 h, puis
-  télécharge l'archive de la release si vous acceptez la mise à jour. Aucune donnée personnelle
-  n'est envoyée (en-tête `User-Agent: CyImgView/<version>`). Désactivable dans les Paramètres.
-- **Fichiers locaux** : réglages dans `%APPDATA%\CyImgView\settings.ini` (et `develop_last.ini`
-  pour les réglages du mode Développement), journal de plantage éventuel dans
-  `%LOCALAPPDATA%\CyImgView\crash.txt` (jamais envoyé), exports temporaires de « Ouvrir avec »
-  dans `%TEMP%\CyImgView` (supprimés après 24 h).
-- **DICOM** : les données nominatives du patient (nom, identifiant, date de naissance) ne sont
-  jamais affichées.
-- « Ouvrir avec » ne lance que les applications que vous avez choisies ou que Windows associe au
-  format.
+## Privacy
 
-## Licence
+- **No telemetry**, account or advertising.
+- **Only network connection**: update checking against the public GitHub API
+  (`api.github.com/repos/MrMybal/CyImgView/releases/latest`), at most every 20 hours, followed
+  by the release archive download if you accept the update. No personal data is sent
+  (`User-Agent: CyImgView/<version>`). Disable it in Settings.
+- **Local files**: settings in `%APPDATA%\CyImgView\settings.ini` (and `develop_last.ini`
+  for Develop settings), optional crash log in `%LOCALAPPDATA%\CyImgView\crash.txt`
+  (never sent), and temporary “Open with” exports in `%TEMP%\CyImgView` (deleted after 24 hours).
+- **DICOM**: patient-identifying data (name, ID, date of birth) is never displayed.
+- “Open with” launches only applications you selected or that Windows associates with the format.
 
-CyImgView est distribué sous licence **GNU GPL v3.0** : voir [LICENSE](LICENSE).
+<a id="licence"></a>
 
-Composants tiers :
-- **LibRaw** (`third_party/LibRaw`) : LGPL 2.1 / CDDL 1.0.
-- **libwebp** : BSD 3 clauses (+ concession de brevets Google).
-- **libheif**, **libde265** : LGPL 3.0. **dav1d** : BSD 2 clauses.
-- **libjxl** : BSD 3 clauses (+ brevets). **highway** : Apache 2.0.
-- **OpenJPEG** : BSD 2 clauses.
-- **OpenEXR** (OpenEXRCore) et **Imath** : BSD 3 clauses. **libdeflate** : MIT. **zstd** : BSD.
-  **OpenJPH** : BSD 2 clauses.
+## License
 
-Les sources de ces bibliothèques, avec leurs licences, sont dans `third_party/`. Les autres formats
-(PSD, XCF, DDS, DICOM, FITS, PCX…) sont lus par du code écrit pour ce projet.
-- **Oodle** (RAD Game Tools / Epic Games) : il n'est **pas** distribué. Il est chargé à l'exécution
-  depuis une installation d'Unreal Engine de l'utilisateur.
-- **Unreal Engine** : le format `.uasset` est lu par du code écrit pour ce projet ; aucun code d'Epic
-  n'est inclus.
+CyImgView is distributed under **GNU GPL v3.0**: see [LICENSE](LICENSE).
+
+Third-party components:
+
+- **LibRaw** (`third_party/LibRaw`): LGPL 2.1 / CDDL 1.0.
+- **libwebp**: BSD 3-Clause (+ Google patent grant).
+- **libheif**, **libde265**: LGPL 3.0. **dav1d**: BSD 2-Clause.
+- **libjxl**: BSD 3-Clause (+ patents). **highway**: Apache 2.0.
+- **OpenJPEG**: BSD 2-Clause.
+- **OpenEXR** (OpenEXRCore) and **Imath**: BSD 3-Clause. **libdeflate**: MIT.
+  **zstd**: BSD. **OpenJPH**: BSD 2-Clause.
+
+Their sources and licenses are in `third_party/`. Other formats (PSD, XCF, DDS, DICOM,
+FITS, PCX…) use code written for this project.
+
+- **Oodle** (RAD Game Tools / Epic Games) is **not** distributed. It is loaded at runtime
+  from the user's Unreal Engine installation.
+- **Unreal Engine**: `.uasset` is read by code written for this project; no Epic code is included.
