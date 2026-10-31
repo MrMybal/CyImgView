@@ -768,7 +768,7 @@ void Viewer::DrawHud(float cw, float ch) {
     if (m_edit.active) DrawEditUi(cw, ch);
     else if (m_slideshow) {
         if (a > 0.004f) DrawSlideBar(cw, ch, a);
-    } else if (a > 0.004f && (m_cur || m_placeholder || !m_files.empty() || !m_error.empty())) {
+    } else if (a > 0.004f) {
         const float barH = 52 * s;
         // Dégradé haut
         if (m_shade) {
@@ -783,6 +783,7 @@ void Viewer::DrawHud(float cw, float ch) {
         m_chanLabel = ChannelLabel(m_chanMask);  // texte du bouton Couches (doit survivre au tableau)
         const Def defs[] = {
             {Btn::Open, L"\uE8E5", T("viewer.btn.open")},
+            {Btn::New, L"\uE710", T("document.new")},
             {Btn::SaveAs, L"\uE74E", T("viewer.btn.save_as")},
             {Btn::OpenWith, L"\uE7AC", T("openwith.btn")},
             {Btn::Edit, L"\uE70F", T("viewer.btn.edit")},
@@ -1086,7 +1087,12 @@ POINT Viewer::ClientCenter() const {
 D2D1_RECT_F Viewer::ViewArea() const {
     RECT rc;
     GetClientRect(m_hwnd, &rc);
-    if (!m_edit.active) return D2D1::RectF(0, 0, float(rc.right), float(rc.bottom));
+    if (!m_edit.active) {
+        if (m_slideshow) return D2D1::RectF(0, 0, float(rc.right), float(rc.bottom));
+        const float top = 60 * m_scale, bottom = (StripVisible() ? 94 : 12) * m_scale;
+        return D2D1::RectF(8 * m_scale, top, std::max(9 * m_scale, float(rc.right) - 8 * m_scale),
+                          std::max(top + m_scale, float(rc.bottom) - bottom));
+    }
     return EditViewArea(float(rc.right), float(rc.bottom));  // marges du mode d'édition actif
 }
 
@@ -1120,6 +1126,13 @@ void Viewer::ClampPan(double& px, double& py, double zoom) const {
     const double aw = a.right - a.left, ah = a.bottom - a.top;
     const double ox = (a.left + a.right) / 2.0 - rc.right / 2.0, oy = (a.top + a.bottom) / 2.0 - rc.bottom / 2.0;
     const double ew = w * zoom, eh = h * zoom;
+    if (m_edit.active && !m_fit) {
+        const double limitX=std::max(0.0,(ew+aw)/2-std::min({32.0*m_scale,ew/2,aw/2}));
+        const double limitY=std::max(0.0,(eh+ah)/2-std::min({32.0*m_scale,eh/2,ah/2}));
+        px=std::clamp(px,ox-limitX,ox+limitX);
+        py=std::clamp(py,oy-limitY,oy+limitY);
+        return;
+    }
     if (ew <= aw) px = ox;
     else px = std::clamp(px, ox - (ew - aw) / 2, ox + (ew - aw) / 2);
     if (eh <= ah) py = oy;
@@ -1221,6 +1234,7 @@ void Viewer::ToggleFullscreen() {
 // Fichiers et navigation
 
 void Viewer::OpenPath(std::wstring path) {
+    if (ExtensionOf(path) == L"cyimg") { OpenProject(path); return; }
     if (m_edit.active && !EndEdit(true)) return;
     wchar_t full[MAX_PATH * 4];
     DWORD n = GetFullPathNameW(path.c_str(), ARRAYSIZE(full), full, nullptr);
@@ -1282,7 +1296,7 @@ void Viewer::OpenPath(std::wstring path) {
 void Viewer::OpenDialog() {
     ComPtr<IFileOpenDialog> dlg;
     if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dlg)))) return;
-    std::wstring pattern = m_decoder.DialogPattern();
+    std::wstring pattern = m_decoder.DialogPattern() + L";*.cyimg";
     COMDLG_FILTERSPEC spec[] = {{T("viewer.dlg.images"), pattern.c_str()}, {T("viewer.dlg.all_files"), L"*.*"}};
     dlg->SetFileTypes(2, spec);
     dlg->SetTitle(T("viewer.dlg.open_title"));
@@ -1583,6 +1597,7 @@ void Viewer::OnButton(Btn b) {
     POINT c = ClientCenter();
     switch (b) {
     case Btn::Open: OpenDialog(); break;
+    case Btn::New: NewDocument(); break;
     case Btn::SaveAs: SaveAs(); break;
     case Btn::OpenWith: ShowOpenWithForCurrent(); break;
     case Btn::Edit: BeginEdit(); break;
@@ -1594,7 +1609,7 @@ void Viewer::OnButton(Btn b) {
     case Btn::Fit: ApplyFit(true); ShowToast(T("viewer.toast.fit")); break;
     case Btn::Actual: ZoomTo(1.0, c, true); break;
     case Btn::Rotate: Rotate(1); break;
-    case Btn::Strip: m_showStrip = !m_showStrip; m_thumbReqLo = -1; RequestThumbs(); break;
+    case Btn::Strip: m_showStrip = !m_showStrip; m_thumbReqLo = -1; RequestThumbs(); if (m_fit) ApplyFit(false); break;
     case Btn::Info:
         m_showInfo = !m_showInfo;
         m_showSettings = false;
@@ -1640,7 +1655,8 @@ void Viewer::OnKey(WPARAM vk) {
     }
     switch (vk) {
     case 'D': if (!ctrl) StartSlideshow(); break;
-    case 'N':  // pixels bruts <-> filtrage choisi
+    case 'N':  // nouveau document / pixels bruts
+        if (ctrl) { NewDocument(); break; }
         if (!ctrl) SetFilter(m_filter == 1 ? (m_filterBeforeRaw == 1 ? 0 : m_filterBeforeRaw) : 1);
         break;
     case VK_SPACE:
@@ -1805,7 +1821,8 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
         if (LOWORD(lp) == HTCLIENT) {
             LPCWSTR cur = IDC_ARROW;
             if (m_edit.active) {
-                if (const wchar_t* mc = EditModeCursor()) cur = mc;  // Mode Développement (ou autre mode)
+                if (m_dragging) cur = IDC_SIZEALL;
+                else if (const wchar_t* mc = EditModeCursor()) cur = mc;  // Mode Développement (ou autre mode)
                 else if (const EditButton* b = HitEdit(m_mouse)) cur = b->cmd == EditCmd::Panel ? IDC_ARROW : IDC_HAND;
                 else if (m_dragging || m_edit.spacePan || m_edit.tool == Tool::Hand || m_edit.tool == Tool::Move) cur = IDC_SIZEALL;
                 else if (m_edit.fx >= 0) cur = IDC_ARROW;
@@ -1839,17 +1856,37 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
     }
     case WM_RBUTTONDOWN:
         if (m_edit.active) {
+            if (m_dragging || m_edit.drawing || m_edit.slider >= 0 || GetCapture()==m_hwnd) return 0;
             POINT p{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
             m_mouse = p;
-            EditMouseDown(p, true, false);
+            if (Contains(ViewArea(),p) && !HitEdit(p)) {
+                m_rightPanning = m_dragging = true;
+                m_rightEditInteraction = false;
+                m_fit = false;
+                m_dragStart = p;
+                m_zoom = m_zoomT;
+                m_panX = m_dragPanX = m_panXT;
+                m_panY = m_dragPanY = m_panYT;
+                SetCapture(m_hwnd);
+                SetCursor(LoadCursorW(nullptr,IDC_SIZEALL));
+                Poke(); Invalidate();
+            } else {
+                m_rightEditInteraction = true;
+                EditMouseDown(p, true, false);
+            }
         }
         return 0;
     case WM_RBUTTONUP:
-        if (m_edit.active) EditMouseUp(POINT{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)});
-        else ShowContextMenu(POINT{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)});
+        if (m_rightPanning) {
+            m_rightPanning = m_dragging = false;
+            ReleaseCapture(); Poke(); Invalidate();
+        } else if (m_edit.active && m_rightEditInteraction) {
+            m_rightEditInteraction = false;
+            EditMouseUp(POINT{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)});
+        } else if (!m_edit.active) ShowContextMenu(POINT{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)});
         return 0;
     case WM_CONTEXTMENU:  // touche Menu / Maj+F10
-        if (!m_edit.active && lp == -1) ShowContextMenu(ClientCenter());
+        if (lp == -1) { if (m_edit.active && m_mode == 0) ShowLayerMenu(m_mouse); else if (!m_edit.active) ShowContextMenu(ClientCenter()); }
         return 0;
     case WM_MOUSELEAVE:
         m_mouseInside = false;
@@ -1857,6 +1894,7 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
         return 0;
     case WM_LBUTTONDOWN:
     case WM_LBUTTONDBLCLK: {
+        if (m_rightPanning) return 0;
         POINT p{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
         m_mouse = p;
         Poke();
@@ -1922,6 +1960,7 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
     }
     case WM_LBUTTONUP:
     case WM_MBUTTONUP:
+        if (m_rightPanning) return 0;
         if (m_dragging) {
             m_dragging = false;
             ReleaseCapture();
@@ -1932,13 +1971,14 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
         }
         return 0;
     case WM_CAPTURECHANGED:
-        m_dragging = false;
+        m_dragging = m_rightPanning = m_rightEditInteraction = false;
         if (m_edit.active && (m_edit.drawing || m_edit.slider >= 0) && reinterpret_cast<HWND>(lp) != m_hwnd) {
             m_edit.slider = -1;
             if (m_edit.drawing) EditMouseUp(m_mouse);  // capture perdue : on termine le tracé
         }
         return 0;
     case WM_MBUTTONDOWN:
+        if (m_rightPanning) return 0;
         if (m_edit.active) {  // édition : clic molette = déplacer la vue
             m_dragging = true;
             m_dragStart = POINT{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};

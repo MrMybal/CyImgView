@@ -16,7 +16,7 @@ using namespace ui;
 namespace {
 
 enum MenuId {
-    kMenuCopy = 1, kMenuCopyPath, kMenuOpen, kMenuSaveAs, kMenuEdit, kMenuReveal, kMenuPlay, kMenuRotate,
+    kMenuCopy = 1, kMenuCopyPath, kMenuNew, kMenuOpen, kMenuSaveAs, kMenuEdit, kMenuReveal, kMenuPlay, kMenuRotate,
     kMenuFull, kMenuInfo, kMenuSettings, kMenuSlideshow, kMenuChannel0 = 100, kMenuFilter0 = 200,  // + canal
     kMenuOpenWith0 = 1000  // sous-menu « Ouvrir avec » (1000..1511)
 };
@@ -98,7 +98,8 @@ void Viewer::CopyToClipboard() {
         if (m_edit.selValid) {
             const D2D1_RECT_U rc = D2D1::RectU(UINT32(m_edit.sel.left), UINT32(m_edit.sel.top), UINT32(m_edit.sel.right),
                                                UINT32(m_edit.sel.bottom));
-            ok = ReadBitmap(CurLayer().bmp.Get(), px, stride, &rc);
+            PrepareMasks();
+            ok = ReadBitmap(LayerImage(m_edit.layer), px, stride, &rc);
             w = rc.right - rc.left;
             h = rc.bottom - rc.top;
             alpha = true;
@@ -219,6 +220,7 @@ void Viewer::ShowContextMenu(POINT client) {
     add(kMenuCopyPath, "menu.copy_path", file);
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     add(kMenuOpen, "menu.open");
+    add(kMenuNew, "document.new");
     add(kMenuSaveAs, "menu.save_as", has);
     add(kMenuEdit, "menu.edit", has);
     add(kMenuReveal, "menu.reveal", file);
@@ -266,6 +268,7 @@ void Viewer::ShowContextMenu(POINT client) {
     case kMenuCopy: CopyToClipboard(); break;
     case kMenuCopyPath: CopyPathToClipboard(); break;
     case kMenuOpen: OpenDialog(); break;
+    case kMenuNew: NewDocument(); break;
     case kMenuSaveAs: SaveAs(); break;
     case kMenuEdit: BeginEdit(); break;
     case kMenuReveal: RevealInExplorer(); break;

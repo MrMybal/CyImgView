@@ -154,6 +154,14 @@ void Viewer::OpenEffect(int fx) {
     if (m_edit.textActive) CommitText();
     if (m_edit.fx >= 0) CloseEffect(false);
     m_edit.menu = EditMenu::None;
+    m_edit.fxSource.Reset();
+    if (!m_edit.fxWhole && !RequirePixels()) return;
+    if (m_edit.fxWhole) {
+        PrepareMasks();
+        auto source = NewCanvas(m_edit.w, m_edit.h);
+        if (!source || !ComposeTo(source.Get(), D2D1::Matrix3x2F::Identity(), VisibleItems())) return;
+        m_edit.fxSource = source;
+    }
     if (fx >= EffectCount()) return OpenPluginEffect(fx - EffectCount());  // effet d'un plugin
     if (fx < 0 || m_edit.layers.empty()) return;
     m_edit.fx = fx;
@@ -165,14 +173,76 @@ void Viewer::OpenEffect(int fx) {
     Invalidate();
 }
 
+void Viewer::PrepareGallery() {
+    if (m_edit.menu != EditMenu::Effects) return;
+    if (m_edit.gallerySample) { PreparePluginGallery(); return; }
+    // A common, opaque test scene makes effects comparable even on a blank document.
+    constexpr uint32_t w = 240, h = 160;
+    std::vector<uint8_t> pixels(w * h * 4);
+    for (uint32_t y = 0; y < h; ++y) for (uint32_t x = 0; x < w; ++x) {
+        float r = 55 + y * .7f, g = 125 + y * .5f, b = 210 + y * .15f;
+        if ((int(x)-183)*(int(x)-183) + (int(y)-31)*(int(y)-31) < 18*18) { r=255; g=216; b=90; }
+        const float ridge = 77 + 17 * std::sin(x * .027f) + 9 * std::cos(x * .065f);
+        if (y > ridge) { r=45+y*.18f; g=112+y*.32f; b=81+y*.1f; }
+        if (y > 105 + 12 * std::sin(x * .032f)) { r=23+y*.15f; g=64+y*.36f; b=67+y*.18f; }
+        if (x>43 && x<96 && y>66 && y<112) { r=241; g=222; b=182; }
+        if (y>43 && y<72 && std::abs(int(x)-69)<(int(y)-43)*1.2f) { r=193; g=65; b=46; }
+        if (x>51 && x<65 && y>80 && y<97) { r=37; g=71; b=104; }
+        if (x>76 && x<87 && y>85 && y<112) { r=97; g=57; b=45; }
+        const float sphere = (x-172.0f)*(x-172.0f)+(y-106.0f)*(y-106.0f);
+        if (sphere<24*24) {
+            const float light = std::clamp(1.0f-std::sqrt((x-162.0f)*(x-162.0f)+(y-96.0f)*(y-96.0f))/55, .15f, 1.0f);
+            r=250*light; g=75*light; b=135*light;
+        }
+        if (y>=138 && y<149) {
+            constexpr uint32_t colors[] = {0xE94E4E,0xF3AC46,0xF1D967,0x64C783,0x50BCD1,0x5979D6,0xA078CB,0xED83B2};
+            const auto c=colors[std::min(7u,x/30)]; r=float(c>>16); g=float((c>>8)&255); b=float(c&255);
+        }
+        if (y>=149) { r=g=b=x*255.0f/(w-1); if (x>190) r=g=b=((x/2+y/2)%2)?230.0f:30.0f; }
+        auto* pixel=&pixels[(y*w+x)*4];
+        pixel[0]=uint8_t(std::clamp(b,0.0f,255.0f)); pixel[1]=uint8_t(std::clamp(g,0.0f,255.0f));
+        pixel[2]=uint8_t(std::clamp(r,0.0f,255.0f)); pixel[3]=255;
+    }
+    auto sample=NewCanvas(w,h);
+    if (!sample || FAILED(sample->CopyFromMemory(nullptr,pixels.data(),w*4))) return;
+    const int savedFx = m_edit.fx;
+    float values[3]; std::copy(std::begin(m_edit.fxVal), std::end(m_edit.fxVal), values);
+    m_edit.galleryThumbs.clear();
+    for (int i = 0; i < EffectCount(); ++i) {
+        m_edit.fx = i;
+        for (int k = 0; k < 3; ++k) m_edit.fxVal[k] = kFx[i].p[k].def;
+        // Illustrative settings only; opening an effect still uses its normal defaults.
+        if (i==kBrightContrast) { m_edit.fxVal[0]=15; m_edit.fxVal[1]=35; }
+        if (i==kHueSat) { m_edit.fxVal[0]=55; m_edit.fxVal[1]=25; }
+        if (i==kExposure) m_edit.fxVal[0]=75;
+        if (i==kTemperature) m_edit.fxVal[0]=65;
+        if (i==kBlur) m_edit.fxVal[0]=3;
+        if (i==kPixelate) m_edit.fxVal[0]=10;
+        auto thumb = NewCanvas(w,h);
+        std::vector<ComPtr<ID2D1Effect>> keep;
+        auto effect = BuildEffect(sample.Get(), keep);
+        if (!thumb || !effect || !DrawOn(thumb.Get(), [&] {
+            m_dc->Clear(D2D1::ColorF(0, 0, 0, 0));
+            m_dc->DrawImage(effect.Get());
+        })) thumb.Reset();
+        m_edit.galleryThumbs.push_back(thumb);
+    }
+    m_edit.fx = savedFx;
+    std::copy(std::begin(values), std::end(values), m_edit.fxVal);
+    m_edit.gallerySample=sample;
+    m_edit.galleryLifetime=std::make_shared<int>(0);
+    PreparePluginGallery();
+}
+
 void Viewer::CloseEffect(bool apply) {
     if (m_edit.fx < 0) return;
     if (m_edit.fx >= EffectCount()) return ClosePluginEffect(apply);
     if (apply) {
         if (m_edit.fxDirty || !m_edit.fxOut) UpdateFxPreview();
-        if (m_edit.fxOut) PushLayerSwap(std::move(m_edit.fxOut));
+        if (m_edit.fxOut) ApplyEffectResult(std::move(m_edit.fxOut));
     }
     m_edit.fx = -1;
+    m_edit.fxSource.Reset();
     m_edit.fxOut.Reset();
     m_edit.fxDirty = false;
     Invalidate();
@@ -356,7 +426,7 @@ void Viewer::UpdateFxPreview() {
         return;
     }
     std::vector<ComPtr<ID2D1Effect>> keep;
-    ID2D1Bitmap1* src = CurLayer().bmp.Get();
+    ID2D1Bitmap1* src = EffectSource();
     ComPtr<ID2D1Image> img = BuildEffect(src, keep);
     const D2D1_RECT_F doc = D2D1::RectF(0, 0, float(m_edit.w), float(m_edit.h));
     DrawOn(m_edit.fxOut.Get(), [&] {

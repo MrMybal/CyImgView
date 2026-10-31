@@ -49,6 +49,7 @@ std::wstring WriteTempPng(const uint8_t* pixels, uint32_t width, uint32_t height
 void EnableDarkMenus();  // menus Win32 sombres (viewer_extra.cpp)
 
 class Viewer {
+    friend struct EditorIntegrationTest;
 public:
     Viewer() = default;
     ~Viewer();
@@ -57,7 +58,7 @@ public:
     int Run();
 
 private:
-    enum class Btn { None, Open, Edit, SaveAs, Prev, Next, ZoomOut, ZoomIn, Fit, Actual, Rotate, Strip, Info, Help, Full, Update, Settings, Channel,
+    enum class Btn { None, Open, New, Edit, SaveAs, Prev, Next, ZoomOut, ZoomIn, Fit, Actual, Rotate, Strip, Info, Help, Full, Update, Settings, Channel,
                      Slideshow, SlidePrev, SlidePlay, SlideNext, SlideLess, SlideMore, SlideShuffle, SlideExit, OpenWith };
     struct SettingRow {
         int id;
@@ -74,7 +75,8 @@ private:
         LayerSelect, LayerEye, LayerNew, LayerDup, LayerDel, LayerUp, LayerDown, LayerMerge, LayerFlatten,
         BlendMenu, BlendOpt, FxMenu, FxPick, FxApply, FxCancel, FxPreview, FxReset,
         ModeTab, ModeCtl,  // Mode Développement : onglet d'un mode (arg = index), contrôle propre au mode (arg libre)
-        PlugTool, PlugToolParam, PlugFxParam  // plugins d'édition : outil (arg = index), paramètre (arg = n | choix << 8)
+        PlugTool, PlugToolParam, PlugFxParam,
+        FxTarget, FxPage, Extensions
     };
     enum class EditMenu { None, Resize, Blend, Effects };
     enum EditSlider { kSlSize, kSlOpacity, kSlHardness, kSlLayerOpacity, kSlFx0,  // kSlFx0 + n : réglage n de l'effet
@@ -93,6 +95,19 @@ private:
         float opacity = 1;
         int blend = 0;             // 0 normal, 1 produit, 2 écran, 3 incrustation, 4 obscurcir, 5 éclaircir, 6 différence, 7 addition
         uint64_t ver = 0;          // identifiant du contenu (change à chaque modification des pixels)
+        // Editable objects retain their geometry; bmp is only their rendered cache.
+        bool object = false;
+        Tool objectTool = Tool::Rect;
+        D2D1_POINT_2F a{}, b{};
+        uint32_t objectColor = 0;
+        float objectSize = 1, objectOpacity = 1;
+        bool objectFill = false;
+        std::wstring objectText;
+        D2D1_MATRIX_3X2_F objectTransform = D2D1::Matrix3x2F::Identity();
+        std::shared_ptr<std::vector<uint8_t>> mask;
+        bool maskEnabled = true;
+        ComPtr<ID2D1Bitmap1> masked;
+        uint64_t maskedVer = 0;
     };
     struct LayerThumb {
         ComPtr<ID2D1Bitmap1> bmp;
@@ -160,6 +175,16 @@ private:
         bool fxPreview = true, fxDirty = false;
         ComPtr<ID2D1Bitmap1> fxOut;
         uint64_t fxVer = 0;
+        bool untitled = false, editMask = false, fxWhole = false;
+        int fxPage = 0;
+        D2D1_RECT_F galleryRect{};
+        std::vector<ComPtr<ID2D1Bitmap1>> galleryThumbs;
+        ComPtr<ID2D1Bitmap1> gallerySample;
+        std::shared_ptr<int> galleryLifetime;
+        std::vector<uint8_t> galleryStatus; // 0 pending, 1 running, 2 ready, 3 unavailable
+        bool galleryBusy = false;
+        ComPtr<ID2D1Bitmap1> fxSource;
+        D2D1_MATRIX_3X2_F moveObjectTransform{};
     };
     struct ButtonRect {
         Btn id;
@@ -326,6 +351,21 @@ private:
 
     // Mode édition : entrée / sortie, outils, interface (viewer_edit.cpp)
     bool BeginEdit();
+    void NewDocument();
+    bool InputText(const wchar_t* title, std::wstring& value);
+    bool RenderObject(Layer& layer);
+    void AddObject(Tool tool, D2D1_POINT_2F a, D2D1_POINT_2F b, const std::wstring& text = {});
+    bool RequirePixels();
+    void ShowLayerMenu(POINT client);
+    void PaintMask(D2D1_POINT_2F a, D2D1_POINT_2F b);
+    void PrepareMasks();
+    void PrepareGallery();
+    void PreparePluginGallery();
+    ID2D1Bitmap1* EffectSource() const;
+    void ApplyEffectResult(ComPtr<ID2D1Bitmap1> result);
+    void OpenExtensions();
+    bool WriteProject(const std::wstring& path, std::wstring& error);
+    bool OpenProject(const std::wstring& path);
     bool EndEdit(bool ask);  // false si l'utilisateur annule
     void DrawEditUi(float cw, float ch);
     void DrawEditOverlay(float left, float top, float z);
@@ -365,6 +405,7 @@ private:
     bool ErasesToColor() const;  // fond d'une image opaque : la gomme peint la couleur secondaire
 
     // Calques, historique, sélection, presse-papier (viewer_layers.cpp)
+    const Layer& CurLayer() const { return m_edit.layers[size_t(m_edit.layer)]; }
     Layer& CurLayer() { return m_edit.layers[size_t(m_edit.layer)]; }
     ID2D1Bitmap1* LayerImage(int i) const;  // pixels affichés (aperçu d'effet compris)
     void Touch(Layer& l) { l.ver = ++m_edit.verSeq; }
@@ -373,7 +414,7 @@ private:
     bool PushUndo();                          // copie du calque actif avant de le modifier
     void PushLayerSwap(ComPtr<ID2D1Bitmap1> bmp);  // remplace le calque actif (l'ancien part dans l'historique)
     void PushDocUndo();                       // avant une opération sur la pile ou une transformation
-    void SetDocument(std::vector<ComPtr<ID2D1Bitmap1>> bmps);  // nouvelles textures de tous les calques
+    void SetDocument(std::vector<ComPtr<ID2D1Bitmap1>> bmps, const D2D1_MATRIX_3X2_F& transform);  // nouvelles textures de tous les calques
     void TrimHistory();
     size_t EditBytes() const;
     bool CanAddLayer();
@@ -468,7 +509,7 @@ private:
 
     HWND m_hwnd = nullptr;
     HINSTANCE m_inst = nullptr;
-    std::wstring m_exeDir, m_iniPath;
+    std::wstring m_exeDir, m_iniPath, m_projectPath;
     Decoder m_decoder;
     std::unique_ptr<Loader> m_loader;
 
@@ -524,6 +565,7 @@ private:
     POINT m_mouse{-1, -1};
     bool m_mouseInside = false;
     bool m_dragging = false;
+    bool m_rightPanning = false, m_rightEditInteraction = false;
     POINT m_dragStart{};
     double m_dragPanX = 0, m_dragPanY = 0;
     std::wstring m_toast;

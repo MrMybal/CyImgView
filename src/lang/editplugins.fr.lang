@@ -20,7 +20,7 @@ plugin.fx_extra.offset = Décalage
 # annotate
 plugin.annotate.name = Annotation
 plugin.annotate.badge = Pastille numérotée
-plugin.annotate.badge_hint = Clic : pastille numérotée (couleur principale ; clic droit : secondaire). Le numéro s'incrémente.
+plugin.annotate.badge_hint = Clic : pastille numérotée (couleur principale). Le numéro s’incrémente.
 plugin.annotate.size = Taille
 plugin.annotate.number = Numéro
 plugin.annotate.highlighter = Surligneur

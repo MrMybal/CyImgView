@@ -31,11 +31,16 @@ Copy-Item (Join-Path $bin 'CyImgView.exe') $stage
 Get-ChildItem (Join-Path $bin 'plugins') -Filter *.dll | Where-Object { $_.Name -notlike 'oo2core*' -and $_.Name -notlike 'crashtest*' } |
     Copy-Item -Destination (Join-Path $stage 'plugins')
 Copy-Item (Join-Path $root 'README.md') $stage
+Copy-Item (Join-Path $root 'README.fr.md') $stage
 Copy-Item (Join-Path $root 'LICENSE') $stage
 New-Item -ItemType Directory -Force (Join-Path $stage 'licenses') | Out-Null
 Copy-Item (Join-Path $root 'third_party\LibRaw\LICENSE.LGPL') (Join-Path $stage 'licenses\LibRaw-LICENSE.LGPL')
 Copy-Item (Join-Path $root 'third_party\LibRaw\LICENSE.CDDL') (Join-Path $stage 'licenses\LibRaw-LICENSE.CDDL')
 Copy-Item (Join-Path $root 'third_party\LibRaw\COPYRIGHT') (Join-Path $stage 'licenses\LibRaw-COPYRIGHT')
+if (Test-Path (Join-Path $bin 'plugins/effects')) {
+    Copy-Item -LiteralPath (Join-Path $bin 'plugins/effects') -Destination (Join-Path $stage 'plugins/effects') -Recurse -Force
+}
+
 # Licences des bibliothèques intégrées aux plugins : licenses\<bibliothèque>-<fichier>
 $thirdLicenses = @(
     'libwebp\COPYING', 'libwebp\PATENTS', 'libheif\COPYING', 'libde265\COPYING', 'dav1d\COPYING',

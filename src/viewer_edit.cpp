@@ -128,7 +128,10 @@ void Viewer::EditOpenWith() {
 }
 
 void Viewer::SaveAs() {
-    const FileEntry* cur = Current();
+    FileEntry untitled;
+    untitled.path = m_projectPath.empty() ? L"Untitled.png" : m_projectPath;
+    untitled.name = FileNameOf(untitled.path);
+    const FileEntry* cur = m_edit.active && m_edit.untitled ? &untitled : Current();
     if (!cur || (!m_cur && !m_edit.active)) {
         ShowToast(T("edit.save.no_image"));
         return;
@@ -182,12 +185,19 @@ void Viewer::SaveAs() {
         formats.push_back(std::move(psd));
     }
 
+    const int psdIndex = layered ? int(formats.size()) - 1 : -1;
+    const int projectIndex = m_edit.active ? int(formats.size()) : -1;
+    if (m_edit.active) {
+        SaveFormat project; project.name = T("document.project"); project.exts = {L"cyimg"}; project.alpha = true;
+        formats.push_back(std::move(project));
+    }
     // Proposition : même nom, même format si on sait l'écrire, sinon JPEG (ou PNG si transparence)
     std::wstring ext = ExtensionOf(cur->path);
     bool known = std::any_of(formats.begin(), formats.end(), [&](const SaveFormat& f) {
         return std::find(f.exts.begin(), f.exts.end(), ext) != f.exts.end();
     });
     if (!known) ext = alpha ? L"png" : L"jpg";
+    if (m_edit.active && (layered || std::any_of(m_edit.layers.begin(), m_edit.layers.end(), [](const Layer& l) { return l.object || bool(l.mask); }))) ext = L"cyimg";
     std::wstring base = cur->name;
     if (size_t dot = base.find_last_of(L'.'); dot != std::wstring::npos) base.resize(dot);
 
@@ -195,7 +205,7 @@ void Viewer::SaveAs() {
     if (!ShowSaveDialog(m_hwnd, formats, m_folder, base, ext, req)) return;
     std::wstring err;
     SetCursor(LoadCursorW(nullptr, IDC_WAIT));
-    bool ok = layered && req.format == int(formats.size()) - 1
+    bool ok = req.format == projectIndex ? WriteProject(req.path, err) : req.format == psdIndex
                   ? WritePsd(req.path, err)
                   : SaveImage(req, formats[size_t(req.format)], px.Data(), w, h, stride, alpha, err);
     SetCursor(LoadCursorW(nullptr, IDC_ARROW));
@@ -203,6 +213,7 @@ void Viewer::SaveAs() {
         MessageBoxW(m_hwnd, Tf("edit.save.failed", err.c_str()).c_str(), L"CyImgView", MB_ICONERROR);
         return;
     }
+    if (req.format == projectIndex) m_projectPath = req.path;
     ShowToast(Tf("edit.save.done", FileNameOf(req.path).c_str()));
     if (m_edit.active) m_edit.dirty = false;
     ForgetFile(req.path);
@@ -311,8 +322,9 @@ bool Viewer::BeginEdit() {
     m_userRot = 0;
     m_showHelp = false;
     m_showInfo = false;
-    InitEditModes();  // dernier mode utilisé (Retouche ou Développement)
-    if (m_mode != 0 && !Mode().Enter()) m_mode = 0;
+    InitEditModes();
+    m_mode = 0;  // opening an editor must not apply the previous plugin's default effect
+    m_projectPath.clear();
     if (m_edit.tool == Tool::Plugin) ActivatePluginTool(true);
     ApplyFit(false);
     Invalidate();
@@ -548,6 +560,12 @@ void Viewer::ApplyGradient(D2D1_POINT_2F a, D2D1_POINT_2F b) {
 
 // Outil Déplacer : contenu du calque (ou de la sélection) décalé depuis son état au début du glissement
 void Viewer::MoveLayerTo(float dx, float dy) {
+    if (CurLayer().object) {
+        CurLayer().objectTransform = m_edit.moveObjectTransform;
+        CurLayer().objectTransform._31 += std::round(dx);
+        CurLayer().objectTransform._32 += std::round(dy);
+        RenderObject(CurLayer()); Invalidate(); return;
+    }
     if (!m_edit.strokeBase) return;
     dx = std::round(dx);
     dy = std::round(dy);
@@ -582,20 +600,7 @@ void Viewer::CommitText() {
         Invalidate();
         return;
     }
-    ComPtr<IDWriteTextFormat> tf;
-    ComPtr<IDWriteTextLayout> lay;
-    if (FAILED(m_dwrite->CreateTextFormat(L"Segoe UI", nullptr, DWRITE_FONT_WEIGHT_SEMI_BOLD, DWRITE_FONT_STYLE_NORMAL,
-                                          DWRITE_FONT_STRETCH_NORMAL, m_edit.fontSize, L"fr-fr", &tf)) ||
-        FAILED(m_dwrite->CreateTextLayout(m_edit.text.c_str(), UINT32(m_edit.text.size()), tf.Get(), 100000, 100000, &lay)))
-        return;
-    if (!PushUndo()) return;
-    const float op = m_edit.opacity / 100;
-    DrawOnLayer([&] {
-        PushOpacity(m_dc.Get(), op);
-        m_brush->SetColor(Rgb(m_edit.color));
-        m_dc->DrawTextLayout(m_edit.textPos, lay.Get(), m_brush.Get());
-        PopOpacity(m_dc.Get(), op);
-    });
+    AddObject(Tool::Text, m_edit.textPos, m_edit.textPos, m_edit.text);
     m_edit.text.clear();
     Invalidate();
 }
@@ -708,7 +713,7 @@ void Viewer::TransformCanvas(EditCmd kind) {
         });
         out.push_back(std::move(b));
     }
-    SetDocument(std::move(out));
+    SetDocument(std::move(out), m);
 }
 
 void Viewer::ResizeCanvas(uint32_t w, uint32_t h) {
@@ -730,7 +735,7 @@ void Viewer::ResizeCanvas(uint32_t w, uint32_t h) {
         });
         out.push_back(std::move(b));
     }
-    SetDocument(std::move(out));
+    SetDocument(std::move(out), D2D1::Matrix3x2F::Scale(float(w) / m_edit.w, float(h) / m_edit.h));
     wchar_t b[64];
     swprintf_s(b, L"%u × %u", w, h);
     ShowToast(b);
@@ -753,7 +758,7 @@ void Viewer::ApplyCrop() {
         }
         out.push_back(std::move(b));
     }
-    SetDocument(std::move(out));
+    SetDocument(std::move(out), D2D1::Matrix3x2F::Translation(-float(r.left), -float(r.top)));
 }
 
 // =============================================================================================
@@ -815,6 +820,9 @@ void Viewer::EditCommand(EditCmd cmd, int arg) {
         break;
     case EditCmd::BlendMenu: toggleMenu(EditMenu::Blend); break;
     case EditCmd::FxMenu: toggleMenu(EditMenu::Effects); break;
+    case EditCmd::FxTarget: m_edit.fxWhole = arg != 0; m_edit.menu = EditMenu::Effects; break;
+    case EditCmd::FxPage: m_edit.fxPage = std::max(0, m_edit.fxPage + arg); m_edit.menu = EditMenu::Effects; break;
+    case EditCmd::Extensions: OpenExtensions(); break;
     case EditCmd::FxPick: OpenEffect(arg); break;
     case EditCmd::FxApply: CloseEffect(true); break;
     case EditCmd::FxCancel: CloseEffect(false); break;
@@ -850,6 +858,11 @@ bool Viewer::EditBtn(EditCmd cmd, int arg, const D2D1_RECT_F& r, const wchar_t* 
 // Souris et clavier
 
 bool Viewer::RetouchMouseDown(POINT p, bool right, bool dbl) {
+    RECT client; GetClientRect(m_hwnd, &client);
+    if (right && m_edit.showLayers && m_edit.fx < 0 && Contains(LayersPanelRect(float(client.right), float(client.bottom)), p)) {
+        ShowLayerMenu(p); return true;
+    }
+    if (right && !HitEdit(p)) return true; // Canvas right-drag is handled by the viewer.
     if (m_edit.renaming >= 0) EditChar(L'\r');  // clic ailleurs : renommage validé
     if (const EditButton* b = HitEdit(p)) {
         if (b->cmd == EditCmd::Slider) {
@@ -887,6 +900,10 @@ bool Viewer::RetouchMouseDown(POINT p, bool right, bool dbl) {
     switch (m_edit.tool) {
     case Tool::Brush:
     case Tool::Eraser:
+        if (m_edit.editMask && CurLayer().mask) {
+            PushDocUndo(); m_edit.drawing = true; m_edit.start = m_edit.cur = ip;
+            PaintMask(ip, ip); break;
+        }
         if (!BeginStroke()) return true;
         m_edit.drawing = true;
         m_edit.start = m_edit.cur = ip;
@@ -897,7 +914,25 @@ bool Viewer::RetouchMouseDown(POINT p, bool right, bool dbl) {
         m_edit.start = m_edit.cur = ip;
         break;
     case Tool::Move:
-        if (right || !PushUndo()) return true;
+        if (right) return true;
+        if (ip.x >= 0 && ip.y >= 0 && ip.x < m_edit.w && ip.y < m_edit.h) {
+            PrepareMasks();
+            const auto pixel = D2D1::RectU(uint32_t(ip.x), uint32_t(ip.y), uint32_t(ip.x) + 1, uint32_t(ip.y) + 1);
+            for (int i = int(m_edit.layers.size()) - 1; i >= 0; --i) {
+                const Layer& candidate = m_edit.layers[size_t(i)];
+                if (!candidate.visible || candidate.opacity <= 0) continue;
+                PixelBuffer hit; uint32_t stride;
+                if (ReadBitmap(LayerImage(i), hit, stride, &pixel) && hit.Data()[3] > 16) {
+                    if (candidate.object) { m_edit.layer = i; m_edit.editMask = false; }
+                    break;
+                }
+            }
+        }
+        if (CurLayer().object) {
+            PushDocUndo(); m_edit.moveObjectTransform = CurLayer().objectTransform;
+            m_edit.drawing = true; m_edit.start = m_edit.cur = ip; break;
+        }
+        if (!PushUndo()) return true;
         m_edit.strokeBase = m_edit.undo.back().bmp;
         m_edit.moveSel = m_edit.sel;
         m_edit.drawing = true;
@@ -943,7 +978,8 @@ void Viewer::RetouchMouseMove(POINT p) {
     D2D1_POINT_2F ip = ScreenToImage(p);
     m_edit.shift = GetKeyState(VK_SHIFT) < 0;
     if (m_edit.tool == Tool::Brush || m_edit.tool == Tool::Eraser) {
-        StrokeTo(m_edit.cur, ip, false);
+        if (m_edit.editMask && CurLayer().mask) PaintMask(m_edit.cur, ip);
+        else StrokeTo(m_edit.cur, ip, false);
         m_edit.cur = ip;
         return;
     }
@@ -984,16 +1020,8 @@ void Viewer::RetouchMouseUp(POINT p) {
         break;
     case Tool::Plugin: PluginToolUp(ScreenToImage(p)); break;
     case Tool::Line: case Tool::Arrow: case Tool::Rect: case Tool::Ellipse: {
-        if (dx * dx + dy * dy < 1 || !PushUndo()) break;
-        uint32_t col = m_edit.secondary ? m_edit.color2 : m_edit.color;
-        Tool t = m_edit.tool;
-        D2D1_POINT_2F a = m_edit.start, b = m_edit.cur;
-        const float op = m_edit.opacity / 100;
-        DrawOnLayer([&] {
-            PushOpacity(m_dc.Get(), op);
-            DrawShape(t, a, b, col, m_edit.size, m_edit.fill);
-            PopOpacity(m_dc.Get(), op);
-        });
+        if (dx * dx + dy * dy < 1) break;
+        AddObject(m_edit.tool, m_edit.start, m_edit.cur);
         break;
     }
     case Tool::Gradient:
@@ -1095,7 +1123,7 @@ bool Viewer::RetouchKey(WPARAM vk) {
         case 'J': LayerCommand(EditCmd::LayerDup, 0); return true;
         case 'E': LayerCommand(shift ? EditCmd::LayerFlatten : EditCmd::LayerMerge, 0); return true;
         case 'N':
-            if (shift) LayerCommand(EditCmd::LayerNew, 0);
+            if (shift) LayerCommand(EditCmd::LayerNew, 0); else NewDocument();
             return true;
         case VK_OEM_6: LayerCommand(EditCmd::LayerUp, 0); return true;
         case VK_OEM_4: LayerCommand(EditCmd::LayerDown, 0); return true;
@@ -1129,7 +1157,10 @@ bool Viewer::RetouchKey(WPARAM vk) {
     case VK_RETURN:
         if (m_edit.cropValid) ApplyCrop();
         return true;
-    case VK_DELETE: case VK_BACK: ClearSelection(); return true;
+    case VK_DELETE: case VK_BACK:
+        if (CurLayer().object && !m_edit.selValid) LayerCommand(EditCmd::LayerDel, 0);
+        else ClearSelection();
+        return true;
     case 'M': SetTool(Tool::Hand); return true;
     case 'V': SetTool(Tool::Move); return true;
     case 'S': SetTool(Tool::Select); return true;
@@ -1164,6 +1195,9 @@ bool Viewer::RetouchKey(WPARAM vk) {
 
 // Molette sur la liste des calques : défilement (ailleurs : zoom)
 bool Viewer::RetouchWheel(POINT p, double notches) {
+    if (m_edit.menu == EditMenu::Effects && Contains(m_edit.galleryRect, p)) {
+        m_edit.fxPage = std::max(0, m_edit.fxPage + (notches < 0 ? 1 : -1)); Invalidate(); return true;
+    }
     if (!m_edit.showLayers || m_edit.fx >= 0) return false;
     RECT rc;
     GetClientRect(m_hwnd, &rc);
@@ -1292,6 +1326,28 @@ void Viewer::DrawRetouchOverlay(float left, float top, float z) {
     auto screen = [&](const D2D1_RECT_F& ir) {
         return D2D1::RectF(left + ir.left * z, top + ir.top * z, left + ir.right * z, top + ir.bottom * z);
     };
+    if (m_edit.tool == Tool::Move && CurLayer().object) {
+        const Layer& object = CurLayer();
+        auto bounds = Norm(object.a, object.b);
+        if (object.objectTool == Tool::Text) {
+            ComPtr<IDWriteTextFormat> format; ComPtr<IDWriteTextLayout> layout;
+            if (SUCCEEDED(m_dwrite->CreateTextFormat(L"Segoe UI", nullptr, DWRITE_FONT_WEIGHT_SEMI_BOLD,
+                DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, object.objectSize, L"", &format)) &&
+                SUCCEEDED(m_dwrite->CreateTextLayout(object.objectText.c_str(), UINT32(object.objectText.size()),
+                    format.Get(), 100000, 100000, &layout))) {
+                DWRITE_TEXT_METRICS metrics{}; layout->GetMetrics(&metrics);
+                bounds = D2D1::RectF(object.a.x, object.a.y, object.a.x + metrics.width, object.a.y + metrics.height);
+            }
+        }
+        const auto transform = *D2D1::Matrix3x2F::ReinterpretBaseType(&object.objectTransform) * toImage;
+        const D2D1_POINT_2F corners[] = {
+            transform.TransformPoint(D2D1::Point2F(bounds.left, bounds.top)),
+            transform.TransformPoint(D2D1::Point2F(bounds.right, bounds.top)),
+            transform.TransformPoint(D2D1::Point2F(bounds.right, bounds.bottom)),
+            transform.TransformPoint(D2D1::Point2F(bounds.left, bounds.bottom))};
+        SetColor(kAccent, .9f);
+        for (int i = 0; i < 4; ++i) m_dc->DrawLine(corners[i], corners[(i + 1) % 4], m_brush.Get(), m_scale);
+    }
     auto sizeLabel = [&](const D2D1_RECT_F& ir, const D2D1_RECT_F& r) {
         wchar_t b[48];
         swprintf_s(b, L"%.0f × %.0f", ir.right - ir.left, ir.bottom - ir.top);
@@ -1410,7 +1466,7 @@ void Viewer::DrawRetouchOverlay(float left, float top, float z) {
 
     // Taille du pinceau sous le curseur (cercle intérieur : partie pleine d'un pinceau doux)
     if ((m_edit.tool == Tool::Brush || m_edit.tool == Tool::Eraser) && m_mouseInside && !HitEdit(m_mouse) &&
-        !m_edit.spacePan && m_edit.fx < 0 && m_edit.slider < 0) {
+        !m_dragging && !m_edit.spacePan && m_edit.fx < 0 && m_edit.slider < 0) {
         const D2D1_POINT_2F c = D2D1::Point2F(float(m_mouse.x), float(m_mouse.y));
         float r = std::max(1.5f, m_edit.size * z / 2);
         SetColor(0x000000, 0.6f);
@@ -1613,11 +1669,14 @@ void Viewer::DrawEditUi(float cw, float ch) {
     const float tabsRight = DrawModeTabs(10 * s, by, bs);
     SetColor(kWhite, 0.1f);
     m_rt->FillRectangle(D2D1::RectF(tabsRight + 6 * s, by + 6 * s, tabsRight + 6 * s + 1, by + bs - 6 * s), m_brush.Get());
-    if (const FileEntry* cur = Current()) {
+    {
+        const FileEntry* cur = Current();
+        const std::wstring title = !m_projectPath.empty() ? FileNameOf(m_projectPath) :
+            m_edit.untitled || !cur ? L"Untitled" : cur->name;
         const float tl = tabsRight + 18 * s, tr = x - 16 * s;
         wchar_t dims[64];
         swprintf_s(dims, L"%u × %u", m_edit.w, m_edit.h);
-        Text(cur->name, m_tfTitle.Get(), D2D1::RectF(tl, 7 * s, tr, 28 * s), kWhite, 0.96f);
+        Text(title, m_tfTitle.Get(), D2D1::RectF(tl, 7 * s, tr, 28 * s), kWhite, 0.96f);
         Text(dims + (m_edit.dirty ? L"   ·   " + std::wstring(T("edit.modified")) : std::wstring()), m_tfSub.Get(),
              D2D1::RectF(tl, 28 * s, tr, 46 * s), kGrey, 1);
     }

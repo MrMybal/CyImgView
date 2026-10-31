@@ -47,6 +47,9 @@ add_executable(CyImgView WIN32
     src/save.cpp
     src/viewer_edit.cpp
     src/viewer_layers.cpp
+    src/new_document_dialog.cpp
+    src/viewer_document.cpp
+    src/viewer_project.cpp
     src/viewer_effects.cpp
     src/viewer_modes.cpp
     src/viewer_develop.cpp
@@ -66,6 +69,18 @@ target_link_libraries(CyImgView PRIVATE cyimg_support d2d1 d3d11 dxgi dwrite win
     ole32 propsys comctl32 comdlg32 winhttp bcrypt dxguid version uxtheme)
 target_include_directories(CyImgView PRIVATE ${CMAKE_BINARY_DIR}/gen)
 set_target_properties(CyImgView PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR})
+
+option(CYIMG_EDITOR_TESTS "Build offscreen editor integration tests" OFF)
+if(CYIMG_EDITOR_TESTS)
+    get_target_property(editor_sources CyImgView SOURCES)
+    list(REMOVE_ITEM editor_sources src/main.cpp)
+    add_executable(cyimg_editor_tests tools/editor_tests.cpp ${editor_sources})
+    target_compile_options(cyimg_editor_tests PRIVATE ${CYIMG_WARNINGS})
+    target_include_directories(cyimg_editor_tests PRIVATE ${CMAKE_BINARY_DIR}/gen)
+    get_target_property(editor_libraries CyImgView LINK_LIBRARIES)
+    target_link_libraries(cyimg_editor_tests PRIVATE ${editor_libraries})
+    set_target_properties(cyimg_editor_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR})
+endif()
 
 # Banc d'essai console du décodage (mesure des temps, conversions, tests des mises à jour)
 add_executable(cyimg_bench tools/bench.cpp tools/bench.rc src/decoder.cpp src/folder.cpp src/save.cpp src/updater.cpp)

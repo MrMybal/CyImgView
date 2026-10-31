@@ -240,6 +240,8 @@ bool InputTextDialog(HWND owner, const wchar_t* title, std::wstring& text) {
 // =============================================================================================
 // État
 
+bool Viewer::InputText(const wchar_t* title, std::wstring& value) { return InputTextDialog(m_hwnd, title, value); }
+
 struct Viewer::PlugState {
     // Outils : geste en cours
     bool begun = false;            // entrée d'historique déjà créée pour ce geste
@@ -678,7 +680,7 @@ struct Viewer::PlugHost {
         PlugState& ps = *v.m_plug;
         editplug::Effect* e = CurFx(v);
         if (!e) return;
-        if (!ps.fullPx.px && !ReadScaled(v, v.CurLayer().bmp.Get(), UINT32_MAX, ps.fullPx)) {
+        if (!ps.fullPx.px && !ReadScaled(v, v.EffectSource(), UINT32_MAX, ps.fullPx)) {
             v.ShowToast(T("edit.err.memory"));
             return;
         }
@@ -740,7 +742,7 @@ struct Viewer::PlugHost {
         if (!ps.smallBmp || ps.smallBmp->GetPixelSize().width != j.width || ps.smallBmp->GetPixelSize().height != j.height)
             ps.smallBmp = v.NewCanvas(j.width, j.height);
         if (!ps.smallBmp || FAILED(ps.smallBmp->CopyFromMemory(nullptr, j.dst.Data(), j.stride)) || !EnsureFxOut(v)) return;
-        ID2D1Bitmap1* layer = v.CurLayer().bmp.Get();
+        ID2D1Bitmap1* layer = v.EffectSource();
         ID2D1Bitmap1* reduced = ps.smallBmp.Get();
         const bool sel = v.m_edit.selValid;
         const D2D1_RECT_F selRc = v.m_edit.sel;
@@ -759,7 +761,7 @@ struct Viewer::PlugHost {
     }
     static void ShowFxFull(Viewer& v) {
         PlugState& ps = *v.m_plug;
-        if (!EnsureFxOut(v) || FAILED(v.m_edit.fxOut->CopyFromBitmap(nullptr, v.CurLayer().bmp.Get(), nullptr))) return;
+        if (!EnsureFxOut(v) || FAILED(v.m_edit.fxOut->CopyFromBitmap(nullptr, v.EffectSource(), nullptr))) return;
         const CyImgRect s = SelRect(v);
         const D2D1_RECT_U r = D2D1::RectU(UINT32(s.x), UINT32(s.y), UINT32(s.x) + s.w, UINT32(s.y) + s.h);
         v.m_edit.fxOut->CopyFromMemory(&r, ps.fullRes.Data() + size_t(s.y) * ps.fullPx.stride + size_t(s.x) * 4, ps.fullPx.stride);
@@ -770,7 +772,7 @@ struct Viewer::PlugHost {
     static void FinishApply(Viewer& v) {
         PlugState& ps = *v.m_plug;
         ps.applying = false;
-        if (v.m_edit.fxOut && ps.shownFull) v.PushLayerSwap(std::move(v.m_edit.fxOut));
+        if (v.m_edit.fxOut && ps.shownFull) v.ApplyEffectResult(std::move(v.m_edit.fxOut));
         v.ClosePluginEffect(false);
     }
     static void FxCrashed(Viewer& v, editplug::Effect& e, const editplug::Crash& c) {
@@ -913,6 +915,43 @@ void Viewer::EnsureEditPlugins() {
 
 void Viewer::OnPluginJobs() { editplug::DispatchJobs(); }
 
+void Viewer::PreparePluginGallery() {
+    EnsureEditPlugins();
+    auto& effects = editplug::Get().effects;
+    const size_t base = size_t(EffectCount());
+    m_edit.galleryThumbs.resize(base + effects.size());
+    m_edit.galleryStatus.resize(effects.size());
+    if (m_edit.galleryBusy || !m_edit.gallerySample) return;
+    for (size_t i=0; i<effects.size(); ++i) {
+        if (m_edit.galleryStatus[i]) continue;
+        auto& effect=effects[i];
+        if (effect.disabled || !effect.api.process) { m_edit.galleryStatus[i]=3; continue; }
+        Pixels source;
+        if (!PlugHost::ReadScaled(*this,m_edit.gallerySample.Get(),240,source)) return;
+        auto job=PlugHost::NewJob(source,{0,0,source.w,source.h},source.w,source.h,
+            editplug::Defaults(effect.params),effect.api.process);
+        const std::weak_ptr<int> lifetime=m_edit.galleryLifetime;
+        job->done=[this,lifetime,i,base](editplug::Job& result) {
+            // A new document, device loss or viewer destruction invalidates this result.
+            if (lifetime.expired()) return;
+            m_edit.galleryBusy=false;
+            m_edit.galleryStatus[i]=3;
+            if (!result.cancel && !result.crashed && result.result==CYIMG_OK) {
+                auto bitmap=NewCanvas(result.width,result.height);
+                if (bitmap && SUCCEEDED(bitmap->CopyFromMemory(nullptr,result.dst.Data(),result.stride))) {
+                    m_edit.galleryThumbs[base+i]=bitmap;
+                    m_edit.galleryStatus[i]=2;
+                }
+            }
+            Invalidate();
+        };
+        m_edit.galleryBusy=true;
+        m_edit.galleryStatus[i]=1;
+        editplug::StartJob(job,&PlugHost::table,m_hwnd,kMsgPlugJob);
+        break; // One small preview at a time; the UI remains responsive.
+    }
+}
+
 void Viewer::PluginCrashed(const std::wstring& what, const std::wstring& file, const std::wstring& where) {
     Trace((L"plugin d'édition planté : " + what + L" (" + file + L") @ " + where).c_str());
     ShowToast(Tf("editapi.err.crashed", what.c_str(), file.c_str()), 6);
@@ -939,7 +978,7 @@ void Viewer::OpenPluginEffect(int i) {
     ps.fullValid = ps.shownFull = ps.applying = ps.previewPending = ps.failedShown = false;
     ps.preview.reset();
     ps.render.reset();
-    if (!PlugHost::ReadScaled(*this, CurLayer().bmp.Get(), PlugHost::PreviewSide(*this), ps.smallPx)) {
+    if (!PlugHost::ReadScaled(*this, EffectSource(), PlugHost::PreviewSide(*this), ps.smallPx)) {
         ps.fx = -1;
         ShowToast(T("edit.err.memory"));
         return;
@@ -974,6 +1013,7 @@ void Viewer::ClosePluginEffect(bool apply) {
     ps.fullValid = ps.shownFull = ps.applying = ps.previewPending = false;
     ps.smallBmp.Reset();
     m_edit.fx = -1;
+    m_edit.fxSource.Reset();
     m_edit.fxOut.Reset();
     m_edit.fxDirty = false;
     KillTimer(m_hwnd, kTimerPlug);
@@ -1220,48 +1260,64 @@ void Viewer::DrawEffectsMenu(float cw, float ch) {
             if (effects[size_t(i)].category == c)
                 rows.push_back({EffectCount() + i, effects[size_t(i)].name, effects[size_t(i)].disabled});
     }
-    const float s = m_scale, iw = 240 * s;
-    float ih = 30 * s, hh = 26 * s, sh = 9 * s;
-    auto total = [&] {
-        float h = 8 * s;
-        for (const Row& r : rows) h += r.fx >= 0 ? ih : r.fx == -1 ? hh : sh;
-        return h;
-    };
-    if (total() > ch - 12 * s) {  // trop long pour la fenêtre : lignes resserrées
-        const float k = std::max(0.6f, (ch - 12 * s) / total());
-        ih *= k;
-        hh *= k;
-        sh *= k;
+    rows.erase(std::remove_if(rows.begin(), rows.end(), [](const Row& r) { return r.fx < 0; }), rows.end());
+    const float s = m_scale, width = std::min(780 * s, cw - 20 * s);
+    const float height = std::min(680 * s, ch - 20 * s);
+    const float left = (cw - width) / 2, top = (ch - height) / 2;
+    const auto panel = D2D1::RectF(left, top, left + width, top + height);
+    m_edit.galleryRect = panel;
+    FillRound(panel, 8 * s, kPanel, 0.99f);
+    EditBtn(EditCmd::Panel, 0, panel, nullptr);
+    Text(T("document.gallery"), m_tfTitle.Get(), D2D1::RectF(left + 16*s, top + 6*s, panel.right - 132*s, top + 36*s), kWhite, 1);
+    Text(T("document.gallery.sample"), m_tfSub.Get(), D2D1::RectF(left+16*s,top+38*s,panel.right-132*s,top+76*s),kGrey,1);
+    if (m_edit.gallerySample) m_dc->DrawBitmap(m_edit.gallerySample.Get(),
+        D2D1::RectF(panel.right-120*s,top+8*s,panel.right-16*s,top+77.333f*s),1,D2D1_INTERPOLATION_MODE_LINEAR,nullptr,nullptr);
+    for (int target = 0; target < 2; ++target) {
+        auto rc = D2D1::RectF(left + 12*s + target * (width - 24*s)/2, top + 84*s,
+            left + 12*s + (target+1)*(width - 24*s)/2 - 4*s, top + 118*s);
+        EditBtn(EditCmd::FxTarget, target, rc, nullptr, m_edit.fxWhole == bool(target));
+        FillRound(rc, 4*s, m_edit.fxWhole == bool(target) ? kAccent : kWhite, .18f);
+        Text(T(target ? "document.fx.whole" : "document.fx.layer"), m_tfCenter.Get(), rc, kWhite, 1);
     }
-    const float height = total();
-    const D2D1_RECT_F a = m_edit.menuAnchor;
-    const float left = std::clamp(a.left, 6 * s, cw - iw - 6 * s);
-    float top = a.bottom + 6 * s;
-    if (top + height > ch - 6 * s) top = std::max(6 * s, std::min(a.top - 6 * s - height, ch - 6 * s - height));
-    const D2D1_RECT_F menu = D2D1::RectF(left, top, left + iw, top + height);
-    FillRound(menu, 8 * s, kPanel, 0.98f);
-    SetColor(kWhite, 0.12f);
-    m_rt->DrawRoundedRectangle(D2D1::RoundedRect(menu, 8 * s, 8 * s), m_brush.Get(), 1);
-    m_editButtons.push_back({EditCmd::Panel, 0, menu, nullptr});
-    float iy = menu.top + 4 * s;
-    for (const Row& r : rows) {
-        if (r.fx == -2) {
-            SetColor(kWhite, 0.1f);
-            m_rt->FillRectangle(D2D1::RectF(menu.left + 10 * s, iy + sh / 2 - 0.5f, menu.right - 10 * s, iy + sh / 2 + 0.5f), m_brush.Get());
-            iy += sh;
-        } else if (r.fx == -1) {  // catégorie d'un plugin
-            SetColor(kAccent, 0.3f);
-            m_rt->FillRectangle(D2D1::RectF(menu.left + 10 * s, iy + 3 * s, menu.right - 10 * s, iy + 3 * s + 1), m_brush.Get());
-            Text(r.label, m_tfSub.Get(), D2D1::RectF(menu.left + 14 * s, iy + 4 * s, menu.right - 8 * s, iy + hh), kAccent, 0.9f);
-            iy += hh;
-        } else {
-            const D2D1_RECT_F rc = D2D1::RectF(menu.left + 4 * s, iy, menu.right - 4 * s, iy + ih);
-            EditBtn(EditCmd::FxPick, r.fx, rc, nullptr, false, !r.disabled);
-            const std::wstring label = r.disabled ? r.label + L"  " + T("editapi.disabled") : r.label;
-            Text(label, m_tfSmall.Get(), D2D1::RectF(rc.left + 10 * s, rc.top, rc.right - 4 * s, rc.bottom), kWhite, r.disabled ? 0.35f : 0.95f);
-            iy += ih;
+    const int columns = width >= 500*s ? 3 : 2;
+    const int countRows = std::max(1, int((height - 172*s) / (190*s)));
+    const int perPage = columns * countRows;
+    const int pages = std::max(1, (int(rows.size()) + perPage - 1) / perPage);
+    m_edit.fxPage = std::clamp(m_edit.fxPage, 0, pages - 1);
+    const float cardW = (width - 24*s) / columns;
+    const float cardH = (height - 172*s) / countRows;
+    for (int slot = 0; slot < perPage; ++slot) {
+        const int index = m_edit.fxPage * perPage + slot;
+        if (index >= int(rows.size())) break;
+        const Row& row = rows[size_t(index)];
+        const float x = left + 12*s + (slot % columns)*cardW, y = top + 128*s + (slot / columns)*cardH;
+        auto rc = D2D1::RectF(x, y, x + cardW - 6*s, y + cardH - 6*s);
+        EditBtn(EditCmd::FxPick, row.fx, rc, nullptr, false, !row.disabled);
+        FillRound(rc, 5*s, kWhite, .06f);
+        const float previewW=std::min(cardW-18*s, std::max(1.0f,(cardH-54*s)*1.5f));
+        const float previewX=x+(rc.right-x-previewW)/2;
+        const auto preview = D2D1::RectF(previewX,y+6*s,previewX+previewW,y+6*s+previewW/1.5f);
+        if (row.fx < int(m_edit.galleryThumbs.size()) && m_edit.galleryThumbs[size_t(row.fx)])
+            m_dc->DrawBitmap(m_edit.galleryThumbs[size_t(row.fx)].Get(), preview, 1, D2D1_INTERPOLATION_MODE_LINEAR, nullptr, nullptr);
+        else {
+            const bool failed=row.fx<EffectCount() || (size_t(row.fx-EffectCount())<m_edit.galleryStatus.size() && m_edit.galleryStatus[size_t(row.fx-EffectCount())]==3);
+            Text(T(failed ? "document.gallery.unavailable" : "document.gallery.loading"),m_tfCenter.Get(),preview,kGrey,.8f);
         }
+        Text(row.label, m_tfSmall.Get(), D2D1::RectF(x+8*s,preview.bottom+4*s,rc.right-5*s,preview.bottom+24*s), kWhite, row.disabled ? .35f : 1);
+        const std::wstring category = row.fx < EffectCount() ? T("document.fx.builtin") : effects[size_t(row.fx - EffectCount())].category;
+        Text(category, m_tfSub.Get(), D2D1::RectF(x+8*s,preview.bottom+24*s,rc.right-5*s,rc.bottom-4*s), kGrey, .9f);
     }
+    auto prev = D2D1::RectF(left + 12*s, panel.bottom - 38*s, left + 54*s, panel.bottom - 8*s);
+    auto next = D2D1::RectF(left + 58*s, prev.top, left + 100*s, prev.bottom);
+    EditBtn(EditCmd::FxPage, -1, prev, nullptr, false, m_edit.fxPage > 0);
+    EditBtn(EditCmd::FxPage, 1, next, nullptr, false, m_edit.fxPage + 1 < pages);
+    Text(L"‹", m_tfCenter.Get(), prev, kWhite, 1); Text(L"›", m_tfCenter.Get(), next, kWhite, 1);
+    Text((std::to_wstring(m_edit.fxPage+1)+L" / "+std::to_wstring(pages)).c_str(),m_tfCenter.Get(),
+        D2D1::RectF(left+106*s,prev.top,left+168*s,prev.bottom),kGrey,1);
+    auto ext = D2D1::RectF(left + 174*s, prev.top, panel.right - 12*s, prev.bottom);
+    EditBtn(EditCmd::Extensions, 0, ext, nullptr);
+    Text(T("document.extensions"), m_tfCenter.Get(), ext, kAccent, 1);
+
 }
 
 // =============================================================================================
@@ -1526,7 +1582,7 @@ public:
     const wchar_t* Cursor(POINT p) const override;
 
 private:
-    enum { kCtlUndo = 1 << 20, kCtlRedo, kCtlReset, kCtlOriginal, kCtlScroll };
+    enum { kCtlUndo = 1 << 20, kCtlRedo, kCtlReset, kCtlOriginal, kCtlScroll, kCtlCancel, kCtlApply };
     enum { kDragNone, kDragSlider, kDragScroll };
 
     editplug::Mode& Def() const { return editplug::Get().modes[size_t(m_index)]; }
@@ -1998,6 +2054,12 @@ void Viewer::PluginEditMode::DrawOptionsBar(float cw, float y, float h) {
         return tm.width;
     };
     float rx = cw - 10 * s;
+    const D2D1_RECT_F apply = D2D1::RectF(rx - 100 * s, by, rx, by + bs);
+    TextButton(kCtlApply, apply, T("document.mode.apply"), nullptr, true);
+    rx = apply.left - 6 * s;
+    const D2D1_RECT_F cancel = D2D1::RectF(rx - 100 * s, by, rx, by + bs);
+    TextButton(kCtlCancel, cancel, T("document.mode.cancel"), nullptr);
+    rx = cancel.left - 6 * s;
     const std::wstring reset = T("editapi.mode.reset"), orig = T("develop.view.original");
     const D2D1_RECT_F rr = D2D1::RectF(rx - width(reset) - 24 * s, by, rx, by + bs);
     TextButton(kCtlReset, rr, reset, T("editapi.tip.mode_reset"), false, m_vals != editplug::Defaults(Def().controls));
@@ -2185,7 +2247,20 @@ void Viewer::PluginEditMode::Control(int id, POINT p, bool right, bool dbl) {
     editplug::Mode& d = Def();
     if (right) return;
     switch (id) {
+    case kCtlCancel: {
+        if (m_drag != kDragNone) MouseUp(v.m_mouse);
+        if (m_baked && ModeLayer() && ModeLayer()->bmp == m_baked) {
+            v.m_edit.layer = m_layer;
+            v.PushLayerSwap(m_src);
+        } else v.m_edit.dirty = m_dirtyAtEnter;
+        CancelJobs(); m_active = false;
+        v.SwitchEditMode(0);
+        Close();
+        return;
+    }
+    case kCtlApply: v.SwitchEditMode(0); return;
     case kCtlUndo:
+        if (m_undo.empty()) { Control(kCtlCancel, p, false, false); return; }
         if (!m_undo.empty()) {
             m_redo.push_back(m_vals);
             m_vals = m_undo.back();
@@ -2369,7 +2444,7 @@ bool Viewer::PluginEditMode::Key(WPARAM vk) {
     case VK_ESCAPE:
         if (m_drag != kDragNone) MouseUp(v.m_mouse);
         else if (m_original) m_original = false;
-        else v.EndEdit(true);
+        else Control(kCtlCancel, POINT{}, false, false);
         v.Invalidate();
         return true;
     case 'E': v.EndEdit(true); return true;

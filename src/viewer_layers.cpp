@@ -136,6 +136,8 @@ std::wstring Viewer::LayerName(const Layer& l) const {
 }
 
 ID2D1Bitmap1* Viewer::LayerImage(int i) const {
+    const Layer& masked = m_edit.layers[size_t(i)];
+    if (masked.mask && masked.maskEnabled && masked.masked) return masked.masked.Get();
     if (i == m_edit.layer && m_edit.fx >= 0 && m_edit.fxPreview && m_edit.fxOut) return m_edit.fxOut.Get();
     if (!m_modes.empty())
         if (ID2D1Bitmap1* b = Mode().LayerBitmap(i)) return b;  // aperçu du mode (Développement)
@@ -144,6 +146,7 @@ ID2D1Bitmap1* Viewer::LayerImage(int i) const {
 
 std::vector<Viewer::ComposeItem> Viewer::VisibleItems() const {
     std::vector<ComposeItem> v;
+    if (m_edit.fxWhole && m_edit.fx >= 0 && m_edit.fxPreview && m_edit.fxOut) return {{m_edit.fxOut.Get(), 1, 0}};
     for (int i = 0; i < int(m_edit.layers.size()); ++i) {
         const Layer& l = m_edit.layers[size_t(i)];
         if (l.visible && l.opacity > 0) v.push_back({LayerImage(i), l.opacity, l.blend});
@@ -232,12 +235,14 @@ void Viewer::PrepareEditFrame() {
     if (!m_modes.empty()) Mode().Prepare();
     if (m_edit.fx >= 0 && (m_edit.fxDirty || m_edit.fx >= EffectCount())) UpdateFxPreview();  // effet de plugin : calculs à suivre
 
+    PrepareMasks();
+    PrepareGallery();
     if (NeedComposite()) {
         std::vector<uint64_t> sig{m_edit.w, m_edit.h};
         for (int i = 0; i < int(m_edit.layers.size()); ++i) {
             const Layer& l = m_edit.layers[size_t(i)];
             if (!l.visible) continue;
-            sig.push_back(LayerImage(i) != l.bmp.Get() ? (m_edit.fxVer | (1ull << 63)) : l.ver);
+            sig.push_back(l.ver); sig.push_back(m_edit.fxVer);
             sig.push_back(uint64_t(l.blend) << 32 | uint32_t(std::lround(l.opacity * 10000)));
         }
         if (!m_edit.comp || m_edit.comp->GetPixelSize().width != m_edit.w || m_edit.comp->GetPixelSize().height != m_edit.h) {
@@ -291,6 +296,9 @@ void Viewer::PrepareEditFrame() {
 }
 
 void Viewer::DrawEditDocument(const D2D1_RECT_F& r, D2D1_INTERPOLATION_MODE mode) {
+    if (m_edit.fxWhole && m_edit.fx >= 0 && m_edit.fxPreview && m_edit.fxOut) {
+        m_dc->DrawBitmap(m_edit.fxOut.Get(), r, 1, mode, nullptr, nullptr); return;
+    }
     // Le mode peut transformer tout le document (redressement) et dessiner un calque à sa façon (aperçu)
     D2D1_MATRIX_3X2_F old, xf;
     const bool turned = Mode().DocTransform(r, xf);
@@ -303,7 +311,7 @@ void Viewer::DrawEditDocument(const D2D1_RECT_F& r, D2D1_INTERPOLATION_MODE mode
     } else {
         for (int i = 0; i < int(m_edit.layers.size()); ++i) {
             const Layer& l = m_edit.layers[size_t(i)];
-            if (!l.visible || l.opacity <= 0 || Mode().DrawLayer(i, r, mode, l.opacity)) continue;
+            if (!l.visible || l.opacity <= 0 || (!l.mask && Mode().DrawLayer(i, r, mode, l.opacity))) continue;
             m_dc->DrawBitmap(LayerImage(i), r, l.opacity, mode, nullptr, nullptr);
         }
     }
@@ -314,6 +322,7 @@ void Viewer::DrawEditDocument(const D2D1_RECT_F& r, D2D1_INTERPOLATION_MODE mode
 // Historique
 
 bool Viewer::PushUndo() {
+    if (!RequirePixels()) return false;
     ComPtr<ID2D1Bitmap1> copy = NewCanvas(m_edit.w, m_edit.h);
     if (!copy || FAILED(copy->CopyFromBitmap(nullptr, CurLayer().bmp.Get(), nullptr))) {
         ShowToast(T("edit.err.vram"));
@@ -326,12 +335,13 @@ bool Viewer::PushUndo() {
 void Viewer::PushLayerSwap(ComPtr<ID2D1Bitmap1> bmp) {
     Layer& l = CurLayer();
     EditUndo e;
-    e.layer = m_edit.layer;
+    e.layers = m_edit.layers; e.cur = m_edit.layer; e.w = m_edit.w; e.h = m_edit.h;
     e.bmp = l.bmp;
     e.ver = l.ver;
     m_edit.undo.push_back(std::move(e));
     m_edit.redo.clear();
     l.bmp = std::move(bmp);
+    l.object = false; l.objectText.clear();
     Touch(l);
     m_edit.dirty = true;
     TrimHistory();
@@ -349,10 +359,36 @@ void Viewer::PushDocUndo() {
     TrimHistory();
 }
 
-void Viewer::SetDocument(std::vector<ComPtr<ID2D1Bitmap1>> bmps) {
+void Viewer::SetDocument(std::vector<ComPtr<ID2D1Bitmap1>> bmps, const D2D1_MATRIX_3X2_F& transform) {
     if (bmps.size() != m_edit.layers.size() || !bmps[0]) return;
+    const auto size = bmps[0]->GetPixelSize();
+    std::vector<std::shared_ptr<std::vector<uint8_t>>> masks(bmps.size());
+    for (size_t i = 0; i < bmps.size(); ++i) {
+        const Layer& l = m_edit.layers[i];
+        if (!l.mask) continue;
+        std::vector<uint8_t> rgba(size_t(m_edit.w) * m_edit.h * 4);
+        for (size_t j = 0; j < l.mask->size(); ++j) {
+            rgba[j*4] = rgba[j*4+1] = rgba[j*4+2] = (*l.mask)[j]; rgba[j*4+3] = 255;
+        }
+        auto source = NewCanvas(m_edit.w, m_edit.h), target = NewCanvas(size.width, size.height);
+        if (!source || !target || FAILED(source->CopyFromMemory(nullptr, rgba.data(), m_edit.w * 4))) return;
+        if (!DrawOn(target.Get(), [&] {
+            m_dc->Clear(D2D1::ColorF(0, 0, 0, 0)); m_dc->SetTransform(transform);
+            m_dc->DrawImage(source.Get());
+        })) return;
+        PixelBuffer px; uint32_t stride;
+        if (!ReadBitmap(target.Get(), px, stride)) return;
+        auto mask = std::make_shared<std::vector<uint8_t>>(size_t(size.width) * size.height);
+        for (uint32_t y = 0; y < size.height; ++y) for (uint32_t x = 0; x < size.width; ++x)
+            (*mask)[size_t(y) * size.width + x] = px.Data()[size_t(y) * stride + x*4];
+        masks[i] = std::move(mask);
+    }
     PushDocUndo();
     for (size_t i = 0; i < bmps.size(); ++i) {
+        Layer& l = m_edit.layers[i];
+        if (l.object) l.objectTransform = *D2D1::Matrix3x2F::ReinterpretBaseType(&l.objectTransform) *
+            *D2D1::Matrix3x2F::ReinterpretBaseType(&transform);
+        l.mask = masks[i]; l.masked.Reset();
         m_edit.layers[i].bmp = std::move(bmps[i]);
         Touch(m_edit.layers[i]);
     }
@@ -367,19 +403,23 @@ void Viewer::SetDocument(std::vector<ComPtr<ID2D1Bitmap1>> bmps) {
 size_t Viewer::EditBytes() const {
     std::unordered_set<ID2D1Bitmap1*> seen;
     size_t total = 0;
+    std::unordered_set<const std::vector<uint8_t>*> masks;
+    auto addMask = [&](const Layer& l) { if (l.mask && masks.insert(l.mask.get()).second) total += l.mask->size(); };
     auto add = [&](ID2D1Bitmap1* b) {
         if (b && seen.insert(b).second) total += Bytes(b);
     };
-    for (auto& l : m_edit.layers) add(l.bmp.Get());
+    for (auto& l : m_edit.layers) { add(l.bmp.Get()); add(l.masked.Get()); addMask(l); }
     for (auto* list : {&m_edit.undo, &m_edit.redo})
         for (auto& e : *list) {
             add(e.bmp.Get());
-            for (auto& l : e.layers) add(l.bmp.Get());
+            for (auto& l : e.layers) { add(l.bmp.Get()); add(l.masked.Get()); addMask(l); }
         }
     add(m_edit.strokeBuf.Get());
     add(m_edit.comp.Get());
     add(m_edit.scratch.Get());
-    add(m_edit.fxOut.Get());
+    add(m_edit.fxOut.Get()); add(m_edit.fxSource.Get());
+    add(m_edit.gallerySample.Get());
+    for (auto& thumbnail : m_edit.galleryThumbs) add(thumbnail.Get());
     return total;
 }
 
@@ -429,6 +469,8 @@ void Viewer::RestoreUndo(EditUndo& e, std::vector<EditUndo>& opposite) {
     opposite.push_back(std::move(back));
     m_edit.dirty = true;
     m_edit.cropValid = false;
+    m_edit.editMask = false;
+    m_edit.compSig.clear();
     Invalidate();
 }
 
@@ -490,6 +532,7 @@ bool Viewer::ReadBitmap(ID2D1Bitmap1* bmp, PixelBuffer& out, uint32_t& stride, c
 // Image aplatie (opacités et modes de fusion appliqués). alpha : au moins un pixel non opaque.
 bool Viewer::ReadFlattened(PixelBuffer& out, uint32_t& stride, bool& alpha) {
     if (m_edit.layers.empty()) return false;
+    PrepareMasks();
     const std::vector<ComposeItem> items = VisibleItems();
     ID2D1Bitmap1* src = nullptr;
     ComPtr<ID2D1Bitmap1> tmp;
@@ -517,6 +560,7 @@ void Viewer::AddLayer(ComPtr<ID2D1Bitmap1> bmp, std::wstring name) {
     PushDocUndo();
     m_edit.layers.insert(m_edit.layers.begin() + m_edit.layer + 1, std::move(l));
     ++m_edit.layer;
+    m_edit.editMask = false;
     Invalidate();
 }
 
@@ -526,10 +570,11 @@ void Viewer::LayerCommand(EditCmd cmd, int arg) {
     const int cur = m_edit.layer;
     switch (cmd) {
     case EditCmd::LayerSelect:
-        if (arg >= 0 && arg < n) m_edit.layer = arg;
+        if (arg >= 0 && arg < n) { m_edit.layer = arg; m_edit.editMask = false; }
         break;
     case EditCmd::LayerEye:
         if (arg >= 0 && arg < n) {
+            PushDocUndo();
             m_edit.layers[size_t(arg)].visible = !m_edit.layers[size_t(arg)].visible;
             m_edit.dirty = true;
         }
@@ -584,21 +629,26 @@ void Viewer::LayerCommand(EditCmd cmd, int arg) {
         const Layer& up = m_edit.layers[size_t(cur)];
         Layer& low = m_edit.layers[size_t(cur - 1)];
         ComPtr<ID2D1Bitmap1> b = NewCanvas(m_edit.w, m_edit.h);
-        std::vector<ComposeItem> items{{low.bmp.Get(), 1.0f, 0}};
-        if (up.visible) items.push_back({up.bmp.Get(), up.opacity, up.blend});
+        PrepareMasks();
+        std::vector<ComposeItem> items;
+        if (low.visible) items.push_back({LayerImage(cur - 1), low.opacity, low.blend});
+        if (up.visible) items.push_back({LayerImage(cur), up.opacity, up.blend});
         if (!b || !ComposeTo(b.Get(), D2D1::Matrix3x2F::Identity(), items)) {
             ShowToast(T("edit.err.vram"));
             break;
         }
         PushDocUndo();
-        m_edit.layers[size_t(cur - 1)].bmp = b;
-        Touch(m_edit.layers[size_t(cur - 1)]);
+        Layer& merged = m_edit.layers[size_t(cur - 1)];
+        merged.bmp = b; merged.object = false; merged.objectText.clear();
+        merged.mask.reset(); merged.masked.Reset(); merged.opacity = 1; merged.blend = 0; merged.visible = true;
+        Touch(merged);
         m_edit.layers.erase(m_edit.layers.begin() + cur);
         m_edit.layer = cur - 1;
         break;
     }
     case EditCmd::LayerFlatten: {
         if (n <= 1) break;
+        PrepareMasks();
         ComPtr<ID2D1Bitmap1> b = NewCanvas(m_edit.w, m_edit.h);
         if (!b || !ComposeTo(b.Get(), D2D1::Matrix3x2F::Identity(), VisibleItems())) {
             ShowToast(T("edit.err.vram"));
@@ -704,8 +754,9 @@ void Viewer::DrawLayersPanel(float cw, float ch) {
         } else {
             Text(LayerName(l), m_tfSmall.Get(), nr, active ? kAccent : kWhite, l.visible ? 1.0f : 0.5f);
         }
-        std::wstring sub;
-        if (l.blend != 0) sub = T(BlendKey(l.blend));
+        std::wstring sub = T(BlendKey(l.blend));
+        if (l.object) sub += L" · " + std::wstring(T("document.object"));
+        if (l.mask) sub += L" · " + std::wstring(T(active && m_edit.editMask ? "document.mask.editing" : "document.mask"));
         if (l.opacity < 0.995f) {
             wchar_t ob[24];
             swprintf_s(ob, L"%.0f %%", l.opacity * 100);
@@ -921,7 +972,7 @@ bool Viewer::WritePsd(const std::wstring& path, std::wstring& err) {
     for (int i = 0; i < n && ok; ++i) {
         PixelBuffer px;
         uint32_t stride = 0;
-        if (!ReadBitmap(m_edit.layers[size_t(i)].bmp.Get(), px, stride)) {
+        if (!ReadBitmap(LayerImage(i), px, stride)) {
             ok = false;
             break;
         }

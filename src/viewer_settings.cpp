@@ -69,6 +69,7 @@ void Viewer::OnSettingClicked(int id) {
         SaveSetting(L"view", L"strip", m_showStrip);
         m_thumbReqLo = -1;
         RequestThumbs();
+        if (m_fit) ApplyFit(false);
         break;
     case kAutoUpdate:
         m_autoUpdate = !m_autoUpdate;

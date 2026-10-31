@@ -92,7 +92,7 @@ slide.anim.pause = Pause
 
 # Mode édition : outils
 edit.tool.hand = Déplacer la vue (M, ou Espace maintenu)
-edit.tool.brush = Pinceau (B) — clic droit : 2e couleur
+edit.tool.brush = Pinceau (B) — X : inverser les couleurs
 edit.tool.eraser = Gomme (G)
 edit.tool.line = Ligne (L) — Maj : angles de 45°
 edit.tool.arrow = Flèche (A)
@@ -166,7 +166,7 @@ edit.tip.grad_transparent = Vers transparent (cliquer : vers la couleur secondai
 edit.hint.hand = Glisser pour déplacer la vue · molette : zoom
 edit.hint.move = Glisser pour déplacer le contenu du calque actif (ou de la sélection) · Échap : annuler
 edit.hint.select = Glisser pour sélectionner · Ctrl+A : tout · Ctrl+D : désélectionner · Suppr : effacer · Ctrl+V : coller en calque
-edit.hint.picker = Clic : couleur principale · clic droit : couleur secondaire
+edit.hint.picker = Clic : prélever la couleur · X : inverser les couleurs
 edit.hint.crop = Tracer le cadre, puis Entrée pour recadrer
 
 # Mode édition : calques

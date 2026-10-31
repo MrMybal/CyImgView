@@ -3,8 +3,8 @@
 // Version de CyImgView : seule source de vÃ©ritÃ© (ressource .rc, mises Ã  jour, script de packaging).
 // Les releases GitHub doivent Ãªtre Ã©tiquetÃ©es Â« vMAJOR.MINOR.PATCH Â».
 #define CYIMG_VERSION_MAJOR 1
-#define CYIMG_VERSION_MINOR 8
-#define CYIMG_VERSION_PATCH 2
+#define CYIMG_VERSION_MINOR 9
+#define CYIMG_VERSION_PATCH 0
 
 #define CYIMG_STR2(x) #x
 #define CYIMG_STR(x) CYIMG_STR2(x)

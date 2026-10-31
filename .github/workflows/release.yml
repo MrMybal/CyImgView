@@ -35,5 +35,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          $notes = "docs/releases/$env:VERSION.md"
+          $noteArgs = if (Test-Path $notes) { @('--notes-file', $notes) } else { @('--generate-notes') }
           gh release create "${{ github.ref_name }}" "dist/CyImgView-$env:VERSION-Setup.exe" "dist/CyImgView-$env:VERSION-win64.zip" `
-            --title "CyImgView $env:VERSION" --generate-notes
+            --title "CyImgView $env:VERSION" @noteArgs

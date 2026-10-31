@@ -57,6 +57,8 @@ Viewer::EditMode& Viewer::Mode() const { return *m_modes[size_t(std::clamp(m_mod
 void Viewer::SwitchEditMode(int i) {
     if (!m_edit.active || i < 0 || i >= int(m_modes.size()) || i == m_mode) return;
     if (m_edit.drawing || m_edit.slider >= 0) return;  // glissement en cours
+    if (i != 0 && !RequirePixels()) return;
+    m_edit.editMask = false;
     Mode().Leave();
     const int old = m_mode;
     m_mode = i;
@@ -99,6 +101,9 @@ void Viewer::EditMouseMove(POINT p) { Mode().MouseMove(p); }
 void Viewer::EditMouseUp(POINT p) { Mode().MouseUp(p); }
 
 bool Viewer::EditKey(WPARAM vk) {
+    if (vk == 'N' && GetKeyState(VK_CONTROL) < 0 && GetKeyState(VK_SHIFT) >= 0 && !m_edit.textActive && m_edit.renaming < 0) {
+        NewDocument(); return true;
+    }
     if (vk == VK_TAB && GetKeyState(VK_CONTROL) < 0 && !m_edit.textActive && m_edit.renaming < 0) {  // Ctrl+Tab : mode suivant
         SwitchEditMode((m_mode + (GetKeyState(VK_SHIFT) < 0 ? int(m_modes.size()) - 1 : 1)) % int(m_modes.size()));
         return true;

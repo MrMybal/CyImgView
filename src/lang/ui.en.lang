@@ -92,7 +92,7 @@ slide.anim.pause = Paused
 
 # Edit mode: tools
 edit.tool.hand = Pan view (M, or hold Space)
-edit.tool.brush = Brush (B) — right click: 2nd color
+edit.tool.brush = Brush (B) — X: swap colors
 edit.tool.eraser = Eraser (G)
 edit.tool.line = Line (L) — Shift: 45° angles
 edit.tool.arrow = Arrow (A)
@@ -166,7 +166,7 @@ edit.tip.grad_transparent = To transparent (click: to secondary color)
 edit.hint.hand = Drag to move the view · wheel: zoom
 edit.hint.move = Drag to move the content of the active layer (or of the selection) · Esc: cancel
 edit.hint.select = Drag to select · Ctrl+A: all · Ctrl+D: deselect · Del: clear · Ctrl+V: paste as layer
-edit.hint.picker = Click: primary color · right-click: secondary color
+edit.hint.picker = Click: pick color · X: swap colors
 edit.hint.crop = Draw the frame, then press Enter to crop
 
 # Edit mode: layers

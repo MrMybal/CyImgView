@@ -20,7 +20,7 @@ plugin.fx_extra.offset = Offset
 # annotate
 plugin.annotate.name = Annotation
 plugin.annotate.badge = Numbered badge
-plugin.annotate.badge_hint = Click: numbered badge (primary color; right click: secondary). The number increments.
+plugin.annotate.badge_hint = Click: numbered badge using the primary color. The number increments.
 plugin.annotate.size = Size
 plugin.annotate.number = Number
 plugin.annotate.highlighter = Highlighter

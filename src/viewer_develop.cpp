@@ -620,7 +620,12 @@ void Viewer::DevelopMode::ApplyGeometry() {
     }
     ComPtr<ID2D1Bitmap1> src = srcIsLayer ? bmps[size_t(m_layer)] : bmps.back();
     if (!srcIsLayer) bmps.pop_back();
-    v.SetDocument(std::move(bmps));  // une entrée d'historique, comme les transformations de la Retouche
+    const float fw = float(e.w), fh = float(e.h), angle = m_p.v[dev::kAngle];
+    D2D1_RECT_F crop = dev::CropRect(m_p, fw, fh);
+    if (angle != 0) { crop.left += 1.5f; crop.top += 1.5f; }
+    const auto transform = D2D1::Matrix3x2F::Rotation(angle, D2D1::Point2F(fw / 2, fh / 2)) *
+        D2D1::Matrix3x2F::Translation(-std::round(crop.left), -std::round(crop.top));
+    v.SetDocument(std::move(bmps), transform);  // une entrée d'historique, comme les transformations de la Retouche
     m_src = src;
     m_baked = baked ? e.layers[size_t(m_layer)].bmp : nullptr;
     m_p.ResetGeometry();
