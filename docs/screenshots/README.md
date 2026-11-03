@@ -8,3 +8,6 @@ The text and frame in the editor were created as real editable object layers.
 The gallery uses the test image built into the application.
 
 All captures use PNG, with no interface elements composited or retouched afterward.
+
+The visible screenshot grid also covers Develop mode, the Black & White plugin
+and the live effect settings panel. Clicking a thumbnail opens the full capture.

@@ -11,28 +11,54 @@ aucune dépendance externe. L'exécutable fait environ 600 Ko et n'a besoin d'au
 
 ![CyImgView affichant un paysage, avec la barre d’outils et la pellicule du dossier](docs/screenshots/viewer-fr.png)
 
-<details>
-<summary>Autres captures : retouche, modèles de documents et effets</summary>
+## Modes d’édition et effets
 
-### Retouche avec calques et objets
+Cliquez sur une capture pour l’ouvrir en grand.
 
-Les textes et les cadres restent modifiables sur des calques séparés.
-
-![Mode Retouche avec des textes modifiables, un cadre et le panneau Calques](docs/screenshots/editor-fr.png)
-
-### Modèles de nouveaux documents
-
-Choisissez un format écran, photo ou impression, puis personnalisez les dimensions et le fond.
-
-![Fenêtre Nouvelle image avec les modèles, les dimensions et le choix de l’arrière-plan](docs/screenshots/new-document-fr.png)
-
-### Aperçus des effets
-
-Comparez les effets sur la même image de test, puis choisissez le calque actif ou l’image entière.
-
-![Galerie d’effets affichant l’image de test originale et six aperçus](docs/screenshots/effects-fr.png)
-
-</details>
+<table>
+  <tr>
+    <th>Retouche et calques</th>
+    <th>Développement photo</th>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/editor-fr.png"><img src="docs/screenshots/editor-fr.png" alt="Retouche et calques" width="100%"></a>
+      <p>Textes et formes modifiables, avec les commandes des calques.</p>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/develop-fr.png"><img src="docs/screenshots/develop-fr.png" alt="Développement photo" width="100%"></a>
+      <p>Histogramme, balance des blancs, tonalité et couleurs.</p>
+    </td>
+  </tr>
+  <tr>
+    <th>Noir et blanc</th>
+    <th>Galerie d’effets</th>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/black-white-fr.png"><img src="docs/screenshots/black-white-fr.png" alt="Noir et blanc" width="100%"></a>
+      <p>Préréglages, mélangeur de couleurs et contraste.</p>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/effects-fr.png"><img src="docs/screenshots/effects-fr.png" alt="Galerie d’effets" width="100%"></a>
+      <p>Comparez les aperçus et choisissez le calque ou l’image entière.</p>
+    </td>
+  </tr>
+  <tr>
+    <th>Réglage d’un effet en direct</th>
+    <th>Modèles de nouveaux documents</th>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/effect-preview-fr.png"><img src="docs/screenshots/effect-preview-fr.png" alt="Réglage d’un effet en direct" width="100%"></a>
+      <p>Ajustez l’effet avec un aperçu, puis appliquez ou annulez.</p>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/new-document-fr.png"><img src="docs/screenshots/new-document-fr.png" alt="Modèles de nouveaux documents" width="100%"></a>
+      <p>Formats écran, photo et impression, avec dimensions personnalisées.</p>
+    </td>
+  </tr>
+</table>
 
 ## Installation
 

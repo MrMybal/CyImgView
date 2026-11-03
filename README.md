@@ -11,28 +11,54 @@ external dependencies for the main executable. The executable is about 600 KB an
 
 ![CyImgView displaying a landscape with the image toolbar and folder filmstrip](docs/screenshots/viewer-en.png)
 
-<details>
-<summary>More screenshots: editing, document templates and effects</summary>
+## Editing modes and effects
 
-### Editing with layers and objects
+Click a screenshot to open it at full size.
 
-Text and frames stay editable on separate layers.
-
-![Retouch mode with editable text, a frame and the Layers panel](docs/screenshots/editor-en.png)
-
-### New document templates
-
-Choose a screen, photo or print preset, then customize the size and background.
-
-![New image window with document presets, custom dimensions and background choices](docs/screenshots/new-document-en.png)
-
-### Effect previews
-
-Compare effects on the same test image and choose the active layer or the entire image.
-
-![Effects gallery showing the original test image and six effect previews](docs/screenshots/effects-en.png)
-
-</details>
+<table>
+  <tr>
+    <th>Retouch and layers</th>
+    <th>Photo development</th>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/editor-en.png"><img src="docs/screenshots/editor-en.png" alt="Retouch and layers" width="100%"></a>
+      <p>Editable text, shapes and layer controls.</p>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/develop-en.png"><img src="docs/screenshots/develop-en.png" alt="Photo development" width="100%"></a>
+      <p>Histogram, white balance, tone and color adjustments.</p>
+    </td>
+  </tr>
+  <tr>
+    <th>Black & white</th>
+    <th>Effects gallery</th>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/black-white-en.png"><img src="docs/screenshots/black-white-en.png" alt="Black & white" width="100%"></a>
+      <p>Presets, color mixer and contrast controls.</p>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/effects-en.png"><img src="docs/screenshots/effects-en.png" alt="Effects gallery" width="100%"></a>
+      <p>Compare previews and choose the layer or entire image.</p>
+    </td>
+  </tr>
+  <tr>
+    <th>Live effect adjustments</th>
+    <th>New document templates</th>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/effect-preview-en.png"><img src="docs/screenshots/effect-preview-en.png" alt="Live effect adjustments" width="100%"></a>
+      <p>Adjust an effect, preview it, then apply or cancel.</p>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/new-document-en.png"><img src="docs/screenshots/new-document-en.png" alt="New document templates" width="100%"></a>
+      <p>Screen, photo and print presets with custom dimensions.</p>
+    </td>
+  </tr>
+</table>
 
 ## Installation
 
