@@ -9,6 +9,31 @@
 Visionneuse d'images pour Windows, pensée pour la vitesse : C++ natif, Direct2D (rendu GPU), WIC,
 aucune dépendance externe. L'exécutable fait environ 600 Ko et n'a besoin d'aucun runtime.
 
+![CyImgView affichant un paysage, avec la barre d’outils et la pellicule du dossier](docs/screenshots/viewer-fr.png)
+
+<details>
+<summary>Autres captures : retouche, modèles de documents et effets</summary>
+
+### Retouche avec calques et objets
+
+Les textes et les cadres restent modifiables sur des calques séparés.
+
+![Mode Retouche avec des textes modifiables, un cadre et le panneau Calques](docs/screenshots/editor-fr.png)
+
+### Modèles de nouveaux documents
+
+Choisissez un format écran, photo ou impression, puis personnalisez les dimensions et le fond.
+
+![Fenêtre Nouvelle image avec les modèles, les dimensions et le choix de l’arrière-plan](docs/screenshots/new-document-fr.png)
+
+### Aperçus des effets
+
+Comparez les effets sur la même image de test, puis choisissez le calque actif ou l’image entière.
+
+![Galerie d’effets affichant l’image de test originale et six aperçus](docs/screenshots/effects-fr.png)
+
+</details>
+
 ## Installation
 
 Téléchargez `CyImgView-<version>-Setup.exe` depuis les

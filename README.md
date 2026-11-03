@@ -9,6 +9,31 @@
 A Windows image viewer built for speed: native C++, Direct2D GPU rendering, WIC and no
 external dependencies for the main executable. The executable is about 600 KB and needs no runtime.
 
+![CyImgView displaying a landscape with the image toolbar and folder filmstrip](docs/screenshots/viewer-en.png)
+
+<details>
+<summary>More screenshots: editing, document templates and effects</summary>
+
+### Editing with layers and objects
+
+Text and frames stay editable on separate layers.
+
+![Retouch mode with editable text, a frame and the Layers panel](docs/screenshots/editor-en.png)
+
+### New document templates
+
+Choose a screen, photo or print preset, then customize the size and background.
+
+![New image window with document presets, custom dimensions and background choices](docs/screenshots/new-document-en.png)
+
+### Effect previews
+
+Compare effects on the same test image and choose the active layer or the entire image.
+
+![Effects gallery showing the original test image and six effect previews](docs/screenshots/effects-en.png)
+
+</details>
+
 ## Installation
 
 Download `CyImgView-<version>-Setup.exe` from
