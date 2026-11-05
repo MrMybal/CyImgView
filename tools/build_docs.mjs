@@ -49,6 +49,9 @@ const stamp = join(work, 'fingerprint');
 const current = existsSync(stamp) ? (await readFile(stamp, 'utf8')).trim() : '';
 if (!args.includes('--check') && !args.includes('--force') && current === fingerprint && existsSync(join(output, 'index.html'))) {
   try {
+    const built = JSON.parse(await readFile(join(output, 'build-info.json'), 'utf8'));
+    if (built.fingerprint !== fingerprint || built.version !== version)
+      throw new Error('This output was generated from different documentation inputs.');
     const { verifyManual } = await import('./docs/verify.mjs');
     await verifyManual(output);
     console.log(`CyImgView manual ${version}: up to date`);
