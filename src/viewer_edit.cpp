@@ -320,7 +320,6 @@ bool Viewer::BeginEdit() {
     m_edit.h = h;
     m_edit.hasAlpha = m_cur->hasAlpha;
     m_userRot = 0;
-    m_showHelp = false;
     m_showInfo = false;
     InitEditModes();
     m_mode = 0;  // opening an editor must not apply the previous plugin's default effect
@@ -765,6 +764,7 @@ void Viewer::ApplyCrop() {
 // Commandes de l'interface
 
 void Viewer::EditCommand(EditCmd cmd, int arg) {
+    if (cmd==EditCmd::Help) { OpenHelp(); return; }
     // Un effet en cours de réglage est abandonné par toute commande qui touche au document
     switch (cmd) {
     case EditCmd::Panel: case EditCmd::Slider: case EditCmd::Color: case EditCmd::Color2: case EditCmd::SwapColors:
@@ -1664,7 +1664,10 @@ void Viewer::DrawEditUi(float cw, float ch) {
     m_editOpenWithRc = D2D1::RectF(save.left - 6 * s - bs, by, save.left - 6 * s, by + bs);
     EditBtn(EditCmd::OpenWith, 0, m_editOpenWithRc, T("openwith.btn"));
     Text(L"\uE7AC", m_tfIcon.Get(), m_editOpenWithRc, kWhite, 0.92f);
-    x = Mode().DrawTopButtons(m_editOpenWithRc.left - 14 * s, by, bs);
+    const auto help=D2D1::RectF(m_editOpenWithRc.left-6*s-bs,by,m_editOpenWithRc.left-6*s,by+bs);
+    EditBtn(EditCmd::Help,0,help,T("viewer.btn.help"));
+    Text(L"\uE897",m_tfIcon.Get(),help,kWhite,.92f);
+    x = Mode().DrawTopButtons(help.left - 14 * s, by, bs);
     // Onglets des modes, puis nom du fichier
     const float tabsRight = DrawModeTabs(10 * s, by, bs);
     SetColor(kWhite, 0.1f);

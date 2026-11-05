@@ -1,0 +1,19 @@
+{
+  "name": "cyimgview-manual-tools",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node ../build_docs.mjs",
+    "check": "node ../build_docs.mjs --check",
+    "test": "node --test test.mjs ui.test.mjs"
+  },
+  "dependencies": {
+    "cydoc": "file:vendor/cydoc-0.1.0.tgz"
+  },
+  "devDependencies": {
+    "happy-dom": "^21.0.4"
+  }
+}

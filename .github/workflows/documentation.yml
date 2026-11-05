@@ -1,0 +1,72 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/documentation.yml'
+      - 'README*.md'
+      - 'docs/**'
+      - 'tools/docs/**'
+      - 'tools/build_docs.mjs'
+      - 'cydoc.config.json'
+      - 'src/version.h'
+      - 'src/lang/**'
+      - 'include/**'
+      - 'plugins/**'
+      - 'LICENSE'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: documentation-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tools/docs/package-lock.json
+
+      - name: Install documentation build tools
+        run: npm --prefix tools/docs ci --no-audit --no-fund
+
+      - name: Export the same reader shipped with the application
+        run: node tools/build_docs.mjs --check --out build/pages
+
+      - name: Check content, translations, resources and reader components
+        run: npm --prefix tools/docs test
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      # Only the verified export is uploaded. No checkout, application data or build tools.
+      - name: Upload complete documentation export
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: build/pages
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy documentation
+        id: deployment
+        uses: actions/deploy-pages@v4

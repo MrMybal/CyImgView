@@ -33,7 +33,7 @@ void Viewer::NewDocument() {
     InitEditModes();
     m_mode = 0;
     m_userRot = 0;
-    m_showHelp = m_showInfo = m_showSettings = false;
+    m_showInfo = m_showSettings = false;
     ApplyFit(false);
     Invalidate();
 }
@@ -170,11 +170,13 @@ void Viewer::ShowLayerMenu(POINT client) {
     add(14, "document.mask.remove", bool(CurLayer().mask));
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     add(20, "edit.tip.layer_merge", m_edit.layer > 0); add(21, "edit.tip.layer_flatten", m_edit.layers.size() > 1);
+    AppendMenuW(menu, MF_SEPARATOR, 0, nullptr); add(30, "help.manual.action");
     POINT screen = client; ClientToScreen(m_hwnd, &screen);
     const UINT id = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY, screen.x, screen.y, 0, m_hwnd, nullptr);
     DestroyMenu(menu);
     if (id >= 100 && id < 108) LayerCommand(EditCmd::BlendOpt, int(id - 100));
     switch (id) {
+    case 30: OpenHelp({"layers","layers"}); break;
     case 1: LayerCommand(EditCmd::LayerNew, 0); break;
     case 2: LayerCommand(EditCmd::LayerDup, 0); break;
     case 3: LayerCommand(EditCmd::LayerDel, 0); break;

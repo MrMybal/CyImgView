@@ -90,6 +90,10 @@ const wchar_t* Viewer::EditModeCursor() { return m_modes.empty() ? nullptr : Mod
 // Aiguillage vers le mode actif
 
 bool Viewer::EditMouseDown(POINT p, bool right, bool dbl) {
+    if (const auto* button=HitEdit(p); button && button->cmd==EditCmd::Help) {
+        if (!right) OpenHelp();
+        return true;
+    }
     if (const EditButton* b = HitEdit(p); b && b->cmd == EditCmd::ModeTab) {
         if (!right) SwitchEditMode(b->arg);
         return true;

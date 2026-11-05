@@ -1,5 +1,6 @@
 #include "new_document_dialog.h"
 #include "i18n.h"
+#include "help.h"
 #include <dwmapi.h>
 #include <uxtheme.h>
 #include <algorithm>
@@ -194,6 +195,10 @@ INT_PTR CALLBACK Proc(HWND dlg,UINT msg,WPARAM wp,LPARAM lp) {
         }
         break;
     }
+    case WM_HELP:
+        if (!cyhelp::OpenForExecutable(dlg,{"new-document","templates","new-document-dialog"}))
+            MessageBoxW(dlg,T("help.manual.unavailable"),T("help.manual.action"),MB_OK|MB_ICONINFORMATION);
+        return TRUE;
     case WM_CLOSE: EndDialog(dlg,IDCANCEL); return TRUE;
     }
     return FALSE;

@@ -1,0 +1,6 @@
+@code = fr
+@name = Français
+
+help.manual.action = Manuel utilisateur\tF1
+help.manual.unavailable = Le manuel local est indisponible. Réinstallez la distribution complète avec son dossier help.
+help.plugins.title = Plugins installés

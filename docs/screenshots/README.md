@@ -1,6 +1,6 @@
 # Documentation screenshots
 
-These captures show the actual CyImgView 1.9.0 renderer and new-document dialog,
+These captures show the actual CyImgView 1.10.0 renderer and new-document dialog,
 with the interface set to English (`-en`) and French (`-fr`).
 
 The landscape is an original AI-generated demonstration image, not a user photo.

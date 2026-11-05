@@ -549,7 +549,7 @@ bool Viewer::OpenWithCommand(OpenWithMenu& m, UINT cmd, const std::wstring& path
         SHOpenWithDialog(m_hwnd, &oi);  // annulation : rien à signaler
     } else if (i == kCmdConfigure) {
         m_showSettings = true;
-        m_showInfo = m_showChannels = m_showHelp = false;
+        m_showInfo = m_showChannels = false;
         m_settingsScrollToOpenWith = true;
     } else if (i < m.items.size()) {
         OpenWith(m.items[i], path);

@@ -17,7 +17,7 @@ namespace {
 
 enum MenuId {
     kMenuCopy = 1, kMenuCopyPath, kMenuNew, kMenuOpen, kMenuSaveAs, kMenuEdit, kMenuReveal, kMenuPlay, kMenuRotate,
-    kMenuFull, kMenuInfo, kMenuSettings, kMenuSlideshow, kMenuChannel0 = 100, kMenuFilter0 = 200,  // + canal
+    kMenuFull, kMenuInfo, kMenuSettings, kMenuSlideshow, kMenuHelp, kMenuPlugins, kMenuChannel0 = 100, kMenuFilter0 = 200,  // + canal
     kMenuOpenWith0 = 1000  // sous-menu « Ouvrir avec » (1000..1511)
 };
 
@@ -256,6 +256,8 @@ void Viewer::ShowContextMenu(POINT client) {
     add(kMenuInfo, "menu.info", true, m_showInfo);
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     add(kMenuSettings, "menu.settings");
+    add(kMenuHelp, "help.manual.action");
+    add(kMenuPlugins, "help.plugins.title");
 
     POINT sp = client;
     ClientToScreen(m_hwnd, &sp);
@@ -278,6 +280,8 @@ void Viewer::ShowContextMenu(POINT client) {
     case kMenuSlideshow: m_slideshow ? StopSlideshow() : StartSlideshow(); break;
     case kMenuInfo: OnButton(Btn::Info); break;
     case kMenuSettings: OnButton(Btn::Settings); break;
+    case kMenuHelp: OpenHelp(); break;
+    case kMenuPlugins: ShowInstalledPlugins(); break;
     default:
         if (cmd >= kMenuChannel0 && cmd <= kMenuChannel0 + 4) SetChannel(int(cmd - kMenuChannel0));
         else if (cmd >= kMenuFilter0 && cmd <= kMenuFilter0 + 5) SetFilter(int(cmd - kMenuFilter0));

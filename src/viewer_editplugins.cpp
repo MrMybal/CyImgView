@@ -191,6 +191,9 @@ INT_PTR CALLBACK InputDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             return TRUE;
         }
         break;
+    case WM_HELP:
+        SendMessageW(GetWindow(dlg,GW_OWNER),WM_HELP,wp,lp);
+        return TRUE;
     default: break;
     }
     return FALSE;
@@ -2472,45 +2475,4 @@ const wchar_t* Viewer::PluginEditMode::Cursor(POINT p) const {
         return IDC_HAND;
     }
     return IDC_SIZEALL;
-}
-
-// =============================================================================================
-// Aide : liste des plugins d'édition
-
-float Viewer::EditPluginsHelpHeight(float rowH) {
-    const size_t n = editplug::Get().plugins.size();
-    return 40 * m_scale + rowH * float((std::max<size_t>(1, n) + 1) / 2);
-}
-
-void Viewer::DrawEditPluginsHelp(float left, float right, float y, float rowH, float col) {
-    const auto& reg = editplug::Get();
-    const float s = m_scale, half = (right - left) / 2;
-    Text(Tf("editapi.help.title", int(reg.plugins.size())), m_tfTitle.Get(), D2D1::RectF(left, y, right, y + 24 * s), kWhite, 1);
-    y += 28 * s;
-    if (reg.plugins.empty()) {
-        Text(T("editapi.help.none"), m_tfSmall.Get(), D2D1::RectF(left, y, right, y + rowH), kGrey, 1);
-        return;
-    }
-    const size_t rows = (reg.plugins.size() + 1) / 2;
-    for (size_t i = 0; i < reg.plugins.size(); ++i) {
-        const editplug::Plugin& p = *reg.plugins[i];
-        const float x = left + (i < rows ? 0 : half + 12 * s), yy = y + rowH * float(i % rows);
-        std::wstring what;
-        auto add = [&](const char* key, uint32_t n) {
-            if (!n) return;
-            if (!what.empty()) what += L"  ·  ";
-            what += Tf(key, int(n));
-        };
-        auto count = [&](auto& list) {
-            uint32_t n = 0;
-            for (const auto& item : list) n += item.plugin == &p ? 1u : 0u;
-            return n;
-        };
-        add("editapi.help.effects", count(reg.effects));
-        add("editapi.help.tools", count(reg.tools));
-        add("editapi.help.modes", count(reg.modes));
-        add("editapi.help.actions", count(reg.actions));
-        Text(p.Name(), m_tfSmall.Get(), D2D1::RectF(x, yy, x + col - 8 * s, yy + rowH), kAccent, 1);
-        Text(what, m_tfSmall.Get(), D2D1::RectF(x + col, yy, x + half - 12 * s, yy + rowH), kGrey, 1);
-    }
 }

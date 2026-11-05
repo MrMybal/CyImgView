@@ -42,7 +42,7 @@ void Viewer::StartSlideshow() {
     m_slideshow = true;
     m_slidePaused = false;
     m_slideWasFull = m_fullscreen;
-    m_showInfo = m_showHelp = m_showSettings = m_showChannels = false;
+    m_showInfo = m_showSettings = m_showChannels = false;
     if (!m_fullscreen) ToggleFullscreen();
     m_lastDir = 1;
     m_lastActivity = 0;  // interface masquée tout de suite

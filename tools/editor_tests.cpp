@@ -3,6 +3,8 @@
 #include "edit_plugins.h"
 #include "i18n.h"
 #include "new_document_dialog.h"
+#include "help.h"
+#include <shlwapi.h>
 #include <iostream>
 #include <stdexcept>
 #include <filesystem>
@@ -233,6 +235,39 @@ struct EditorIntegrationTest {
             v.SwitchEditMode(0);
         }
         v.SwitchEditMode(0);
+        Check(cyhelp::Available(v.m_exeDir), "offline manual is beside the built application");
+        const auto special=cyhelp::Url(L"D:\\Apps\\Photos %20 & #1",L"fr",{"layers","masks","mask-demo"});
+        const auto base=special.substr(0,special.find(L'#'));
+        wchar_t restored[32768]{};DWORD restoredSize=32768;
+        const auto restoredHr=PathCreateFromUrlW(base.c_str(),restored,&restoredSize,0);
+        Check(SUCCEEDED(restoredHr) &&
+            std::wstring(restored)==L"D:\\Apps\\Photos %20 & #1\\help\\index.html", "file URL round-trip preserves spaces percent ampersand and hash");
+        Check(special.find(L"#/fr/layers/masks?media=mask-demo")!=std::wstring::npos, "CyDoc route keeps section and media inside fragment");
+        Check(cyhelp::Url(v.m_exeDir,L"unknown",{"overview"}).find(L"#/en/overview")!=std::wstring::npos, "unknown application locale falls back to English help");
+        std::wstring helpLaunch;
+        v.m_helpLauncher=[&](const std::wstring& url){helpLaunch=url;};
+        auto f1=[&](const wchar_t* expected) {
+            helpLaunch.clear();v.Handle(WM_KEYDOWN,VK_F1,0);
+            Check(helpLaunch.find(expected)!=std::wstring::npos,"F1 selects the contextual manual page");
+        };
+        v.m_edit.menu=Viewer::EditMenu::None;v.m_edit.fx=-1;v.m_edit.tool=Viewer::Tool::Brush;
+        const auto oldHistory=v.m_edit.undo.size();const auto oldBitmap=v.CurLayer().bmp;
+        f1(L"/edit/paint");
+        v.m_edit.tool=Viewer::Tool::Text;v.m_edit.textActive=true;v.m_edit.text=L"Unfinished text";
+        f1(L"/edit/objects");Check(v.m_edit.textActive && v.m_edit.text==L"Unfinished text","F1 does not commit or discard text");v.m_edit.textActive=false;v.m_edit.text.clear();
+        v.m_edit.editMask=true;f1(L"/layers/masks");v.m_edit.editMask=false;
+        v.m_edit.menu=Viewer::EditMenu::Effects;f1(L"/effects/gallery");v.m_edit.menu=Viewer::EditMenu::None;
+        v.m_edit.fx=0;f1(L"/effects/apply");Check(v.m_edit.fx==0,"help leaves the live effect open");v.m_edit.fx=-1;
+        v.EditCommand(Viewer::EditCmd::Help,0);Check(helpLaunch.find(L"/edit/objects")!=std::wstring::npos,"editor help command uses the contextual route");
+        for(int mode=1;mode<int(v.m_modes.size());++mode){
+            const auto* plugin=mode>=2?editplug::Get().modes[size_t(mode-2)].plugin:nullptr;
+            const bool blackWhite=plugin && std::string(plugin->api.id)=="bw_mode";
+            v.SwitchEditMode(mode);f1(mode==1?L"/develop/adjust":blackWhite?L"/black-white/cancel":L"/plugins/modes");
+            v.Mode().Close();v.SwitchEditMode(0);
+        }
+        v.m_edit.active=false;f1(L"/viewer/navigation");v.m_showSettings=true;f1(L"/settings/settings");v.m_showSettings=false;v.m_edit.active=true;
+        Check(v.m_edit.undo.size()==oldHistory && v.CurLayer().bmp==oldBitmap,"help routing preserves document pixels and undo history");
+        v.m_helpLauncher={};
         v.m_edit.active = false; v.m_showStrip = true; v.m_files.resize(2);
         const auto area = v.ViewArea(); RECT client; GetClientRect(v.m_hwnd,&client);
         Check(area.top >= 52*v.m_scale && area.bottom <= client.bottom - 80*v.m_scale, "fit reserves toolbar and filmstrip");

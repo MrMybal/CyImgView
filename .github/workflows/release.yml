@@ -16,6 +16,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tools/docs/package-lock.json
+
+      - name: Installer les outils de documentation
+        run: npm --prefix tools/docs ci --no-audit --no-fund
+
       - name: Vérifier la version
         shell: pwsh
         run: |
@@ -29,6 +38,12 @@ jobs:
       - name: Compiler et empaqueter
         shell: pwsh
         run: ./tools/package.ps1
+
+      - name: Vérifier le manuel local
+        run: node --test tools/docs/test.mjs tools/docs/ui.test.mjs
+
+      - name: Vérifier le manuel distribué
+        run: python tools/check_package.py
 
       - name: Publier la release
         shell: pwsh

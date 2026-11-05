@@ -6,6 +6,7 @@
 #include "loader.h"
 #include "save.h"
 #include "updater.h"
+#include "help.h"
 
 #include <d2d1_1.h>
 #include <d3d11.h>
@@ -76,7 +77,7 @@ private:
         BlendMenu, BlendOpt, FxMenu, FxPick, FxApply, FxCancel, FxPreview, FxReset,
         ModeTab, ModeCtl,  // Mode Développement : onglet d'un mode (arg = index), contrôle propre au mode (arg libre)
         PlugTool, PlugToolParam, PlugFxParam,
-        FxTarget, FxPage, Extensions
+        FxTarget, FxPage, Extensions, Help
     };
     enum class EditMenu { None, Resize, Blend, Effects };
     enum EditSlider { kSlSize, kSlOpacity, kSlHardness, kSlLayerOpacity, kSlFx0,  // kSlFx0 + n : réglage n de l'effet
@@ -227,7 +228,10 @@ private:
     void DrawHud(float cw, float ch);
     void DrawStrip(float cw, float ch, float alpha);
     void DrawInfoPanel(float cw, float ch);
-    void DrawHelp(float cw, float ch);
+    cyhelp::Topic HelpTopic() const;
+    void OpenHelp(const cyhelp::Topic& topic = {"", "", ""});
+    void ShowInstalledPlugins();
+    std::function<void(const std::wstring&)> m_helpLauncher; // Captures launches in integration tests.
     void DrawSettings(float cw, float ch);
     void OnSettingClicked(int id);
     void SaveSetting(const wchar_t* section, const wchar_t* key, int value);
@@ -479,8 +483,6 @@ private:
     bool PluginToolKey(WPARAM vk);
     void DrawPluginToolOverlay(float left, float top, float z);
     std::vector<std::shared_ptr<EditMode>> NewPluginModes();
-    float EditPluginsHelpHeight(float rowH);
-    void DrawEditPluginsHelp(float left, float right, float y, float rowH, float col);
     std::shared_ptr<PlugState> m_plug;
 
     // --- Mode Développement : modes du mode édition (viewer_modes.h / .cpp) et Développement
@@ -559,7 +561,7 @@ private:
 
     bool m_fullscreen = false;
     WINDOWPLACEMENT m_wpPrev{sizeof(WINDOWPLACEMENT)};
-    bool m_showStrip = true, m_showInfo = false, m_showHelp = false;
+    bool m_showStrip = true, m_showInfo = false;
     float m_hud = 1.0f;
     double m_lastActivity = 0;
     POINT m_mouse{-1, -1};

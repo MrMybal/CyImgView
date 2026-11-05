@@ -1,0 +1,6 @@
+@code = nl
+@name = Nederlands
+
+help.manual.action = Gebruikershandleiding\tF1
+help.manual.unavailable = De lokale handleiding is niet beschikbaar. Installeer de volledige distributie opnieuw, inclusief de map help.
+help.plugins.title = Geïnstalleerde plugins

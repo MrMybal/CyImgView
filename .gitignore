@@ -6,3 +6,6 @@ dist/
 
 # Fichiers sources du logo (docs/logo.png et src/app.ico en sont générés)
 /cyimgview-logo-*.png
+
+# Documentation generation dependencies
+node_modules/

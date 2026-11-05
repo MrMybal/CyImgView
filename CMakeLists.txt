@@ -41,6 +41,8 @@ set_source_files_properties(src/app.rc installer/setup.rc tools/bench.rc PROPERT
 add_executable(CyImgView WIN32
     src/main.cpp
     src/viewer.cpp
+    src/help.cpp
+    src/viewer_help.cpp
     src/decoder.cpp
     src/loader.cpp
     src/folder.cpp
@@ -70,11 +72,20 @@ target_link_libraries(CyImgView PRIVATE cyimg_support d2d1 d3d11 dxgi dwrite win
 target_include_directories(CyImgView PRIVATE ${CMAKE_BINARY_DIR}/gen)
 set_target_properties(CyImgView PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR})
 
+# Local documentation is part of every application build. Reading needs no Node runtime.
+find_program(CYIMG_NODE NAMES node node.exe REQUIRED)
+add_custom_target(cyimg_help ALL
+    COMMAND "${CYIMG_NODE}" "${CMAKE_SOURCE_DIR}/tools/build_docs.mjs" --out "${OUT_DIR}/help"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    COMMENT "Generate offline CyDoc manual")
+add_dependencies(CyImgView cyimg_help)
+
 option(CYIMG_EDITOR_TESTS "Build offscreen editor integration tests" OFF)
 if(CYIMG_EDITOR_TESTS)
     get_target_property(editor_sources CyImgView SOURCES)
     list(REMOVE_ITEM editor_sources src/main.cpp)
     add_executable(cyimg_editor_tests tools/editor_tests.cpp ${editor_sources})
+    add_dependencies(cyimg_editor_tests cyimg_help)
     target_compile_options(cyimg_editor_tests PRIVATE ${CYIMG_WARNINGS})
     target_include_directories(cyimg_editor_tests PRIVATE ${CMAKE_BINARY_DIR}/gen)
     get_target_property(editor_libraries CyImgView LINK_LIBRARIES)

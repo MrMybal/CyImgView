@@ -831,7 +831,7 @@ void Viewer::DrawHud(float cw, float ch) {
         for (auto& b : m_buttons) {
             if (b.id == Btn::Update) continue;
             bool active = (b.id == Btn::Strip && m_showStrip) || (b.id == Btn::Info && m_showInfo) ||
-                          (b.id == Btn::Help && m_showHelp) || (b.id == Btn::Fit && m_fit) ||
+                          (b.id == Btn::Fit && m_fit) ||
                           (b.id == Btn::Settings && m_showSettings) || (b.id == Btn::Channel && (!ChannelFull(m_chanMask) || m_showChannels));
             if (b.id == hovered) FillRound(b.rc, 5 * s, kWhite, 0.14f * a);
             else if (active) FillRound(b.rc, 5 * s, kWhite, 0.07f * a);
@@ -902,7 +902,6 @@ void Viewer::DrawHud(float cw, float ch) {
     } else if (m_showInfo && !m_showSettings) DrawInfoPanel(cw, ch);
     else if (m_showChannels && !m_showSettings && !m_edit.active) DrawChannelPanel(cw, ch);
     if (m_showSettings && !m_edit.active && !m_slideshow) DrawSettings(cw, ch);
-    if (m_showHelp && !m_slideshow) DrawHelp(cw, ch);
 
     // Toast (niveau de zoom, messages)
     double age = now - m_toastTime;
@@ -958,90 +957,6 @@ void Viewer::DrawInfoPanel(float cw, float ch) {
         Text(v, m_tfSmall.Get(), D2D1::RectF(p.left + pad + keyW, y, p.right - pad, y + rowH), kWhite, 1);
         y += rowH;
     }
-    m_rt->PopAxisAlignedClip();
-}
-
-void Viewer::DrawHelp(float cw, float ch) {
-    const float s = m_scale;
-    // Libellé de la touche : clé de traduction (touches nommées) ou texte fixe (lettres, Ctrl+...)
-    struct HelpRow {
-        const char* keyName;
-        const wchar_t* keyFixed;
-        const char* desc;
-    };
-    static const HelpRow keys[] = {
-        {"viewer.help.k.nav", nullptr, "viewer.help.d.nav"},
-        {nullptr, L"N", "viewer.help.d.filter"},
-        {nullptr, L"D", "viewer.help.d.slideshow"},
-        {"viewer.help.k.copy", nullptr, "viewer.help.d.copy"},
-        {"viewer.help.k.channels", nullptr, "viewer.help.d.channels"},
-        {"viewer.help.k.anim", nullptr, "viewer.help.d.anim"},
-        {"viewer.help.k.home_end", nullptr, "viewer.help.d.home_end"},
-        {"viewer.help.k.zoom", nullptr, "viewer.help.d.zoom"},
-        {"viewer.help.k.drag", nullptr, "viewer.help.d.drag"},
-        {"viewer.help.k.dblclick", nullptr, "viewer.help.d.dblclick"},
-        {nullptr, L"0 / 1", "viewer.help.d.fit"},
-        {"viewer.help.k.rotate", nullptr, "viewer.help.d.rotate"},
-        {"viewer.help.k.fullscreen", nullptr, "viewer.help.d.fullscreen"},
-        {nullptr, L"T", "viewer.help.d.strip"},
-        {nullptr, L"I", "viewer.help.d.info"},
-        {nullptr, L"Ctrl+O", "viewer.help.d.open"},
-        {nullptr, L"Ctrl+S", "viewer.help.d.save_as"},
-        {"openwith.help.key", nullptr, "openwith.help.desc"},
-        {nullptr, L"Ctrl+U", "viewer.help.d.update"},
-        {nullptr, L"P", "viewer.help.d.settings"},
-        {nullptr, L"E", "viewer.help.d.edit"},
-        {nullptr, L"F5", "viewer.help.d.reload"},
-        {"viewer.help.k.mouse_side", nullptr, "viewer.help.d.mouse_side"},
-        {"viewer.help.k.esc", nullptr, "viewer.help.d.esc"},
-    };
-    const auto& plugins = m_decoder.Plugins();
-    EnsureEditPlugins();
-    // Deux colonnes de raccourcis, puis les plugins sur deux colonnes : tient dans un écran 1080p
-    const float rowH = 24 * s, pad = 22 * s, w = std::min(1080 * s, cw - 24 * s);
-    const size_t keyRows = (ARRAYSIZE(keys) + 1) / 2, plugRows = (std::max<size_t>(1, plugins.size()) + 1) / 2;
-    float h = pad * 2 + 36 * s + rowH * keyRows + 40 * s + rowH * plugRows + EditPluginsHelpHeight(rowH);
-    h = std::min(h, ch - 24 * s);
-    D2D1_RECT_F p = D2D1::RectF(cw / 2 - w / 2, ch / 2 - h / 2, cw / 2 + w / 2, ch / 2 + h / 2);
-    SetColor(0x000000, 0.45f);
-    m_rt->FillRectangle(D2D1::RectF(0, 0, cw, ch), m_brush.Get());
-    FillRound(p, 10 * s, kPanel, 0.97f);
-    m_rt->PushAxisAlignedClip(p, D2D1_ANTIALIAS_MODE_ALIASED);
-    float titleX = p.left + pad;
-    if (ID2D1Bitmap* logo = Logo()) {
-        const float ls = 26 * s;
-        m_dc->DrawBitmap(logo, D2D1::RectF(titleX, p.top + pad - 4 * s, titleX + ls, p.top + pad - 4 * s + ls), 1.0f,
-                         D2D1_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC, nullptr, nullptr);
-        titleX += ls + 10 * s;
-    }
-    Text(std::wstring(T("viewer.help.title")) + L"   ·   CyImgView " CYIMG_VERSION_WSTR, m_tfTitle.Get(), D2D1::RectF(titleX, p.top + pad - 6 * s, p.right - pad, p.top + pad + 22 * s), kWhite, 1);
-    const float top = p.top + pad + 36 * s;
-    const float half = (w - 2 * pad) / 2, col = std::min(200 * s, half * 0.42f);
-    for (size_t i = 0; i < ARRAYSIZE(keys); ++i) {
-        const float x = p.left + pad + (i < keyRows ? 0 : half + 12 * s), y = top + rowH * float(i % keyRows);
-        std::wstring keyText = keys[i].keyName ? T(keys[i].keyName) : keys[i].keyFixed;
-        if (keyText.rfind(L"Ctrl", 0) == 0) keyText = T("viewer.key.ctrl") + keyText.substr(4);  // « Strg » en allemand
-        Text(keyText, m_tfSmall.Get(), D2D1::RectF(x, y, x + col - 8 * s, y + rowH), kAccent, 1);
-        Text(T(keys[i].desc), m_tfSmall.Get(), D2D1::RectF(x + col, y, x + half - 12 * s, y + rowH), kWhite, 0.95f);
-    }
-    float y = top + rowH * keyRows + 12 * s;
-    Text(Tf("viewer.help.plugins", int(plugins.size())), m_tfTitle.Get(), D2D1::RectF(p.left + pad, y, p.right - pad, y + 24 * s), kWhite, 1);
-    y += 28 * s;
-    if (plugins.empty()) {
-        Text(T("viewer.help.no_plugins"), m_tfSmall.Get(), D2D1::RectF(p.left + pad, y, p.right - pad, y + rowH), kGrey, 1);
-    }
-    for (size_t i = 0; i < plugins.size(); ++i) {
-        const auto& pl = plugins[i];
-        const float x = p.left + pad + (i < plugRows ? 0 : half + 12 * s), yy = y + rowH * float(i % plugRows);
-        std::wstring exts = pl.extensions;
-        std::replace(exts.begin(), exts.end(), L';', L' ');
-        // Nom affiché traduit si une clé « pluginname.<fichier> » existe (plugins livrés avec CyImgView)
-        std::string nameKey = "pluginname.";
-        for (wchar_t c : FileNameOf(pl.file).substr(0, FileNameOf(pl.file).find_last_of(L'.'))) nameKey += char(towlower(c));
-        Text(TrOr(nameKey.c_str(), pl.name.c_str()), m_tfSmall.Get(), D2D1::RectF(x, yy, x + col - 8 * s, yy + rowH), kAccent, 1);
-        Text(exts, m_tfSmall.Get(), D2D1::RectF(x + col, yy, x + half - 12 * s, yy + rowH), kGrey, 1);
-    }
-    DrawEditPluginsHelp(p.left + pad, p.right - pad, y + rowH * plugRows + 8 * s, rowH, col);
     m_rt->PopAxisAlignedClip();
 }
 
@@ -1551,7 +1466,7 @@ int Viewer::HitStrip(POINT p) const {
 }
 
 int Viewer::HitNavZone(POINT p) const {
-    if (m_files.size() < 2 || m_hud < 0.3f || m_showHelp || m_edit.active) return 0;
+    if (m_files.size() < 2 || m_hud < 0.3f || m_edit.active) return 0;
     RECT rc;
     GetClientRect(m_hwnd, &rc);
     const float s = m_scale;
@@ -1619,9 +1534,8 @@ void Viewer::OnButton(Btn b) {
         m_showSettings = !m_showSettings;
         m_showInfo = false;
         m_showChannels = false;
-        m_showHelp = false;
         break;
-    case Btn::Help: m_showHelp = !m_showHelp; break;
+    case Btn::Help: OpenHelp(); break;
     case Btn::Full: ToggleFullscreen(); break;
     case Btn::Slideshow: StartSlideshow(); break;
     case Btn::SlidePrev: SlideGo(-1, false); break;
@@ -1711,7 +1625,6 @@ void Viewer::OnKey(WPARAM vk) {
         break;
     case VK_ESCAPE:
         if (m_edit.active) EndEdit(true);
-        else if (m_showHelp) m_showHelp = false;
         else if (m_showSettings) m_showSettings = false;
         else if (m_showInfo) m_showInfo = false;
         else if (m_showChannels) m_showChannels = false;
@@ -1834,7 +1747,7 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
                 SetCursor(LoadCursorW(nullptr, cur));
                 return TRUE;
             }
-            if (m_fullscreen && m_hud < 0.05f && !m_showHelp && !m_showInfo) SetCursor(nullptr);
+            if (m_fullscreen && m_hud < 0.05f && !m_showInfo) SetCursor(nullptr);
             else if (m_dragging) SetCursor(LoadCursorW(nullptr, IDC_SIZEALL));
             else if (std::any_of(m_channelRows.begin(), m_channelRows.end(),
                                  [&](const ChannelRow& r) { return r.ch >= 0 && Contains(r.rc, m_mouse); }))
@@ -1898,11 +1811,6 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
         POINT p{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
         m_mouse = p;
         Poke();
-        if (m_showHelp) {
-            m_showHelp = false;
-            Invalidate();
-            return 0;
-        }
         if (m_slideshow) {  // diaporama : seulement les boutons de la barre
             if (Btn b = HitButton(p); b != Btn::None) OnButton(b);
             return 0;
@@ -2024,8 +1932,11 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
         Poke();
         return 0;
     }
+    case WM_HELP:
+        OpenHelp(); return TRUE;
     case WM_KEYDOWN:
         Poke();
+        if (wp == VK_F1) { OpenHelp(); return 0; }
         if (m_edit.active && EditKey(wp)) return 0;
         OnKey(wp);
         return 0;

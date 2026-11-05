@@ -1,0 +1,6 @@
+@code = pl
+@name = Polski
+
+help.manual.action = Podręcznik użytkownika\tF1
+help.manual.unavailable = Lokalny podręcznik jest niedostępny. Zainstaluj ponownie pełną dystrybucję wraz z folderem help.
+help.plugins.title = Zainstalowane wtyczki
