@@ -34,6 +34,7 @@ cyhelp::Topic Viewer::HelpTopic() const {
     switch (m_edit.tool) {
     case Tool::Text:case Tool::Move:case Tool::Line:case Tool::Arrow:case Tool::Rect:case Tool::Ellipse:return {"edit","objects"};
     case Tool::Brush:case Tool::Eraser:case Tool::Fill:return {"edit","paint"};
+    case Tool::Gradient:return {"edit","gradient"};
     default:return {"edit","tools"};
     }
 }

@@ -6,10 +6,7 @@ on:
     paths:
       - '.github/workflows/documentation.yml'
       - 'README*.md'
-      - 'docs/**'
-      - 'tools/docs/**'
-      - 'tools/build_docs.mjs'
-      - 'cydoc.config.json'
+      - '.CyDocBuild/**'
       - 'src/version.h'
       - 'src/lang/**'
       - 'include/**'
@@ -37,16 +34,19 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: tools/docs/package-lock.json
+          cache-dependency-path: .CyDocBuild/package-lock.json
 
       - name: Install documentation build tools
-        run: npm --prefix tools/docs ci --no-audit --no-fund
+        run: npm --prefix .CyDocBuild ci --no-audit --no-fund
 
       - name: Export the same reader shipped with the application
-        run: node tools/build_docs.mjs --check --out build/pages
+        run: node .CyDocBuild/build.mjs --check
 
       - name: Check content, translations, resources and reader components
-        run: npm --prefix tools/docs test
+        run: npm --prefix .CyDocBuild test
+
+      - name: Stage only the verified export and legacy URL entry point
+        run: node .CyDocBuild/stage_pages.mjs
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

@@ -2,5 +2,5 @@
 @name = 简体中文
 
 help.manual.action = 用户手册\tF1
-help.manual.unavailable = 本地手册不可用。请重新安装包含 help 文件夹的完整发行版。
+help.manual.unavailable = 本地手册不可用。请重新安装包含 Documentation 文件夹的完整发行版。
 help.plugins.title = 已安装的插件

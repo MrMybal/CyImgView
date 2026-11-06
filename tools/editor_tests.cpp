@@ -241,9 +241,10 @@ struct EditorIntegrationTest {
         wchar_t restored[32768]{};DWORD restoredSize=32768;
         const auto restoredHr=PathCreateFromUrlW(base.c_str(),restored,&restoredSize,0);
         Check(SUCCEEDED(restoredHr) &&
-            std::wstring(restored)==L"D:\\Apps\\Photos %20 & #1\\help\\index.html", "file URL round-trip preserves spaces percent ampersand and hash");
+            std::wstring(restored)==L"D:\\Apps\\Photos %20 & #1\\Documentation\\Documentation.html", "file URL round-trip preserves spaces percent ampersand and hash");
         Check(special.find(L"#/fr/layers/masks?media=mask-demo")!=std::wstring::npos, "CyDoc route keeps section and media inside fragment");
         Check(cyhelp::Url(v.m_exeDir,L"unknown",{"overview"}).find(L"#/en/overview")!=std::wstring::npos, "unknown application locale falls back to English help");
+        Check(cyhelp::Url(v.m_exeDir,L"de",{"layers","masks"}).find(L"#/en/layers/masks")!=std::wstring::npos, "interface locales without a complete manual open English contextual help");
         std::wstring helpLaunch;
         v.m_helpLauncher=[&](const std::wstring& url){helpLaunch=url;};
         auto f1=[&](const wchar_t* expected) {
@@ -253,6 +254,7 @@ struct EditorIntegrationTest {
         v.m_edit.menu=Viewer::EditMenu::None;v.m_edit.fx=-1;v.m_edit.tool=Viewer::Tool::Brush;
         const auto oldHistory=v.m_edit.undo.size();const auto oldBitmap=v.CurLayer().bmp;
         f1(L"/edit/paint");
+        v.m_edit.tool=Viewer::Tool::Gradient;f1(L"/edit/gradient");
         v.m_edit.tool=Viewer::Tool::Text;v.m_edit.textActive=true;v.m_edit.text=L"Unfinished text";
         f1(L"/edit/objects");Check(v.m_edit.textActive && v.m_edit.text==L"Unfinished text","F1 does not commit or discard text");v.m_edit.textActive=false;v.m_edit.text.clear();
         v.m_edit.editMask=true;f1(L"/layers/masks");v.m_edit.editMask=false;

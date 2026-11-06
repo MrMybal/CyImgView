@@ -2,5 +2,5 @@
 @name = 한국어
 
 help.manual.action = 사용자 설명서\tF1
-help.manual.unavailable = 로컬 설명서를 사용할 수 없습니다. help 폴더를 포함한 전체 배포판을 다시 설치하세요.
+help.manual.unavailable = 로컬 설명서를 사용할 수 없습니다. Documentation 폴더를 포함한 전체 배포판을 다시 설치하세요.
 help.plugins.title = 설치된 플러그인

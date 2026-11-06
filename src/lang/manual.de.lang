@@ -2,5 +2,5 @@
 @name = Deutsch
 
 help.manual.action = Benutzerhandbuch\tF1
-help.manual.unavailable = Das lokale Handbuch ist nicht verfügbar. Installieren Sie die vollständige Anwendung mit dem Ordner help erneut.
+help.manual.unavailable = Das lokale Handbuch ist nicht verfügbar. Installieren Sie die vollständige Anwendung mit dem Ordner Documentation erneut.
 help.plugins.title = Installierte Plugins

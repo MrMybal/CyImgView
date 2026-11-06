@@ -1,0 +1,397 @@
+{
+  "symbols": [
+    {
+      "key": "get-decoder",
+      "owner": null,
+      "field": "CyImgGetPluginFn",
+      "header": "include/cyimg_plugin.h",
+      "description": {
+        "en": "Export this C entry point from a decoder DLL. The returned descriptor declares extensions and the decode callback.",
+        "fr": "Exportez ce point d’entrée C depuis une DLL de décodage. Le descripteur renvoyé déclare les extensions et le rappel de décodage."
+      },
+      "returns": {
+        "en": "A persistent plugin descriptor.",
+        "fr": "Un descripteur de plugin conservé pendant son chargement."
+      },
+      "references": [
+        "decode"
+      ],
+      "entry": "CyImg_GetPlugin"
+    },
+    {
+      "key": "decode",
+      "owner": "CyImgPlugin",
+      "field": "decode",
+      "header": "include/cyimg_plugin.h",
+      "description": {
+        "en": "Decode one file. This callback may run concurrently; avoid mutable global state. Return pixels with alloc_bgra or delegate an encoded stream to the host.",
+        "fr": "Décodez un fichier. Ce rappel peut être exécuté simultanément ; évitez un état global modifiable. Renvoyez les pixels avec alloc_bgra ou confiez un flux encodé à l’hôte."
+      },
+      "returns": {
+        "en": "CYIMG_OK on success, otherwise a CYIMG_E_* error code.",
+        "fr": "CYIMG_OK en cas de réussite, sinon un code d’erreur CYIMG_E_*."
+      },
+      "references": [
+        "alloc-bgra",
+        "decode-encoded",
+        "target-size",
+        "cancel-decoder"
+      ]
+    },
+    {
+      "key": "alloc-bgra",
+      "owner": "CyImgHost",
+      "field": "alloc_bgra",
+      "header": "include/cyimg_plugin.h",
+      "description": {
+        "en": "Allocate the output image once, then fill its rows with premultiplied 8-bit BGRA. For an opaque image, every alpha byte is 255.",
+        "fr": "Allouez une fois l’image de sortie, puis remplissez ses lignes en BGRA 8 bits à alpha prémultiplié. Pour une image opaque, chaque octet alpha vaut 255."
+      },
+      "returns": {
+        "en": "The output pixel buffer, or NULL when allocation or dimensions are invalid. The host owns the buffer.",
+        "fr": "Le tampon de pixels, ou NULL si l’allocation ou les dimensions sont invalides. Le tampon appartient à l’hôte."
+      },
+      "references": [
+        "decode"
+      ]
+    },
+    {
+      "key": "decode-encoded",
+      "owner": "CyImgHost",
+      "field": "decode_encoded",
+      "header": "include/cyimg_plugin.h",
+      "description": {
+        "en": "Let the host decode a memory stream using WIC. The bytes only need to remain valid during this call; do not also allocate a separate output.",
+        "fr": "Confiez à l’hôte le décodage d’un flux mémoire avec WIC. Les octets doivent rester valides uniquement pendant l’appel ; n’allouez pas une autre sortie en parallèle."
+      },
+      "returns": {
+        "en": "CYIMG_OK on success or CYIMG_E_FAIL on failure.",
+        "fr": "CYIMG_OK en cas de réussite ou CYIMG_E_FAIL en cas d’échec."
+      },
+      "references": [
+        "decode"
+      ]
+    },
+    {
+      "key": "target-size",
+      "owner": "CyImgHost",
+      "field": "target_size",
+      "header": "include/cyimg_plugin.h",
+      "description": {
+        "en": "Check whether the host wants a thumbnail before decoding a large image.",
+        "fr": "Vérifiez si l’hôte demande une vignette avant de décoder une grande image."
+      },
+      "returns": {
+        "en": "0 for full resolution, otherwise the requested maximum thumbnail size in pixels.",
+        "fr": "0 pour la pleine résolution, sinon la dimension maximale souhaitée de la vignette en pixels."
+      },
+      "references": [
+        "decode",
+        "quality"
+      ]
+    },
+    {
+      "key": "cancel-decoder",
+      "owner": "CyImgHost",
+      "field": "is_cancelled",
+      "header": "include/cyimg_plugin.h",
+      "description": {
+        "en": "Check this callback during a long decode and stop when the result is no longer needed.",
+        "fr": "Consultez ce rappel pendant un décodage long et arrêtez le calcul lorsque le résultat n’est plus nécessaire."
+      },
+      "returns": {
+        "en": "Nonzero when cancellation is requested.",
+        "fr": "Une valeur non nulle lorsque l’annulation est demandée."
+      },
+      "references": [
+        "decode"
+      ]
+    },
+    {
+      "key": "quality",
+      "owner": "CyImgHost",
+      "field": "quality",
+      "header": "include/cyimg_plugin.h",
+      "description": {
+        "en": "Use CYIMG_HOST_HAS(host, quality) before accessing this later-added callback. A refinable image is decoded again at best quality.",
+        "fr": "Testez CYIMG_HOST_HAS(host, quality) avant ce rappel ajouté ultérieurement. Une image améliorable est redécodée avec la meilleure qualité."
+      },
+      "returns": {
+        "en": "0 when a fast preview is acceptable, 1 for the best-quality request.",
+        "fr": "0 lorsqu’un aperçu rapide suffit, 1 pour la demande de meilleure qualité."
+      },
+      "references": [
+        "refinable",
+        "decode"
+      ]
+    },
+    {
+      "key": "refinable",
+      "owner": "CyImgHost",
+      "field": "set_refinable",
+      "header": "include/cyimg_plugin.h",
+      "description": {
+        "en": "After returning a quick preview, mark it as refinable. Check callback availability with CYIMG_HOST_HAS.",
+        "fr": "Après avoir renvoyé un aperçu rapide, signalez qu’il peut être amélioré. Vérifiez la présence du rappel avec CYIMG_HOST_HAS."
+      },
+      "returns": {
+        "en": "No return value. The host may request another decode with quality equal to 1.",
+        "fr": "Aucune valeur de retour. L’hôte peut redemander le décodage avec quality égal à 1."
+      },
+      "references": [
+        "quality",
+        "decode"
+      ]
+    },
+    {
+      "key": "add-frame",
+      "owner": "CyImgHost",
+      "field": "add_frame",
+      "header": "include/cyimg_plugin.h",
+      "description": {
+        "en": "Append a complete composited animation frame after frame zero was allocated. Keep every frame at the same dimensions.",
+        "fr": "Ajoutez une image d’animation complète et déjà composée après l’allocation de l’image zéro. Gardez les mêmes dimensions pour toutes les images."
+      },
+      "returns": {
+        "en": "A premultiplied BGRA buffer, or NULL when no more frames are wanted. Stop adding frames in that case.",
+        "fr": "Un tampon BGRA prémultiplié, ou NULL lorsque d’autres images ne sont plus souhaitées. Arrêtez alors les ajouts."
+      },
+      "references": [
+        "alloc-bgra",
+        "frame-delay"
+      ]
+    },
+    {
+      "key": "frame-delay",
+      "owner": "CyImgHost",
+      "field": "set_frame_delay",
+      "header": "include/cyimg_plugin.h",
+      "description": {
+        "en": "Assign the display duration of a frame already supplied to the host.",
+        "fr": "Définissez la durée d’affichage d’une image déjà fournie à l’hôte."
+      },
+      "returns": {
+        "en": "No return value.",
+        "fr": "Aucune valeur de retour."
+      },
+      "references": [
+        "add-frame"
+      ]
+    },
+    {
+      "key": "get-editor",
+      "owner": null,
+      "field": "CyImgGetEditPluginFn",
+      "header": "include/cyimg_edit_plugin.h",
+      "description": {
+        "en": "Export this C entry point from an editing DLL to provide effects, tools, modes or Open with actions.",
+        "fr": "Exportez ce point d’entrée C depuis une DLL d’édition pour fournir des effets, outils, modes ou actions Ouvrir avec."
+      },
+      "returns": {
+        "en": "A persistent CyImgEditPlugin descriptor.",
+        "fr": "Un descripteur CyImgEditPlugin conservé pendant le chargement."
+      },
+      "references": [
+        "process",
+        "new-layer"
+      ],
+      "entry": "CyImg_GetEditPlugin"
+    },
+    {
+      "key": "process",
+      "owner": "CyImgEffect",
+      "field": "process",
+      "header": "include/cyimg_edit_plugin.h",
+      "description": {
+        "en": "Process only img->sel in img->data. Pixels are premultiplied BGRA; img->source is read-only. Scale pixel distances by img->scale for previews. Worker callbacks may run concurrently; only translate and is_cancelled host calls are allowed here.",
+        "fr": "Traitez uniquement img->sel dans img->data. Les pixels sont en BGRA prémultiplié ; img->source est en lecture seule. Multipliez les distances en pixels par img->scale pour les aperçus. Ces rappels de travail peuvent être simultanés ; seuls translate et is_cancelled de l’hôte y sont autorisés."
+      },
+      "returns": {
+        "en": "CYIMG_OK on success or CYIMG_E_CANCELLED when the host cancels, otherwise an error code.",
+        "fr": "CYIMG_OK en cas de réussite ou CYIMG_E_CANCELLED lors d’une annulation par l’hôte, sinon un code d’erreur."
+      },
+      "references": [
+        "cancel-editor",
+        "translate"
+      ]
+    },
+    {
+      "key": "cancel-editor",
+      "owner": "CyImgEditHost",
+      "field": "is_cancelled",
+      "header": "include/cyimg_edit_plugin.h",
+      "description": {
+        "en": "Check cancellation regularly during an effect or mode calculation. This callback is available on worker threads.",
+        "fr": "Testez régulièrement l’annulation pendant le calcul d’un effet ou d’un mode. Ce rappel est utilisable depuis les threads de travail."
+      },
+      "returns": {
+        "en": "Nonzero when the current result is no longer needed.",
+        "fr": "Une valeur non nulle lorsque le résultat courant n’est plus nécessaire."
+      },
+      "references": [
+        "process"
+      ]
+    },
+    {
+      "key": "translate",
+      "owner": "CyImgEditHost",
+      "field": "translate",
+      "header": "include/cyimg_edit_plugin.h",
+      "description": {
+        "en": "Look up a plugin label using its key and a fallback. This callback is allowed on workers and on the UI thread.",
+        "fr": "Recherchez un libellé de plugin avec sa clé et un texte de repli. Ce rappel est utilisable sur les threads de travail et celui de l’interface."
+      },
+      "returns": {
+        "en": "A label whose pointer stays valid until the application exits; fallback is used for an unknown key.",
+        "fr": "Un libellé dont le pointeur reste valide jusqu’à la fermeture de l’application ; le texte de repli est utilisé si la clé est inconnue."
+      },
+      "references": [
+        "process"
+      ]
+    },
+    {
+      "key": "begin-edit",
+      "owner": "CyImgEditHost",
+      "field": "begin_edit",
+      "header": "include/cyimg_edit_plugin.h",
+      "description": {
+        "en": "Begin an undoable change on the active layer from a UI callback. The first drawing operation also calls this automatically when needed.",
+        "fr": "Commencez une modification annulable du calque actif depuis un rappel de l’interface. La première opération de dessin l’appelle aussi automatiquement si nécessaire."
+      },
+      "returns": {
+        "en": "Nonzero on success, 0 when the edit cannot begin.",
+        "fr": "Une valeur non nulle en cas de réussite, 0 si la modification ne peut pas commencer."
+      },
+      "references": [
+        "lock-pixels",
+        "unlock-pixels"
+      ]
+    },
+    {
+      "key": "lock-pixels",
+      "owner": "CyImgEditHost",
+      "field": "lock_pixels",
+      "header": "include/cyimg_edit_plugin.h",
+      "description": {
+        "en": "Lock one rectangle of the active pixel layer from the UI thread. Only one lock is allowed at a time; unlock it after use.",
+        "fr": "Verrouillez un rectangle du calque de pixels actif depuis le thread de l’interface. Un seul verrou est permis à la fois ; déverrouillez après utilisation."
+      },
+      "returns": {
+        "en": "Premultiplied BGRA pixels, or NULL for an empty rectangle. rect is clipped to the document and stride receives bytes per row.",
+        "fr": "Les pixels BGRA prémultipliés, ou NULL pour un rectangle vide. rect est limité au document et stride reçoit le nombre d’octets par ligne."
+      },
+      "references": [
+        "begin-edit",
+        "unlock-pixels"
+      ]
+    },
+    {
+      "key": "unlock-pixels",
+      "owner": "CyImgEditHost",
+      "field": "unlock_pixels",
+      "header": "include/cyimg_edit_plugin.h",
+      "description": {
+        "en": "Release the active-layer pixel lock on the UI thread.",
+        "fr": "Libérez le verrou des pixels du calque actif sur le thread de l’interface."
+      },
+      "returns": {
+        "en": "No return value. A modified region is uploaded to the GPU when modified is nonzero.",
+        "fr": "Aucune valeur de retour. La zone modifiée est renvoyée au GPU lorsque modified est non nul."
+      },
+      "references": [
+        "lock-pixels"
+      ]
+    },
+    {
+      "key": "new-layer",
+      "owner": "CyImgEditHost",
+      "field": "new_layer",
+      "header": "include/cyimg_edit_plugin.h",
+      "description": {
+        "en": "Create an empty layer above the active layer from a UI callback; the new layer becomes active.",
+        "fr": "Créez un calque vide au-dessus du calque actif depuis un rappel de l’interface ; ce nouveau calque devient actif."
+      },
+      "returns": {
+        "en": "Nonzero on success, 0 if creation is impossible.",
+        "fr": "Une valeur non nulle en cas de réussite, 0 si la création est impossible."
+      },
+      "references": [
+        "begin-edit"
+      ]
+    }
+  ],
+  "parameters": {
+    "ctx": {
+      "en": "Context supplied by the host for the current operation.",
+      "fr": "Contexte fourni par l’hôte pour l’opération courante."
+    },
+    "host": {
+      "en": "Host callback table; check struct_size before optional fields.",
+      "fr": "Table des rappels de l’hôte ; vérifiez struct_size avant les champs facultatifs."
+    },
+    "path": {
+      "en": "Path of the file to decode, as UTF-16 text.",
+      "fr": "Chemin du fichier à décoder, en texte UTF-16."
+    },
+    "width": {
+      "en": "Output width in pixels.",
+      "fr": "Largeur de sortie en pixels."
+    },
+    "height": {
+      "en": "Output height in pixels.",
+      "fr": "Hauteur de sortie en pixels."
+    },
+    "has_alpha": {
+      "en": "Nonzero when the image uses transparency.",
+      "fr": "Une valeur non nulle si l’image utilise la transparence."
+    },
+    "stride": {
+      "en": "Output: bytes between consecutive image rows.",
+      "fr": "Sortie : nombre d’octets entre deux lignes consécutives."
+    },
+    "data": {
+      "en": "Encoded image bytes readable by WIC.",
+      "fr": "Octets d’une image encodée lisible par WIC."
+    },
+    "size": {
+      "en": "Length of the encoded buffer in bytes.",
+      "fr": "Taille du tampon encodé en octets."
+    },
+    "frame_index": {
+      "en": "Zero-based frame index.",
+      "fr": "Indice de l’image, à partir de zéro."
+    },
+    "delay_ms": {
+      "en": "Frame display duration in milliseconds.",
+      "fr": "Durée d’affichage de l’image en millisecondes."
+    },
+    "img": {
+      "en": "Image buffers, row stride, selection and preview scale.",
+      "fr": "Tampons d’image, pas des lignes, sélection et échelle de l’aperçu."
+    },
+    "values": {
+      "en": "Parameter values, in the order declared by the effect.",
+      "fr": "Valeurs des paramètres, dans l’ordre déclaré par l’effet."
+    },
+    "key": {
+      "en": "ASCII translation key, usually plugin.<id>.<text>.",
+      "fr": "Clé de traduction ASCII, habituellement plugin.<id>.<texte>."
+    },
+    "fallback": {
+      "en": "Default label for an unknown translation key.",
+      "fr": "Libellé par défaut si la clé de traduction est inconnue."
+    },
+    "rect": {
+      "en": "Requested pixel rectangle; updated to the clipped rectangle.",
+      "fr": "Rectangle de pixels demandé ; mis à jour avec le rectangle limité au document."
+    },
+    "modified": {
+      "en": "Nonzero if locked pixels were changed, otherwise zero.",
+      "fr": "Une valeur non nulle si les pixels verrouillés ont changé, sinon zéro."
+    },
+    "name": {
+      "en": "Name of the new layer.",
+      "fr": "Nom du nouveau calque."
+    }
+  }
+}

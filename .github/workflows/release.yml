@@ -20,10 +20,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: tools/docs/package-lock.json
+          cache-dependency-path: .CyDocBuild/package-lock.json
 
       - name: Installer les outils de documentation
-        run: npm --prefix tools/docs ci --no-audit --no-fund
+        run: npm --prefix .CyDocBuild ci --no-audit --no-fund
 
       - name: Vérifier la version
         shell: pwsh
@@ -40,10 +40,12 @@ jobs:
         run: ./tools/package.ps1
 
       - name: Vérifier le manuel local
-        run: node --test tools/docs/test.mjs tools/docs/ui.test.mjs
+        run: |
+          node .CyDocBuild/build.mjs --check
+          node --test .CyDocBuild/test.mjs .CyDocBuild/ui.test.mjs
 
       - name: Vérifier le manuel distribué
-        run: python tools/check_package.py
+        run: python .CyDocBuild/check_package.py
 
       - name: Publier la release
         shell: pwsh

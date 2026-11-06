@@ -9,3 +9,16 @@ dist/
 
 # Documentation generation dependencies
 node_modules/
+
+# Private documentation build outputs (authored manual and tooling stay versioned)
+.CyDocBuild/node_modules/
+.CyDocBuild/.npm-cache/
+.CyDocBuild/generated/
+.CyDocBuild/cydoc.active.json
+.CyDocBuild/internal/*
+!.CyDocBuild/internal/README.md
+!.CyDocBuild/internal/screenshots.md
+!.CyDocBuild/internal/previous-manual/
+!.CyDocBuild/internal/previous-MIGRATION.md
+!.CyDocBuild/internal/previous-README.md
+Documentation/

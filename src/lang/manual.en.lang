@@ -2,5 +2,5 @@
 @name = English
 
 help.manual.action = User manual\tF1
-help.manual.unavailable = The local manual is unavailable. Reinstall the complete distribution, including its help folder.
+help.manual.unavailable = The local manual is unavailable. Reinstall the complete distribution, including its Documentation folder.
 help.plugins.title = Installed plugins

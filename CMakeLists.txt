@@ -75,7 +75,7 @@ set_target_properties(CyImgView PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR})
 # Local documentation is part of every application build. Reading needs no Node runtime.
 find_program(CYIMG_NODE NAMES node node.exe REQUIRED)
 add_custom_target(cyimg_help ALL
-    COMMAND "${CYIMG_NODE}" "${CMAKE_SOURCE_DIR}/tools/build_docs.mjs" --out "${OUT_DIR}/help"
+    COMMAND "${CYIMG_NODE}" "${CMAKE_SOURCE_DIR}/.CyDocBuild/build.mjs" --out "${OUT_DIR}/Documentation"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     COMMENT "Generate offline CyDoc manual")
 add_dependencies(CyImgView cyimg_help)

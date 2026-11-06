@@ -1,7 +1,7 @@
 # Construit l'archive de release : dist\CyImgView-<version>-win64.zip
 #   .\tools\package.ps1            (compile en Release puis empaquette)
 #   .\tools\package.ps1 -NoBuild   (empaquette le build existant)
-# L'archive contient CyImgView.exe + plugins\ + help\ ; elle est jointe à la release GitHub
+# L'archive contient CyImgView.exe + plugins\ + Documentation\ ; elle est jointe à la release GitHub
 # (étiquette « v<version> ») pour que la mise à jour automatique la trouve.
 param([switch]$NoBuild)
 $ErrorActionPreference = 'Stop'
@@ -20,7 +20,7 @@ if (-not $NoBuild) {
 }
 
 $bin = Join-Path $root 'build\Release\bin'
-& node (Join-Path $root 'tools\build_docs.mjs') --out (Join-Path $bin 'help')
+& node (Join-Path $root '.CyDocBuild\build.mjs') --out (Join-Path $bin 'Documentation')
 if ($LASTEXITCODE -ne 0) { throw 'La génération du manuel a échoué.' }
 $stage = Join-Path $root "dist\CyImgView-$ver-win64"
 $zip = "$stage.zip"
@@ -31,7 +31,7 @@ if (Test-Path $stage) { Remove-Item -LiteralPath $stage -Recurse -Force }
 New-Item -ItemType Directory -Force (Join-Path $stage 'plugins') | Out-Null
 
 Copy-Item (Join-Path $bin 'CyImgView.exe') $stage
-Copy-Item -LiteralPath (Join-Path $bin 'help') -Destination (Join-Path $stage 'help') -Recurse -Force
+Copy-Item -LiteralPath (Join-Path $bin 'Documentation') -Destination (Join-Path $stage 'Documentation') -Recurse -Force
 # Oodle n'est jamais redistribué ; les plugins de test (CYIMG_TEST_PLUGINS) vont dans bin/testplugins,
 # jamais dans bin\plugins : le filtre crashtest* n'est qu'une sécurité en cas de copie manuelle.
 Get-ChildItem (Join-Path $bin 'plugins') -Filter *.dll | Where-Object { $_.Name -notlike 'oo2core*' -and $_.Name -notlike 'crashtest*' } |

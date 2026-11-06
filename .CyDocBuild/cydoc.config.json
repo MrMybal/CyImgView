@@ -1,0 +1,47 @@
+{
+  "name": "CyImgView",
+  "version": "1.10.1",
+  "defaultLocale": "en",
+  "locales": [
+    {
+      "code": "en",
+      "label": "English"
+    },
+    {
+      "code": "fr",
+      "label": "Français"
+    }
+  ],
+  "homePage": "overview",
+  "content": "generated/manual",
+  "assets": "assets",
+  "out": "../Documentation",
+  "modules": [
+    "image",
+    "gallery"
+  ],
+  "aliases": {
+    "help": "overview",
+    "usage": "viewer",
+    "utilisation": "viewer",
+    "editing": "edit",
+    "mode-edition": "edit",
+    "write-a-plugin": "decoder-api",
+    "write-an-editing-plugin": "editor-api",
+    "compiler": "plugins#api",
+    "write-a-shader": "hlsl",
+    "building": "plugins#api",
+    "performance": "viewer#navigation",
+    "translation-report": "settings#languages",
+    "source-api-include-cyimg-plugin-h": "decoder-api#decoder-api",
+    "source-api-include-cyimg-edit-plugin-h": "editor-api#editor-api",
+    "source-api-include-cyimg-plugin-i18n-h": "editor-api#translation",
+    "source-api-plugins-fx-extra-fx-extra-cpp": "effects#gallery",
+    "source-api-plugins-annotate-annotate-cpp": "edit#tools",
+    "source-api-plugins-share-actions-share-actions-cpp": "plugins#actions",
+    "source-api-plugins-bw-mode-bw-mode-cpp": "black-white#adjust",
+    "source-api-plugins-hlsl-hlsl-cpp": "hlsl#contract",
+    "source-api-plugins-hlsl-warmth-hlsl": "hlsl#contract"
+  },
+  "logo": "assets/app-logo.png"
+}

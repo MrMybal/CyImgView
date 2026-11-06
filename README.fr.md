@@ -9,7 +9,7 @@
 Visionneuse d'images pour Windows, pensée pour la vitesse : C++ natif, Direct2D (rendu GPU), WIC,
 aucun runtime externe pour l’exécutable principal. La distribution inclut les plugins de formats et un manuel complet hors ligne.
 
-![CyImgView affichant un paysage, avec la barre d’outils et la pellicule du dossier](docs/screenshots/viewer-fr.png)
+![CyImgView affichant un paysage, avec la barre d’outils et la pellicule du dossier](.CyDocBuild/assets/screenshots/viewer-fr.png)
 
 ## Modes d’édition et effets
 
@@ -22,11 +22,11 @@ Cliquez sur une capture pour l’ouvrir en grand.
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <a href="docs/screenshots/editor-fr.png"><img src="docs/screenshots/editor-fr.png" alt="Retouche et calques" width="100%"></a>
+      <a href=".CyDocBuild/assets/screenshots/editor-fr.png"><img src=".CyDocBuild/assets/screenshots/editor-fr.png" alt="Retouche et calques" width="100%"></a>
       <p>Textes et formes modifiables, avec les commandes des calques.</p>
     </td>
     <td width="50%" valign="top">
-      <a href="docs/screenshots/develop-fr.png"><img src="docs/screenshots/develop-fr.png" alt="Développement photo" width="100%"></a>
+      <a href=".CyDocBuild/assets/screenshots/develop-fr.png"><img src=".CyDocBuild/assets/screenshots/develop-fr.png" alt="Développement photo" width="100%"></a>
       <p>Histogramme, balance des blancs, tonalité et couleurs.</p>
     </td>
   </tr>
@@ -36,11 +36,11 @@ Cliquez sur une capture pour l’ouvrir en grand.
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <a href="docs/screenshots/black-white-fr.png"><img src="docs/screenshots/black-white-fr.png" alt="Noir et blanc" width="100%"></a>
+      <a href=".CyDocBuild/assets/screenshots/black-white-fr.png"><img src=".CyDocBuild/assets/screenshots/black-white-fr.png" alt="Noir et blanc" width="100%"></a>
       <p>Préréglages, mélangeur de couleurs et contraste.</p>
     </td>
     <td width="50%" valign="top">
-      <a href="docs/screenshots/effects-fr.png"><img src="docs/screenshots/effects-fr.png" alt="Galerie d’effets" width="100%"></a>
+      <a href=".CyDocBuild/assets/screenshots/effects-fr.png"><img src=".CyDocBuild/assets/screenshots/effects-fr.png" alt="Galerie d’effets" width="100%"></a>
       <p>Comparez les aperçus et choisissez le calque ou l’image entière.</p>
     </td>
   </tr>
@@ -50,11 +50,11 @@ Cliquez sur une capture pour l’ouvrir en grand.
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <a href="docs/screenshots/effect-preview-fr.png"><img src="docs/screenshots/effect-preview-fr.png" alt="Réglage d’un effet en direct" width="100%"></a>
+      <a href=".CyDocBuild/assets/screenshots/effect-preview-fr.png"><img src=".CyDocBuild/assets/screenshots/effect-preview-fr.png" alt="Réglage d’un effet en direct" width="100%"></a>
       <p>Ajustez l’effet avec un aperçu, puis appliquez ou annulez.</p>
     </td>
     <td width="50%" valign="top">
-      <a href="docs/screenshots/new-document-fr.png"><img src="docs/screenshots/new-document-fr.png" alt="Modèles de nouveaux documents" width="100%"></a>
+      <a href=".CyDocBuild/assets/screenshots/new-document-fr.png"><img src=".CyDocBuild/assets/screenshots/new-document-fr.png" alt="Modèles de nouveaux documents" width="100%"></a>
       <p>Formats écran, photo et impression, avec dimensions personnalisées.</p>
     </td>
   </tr>
@@ -63,7 +63,7 @@ Cliquez sur une capture pour l’ouvrir en grand.
 ## Installation
 
 Téléchargez l’installeur ou le ZIP portable depuis les [releases GitHub](https://github.com/MrMybal/CyImgView/releases/latest).
-L’installation ne nécessite pas de droits administrateur. En version portable, gardez `plugins/` et **tout le dossier `help/`** à côté de l’exécutable.
+L’installation ne nécessite pas de droits administrateur. En version portable, gardez `plugins/` et **tout le dossier `Documentation/`** à côté de l’exécutable.
 [Installation, intégration, mises à jour et désinstallation](https://mrmybal.github.io/CyImgView/#/fr/installation).
 
 ## Manuel utilisateur
@@ -71,8 +71,8 @@ L’installation ne nécessite pas de droits administrateur. En version portable
 **[Documentation](https://mrmybal.github.io/CyImgView/#/fr/overview)** — Consulter le manuel visuel complet en ligne.
 
 Appuyez sur **F1** ou cliquez sur **?** dans l’application pour ouvrir l’aide du contexte courant.
-Le manuel s’ouvre localement depuis `help/index.html`, avec captures, schémas, recherche et comparaisons d’images interactives.
-Il fonctionne hors ligne, sans serveur. Les guides sont complets en français et en anglais ; l’aide clavier est conservée dans les 12 langues de l’interface.
+Le manuel s’ouvre localement depuis `Documentation/Documentation.html`, avec captures, schémas, recherche et comparaisons d’images interactives.
+Il fonctionne hors ligne, sans serveur. Le manuel est complet en français et en anglais. L’application conserve ses 12 langues d’interface ; l’aide s’ouvre en anglais pour les autres langues.
 
 - [Bien démarrer](https://mrmybal.github.io/CyImgView/#/fr/quickstart) · [Voir et parcourir les images](https://mrmybal.github.io/CyImgView/#/fr/viewer)
 - [Créer un document vierge](https://mrmybal.github.io/CyImgView/#/fr/new-document) · [Peindre et modifier les objets](https://mrmybal.github.io/CyImgView/#/fr/edit)
@@ -88,16 +88,16 @@ Ces liens ouvrent le lecteur HTML publié, avec navigation, recherche, images et
 Visual Studio 2022 avec le développement C++ Desktop, CMake/Ninja et **Node.js 22+** pour générer le manuel :
 
 ```powershell
-npm --prefix tools/docs ci
+npm --prefix .CyDocBuild ci
 ./build.ps1
 ```
 
 L’application et son aide complète sont produites dans `build/Release/bin`.
-[Compilation et distribution](https://mrmybal.github.io/CyImgView/#/fr/building) · [Maintenance et vérification du manuel](docs/README.md).
+[Compilation et distribution](.CyDocBuild/internal/previous-manual/fr/building.md) · [Outillage du manuel](.CyDocBuild/README.md).
 
 ## Références
 
-Les anciens chapitres détaillés du README sont conservés dans le manuel. Leurs adresses de section restent accessibles ici.
+Les guides utilisateur sont dans le manuel ; les notes de compilation et de mesure restent séparées. Les anciennes adresses de section restent accessibles ici.
 
 <a id="fonctionnalités"></a>
 - [Formats et fonctionnalités](https://mrmybal.github.io/CyImgView/#/fr/formats)
@@ -114,7 +114,7 @@ Les anciens chapitres détaillés du README sont conservés dans le manuel. Leur
 <a id="écrire-un-plugin-dédition"></a>
 - [API et exemples de plugins d’édition](https://mrmybal.github.io/CyImgView/#/fr/editor-api) · [Effets HLSL](https://mrmybal.github.io/CyImgView/#/fr/hlsl)
 <a id="mesurer-les-performances"></a>
-- [Mesurer les performances](https://mrmybal.github.io/CyImgView/#/fr/performance)
+- [Mesurer les performances](.CyDocBuild/internal/previous-manual/fr/performance.md)
 <a id="confidentialité"></a>
 - [Confidentialité et fichiers locaux](https://mrmybal.github.io/CyImgView/#/fr/privacy)
 <a id="licence"></a>

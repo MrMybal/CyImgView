@@ -2,5 +2,5 @@
 @name = 日本語
 
 help.manual.action = ユーザーマニュアル\tF1
-help.manual.unavailable = ローカルマニュアルを開けません。help フォルダーを含む完全な配布版を再インストールしてください。
+help.manual.unavailable = ローカルマニュアルを開けません。Documentation フォルダーを含む完全な配布版を再インストールしてください。
 help.plugins.title = インストール済みプラグイン

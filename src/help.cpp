@@ -2,12 +2,11 @@
 #include "i18n.h"
 #include <shlwapi.h>
 #include <shellapi.h>
-#include <algorithm>
 #include <vector>
 
 namespace cyhelp {
 namespace {
-// CyDoc's C++17 route helper algorithm, MIT, commit 774f2a7. License shipped in help/.
+// CyDoc's C++17 route helper algorithm, MIT. License shipped in Documentation/DocData/.
 std::string Encode(const std::string& value) {
     constexpr char hex[]="0123456789ABCDEF";
     std::string result;
@@ -17,7 +16,7 @@ std::string Encode(const std::string& value) {
     }
     return result;
 }
-std::wstring Index(const std::wstring& directory) { return directory+L"\\help\\index.html"; }
+std::wstring Index(const std::wstring& directory) { return directory+L"\\Documentation\\Documentation.html"; }
 }
 std::wstring Url(const std::wstring& directory,const std::wstring& locale,const Topic& topic) {
     const auto path=Index(directory);
@@ -29,10 +28,7 @@ std::wstring Url(const std::wstring& directory,const std::wstring& locale,const 
         converted=UrlCreateFromPathW(path.c_str(),buffer.data(),&capacity,0);
     }
     if (FAILED(converted)) return {};
-    const wchar_t* locales[]={L"en",L"fr",L"de",L"es",L"it",L"pt",L"nl",L"pl",L"ru",L"ja",L"zh",L"ko"};
-    const auto known=std::find_if(std::begin(locales),std::end(locales),[&](const wchar_t* item){return locale==item;});
-    const std::wstring selected=known==std::end(locales)?L"en":locale;
-    std::string code(selected.begin(),selected.end());
+    const std::string code=locale==L"fr"?"fr":"en";
     std::string route="#/"+Encode(code)+"/"+Encode(topic.page.empty()?"overview":topic.page);
     if (!topic.section.empty()) route+="/"+Encode(topic.section);
     if (!topic.media.empty()) route+="?media="+Encode(topic.media);
