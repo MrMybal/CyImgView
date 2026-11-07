@@ -12,6 +12,7 @@ revision: 6
 
 - The installer and portable ZIP include the native OpenMP runtime needed by the RAW plugin, including when built with newer Visual Studio versions on GitHub.
 - Build and package validation now stop if that dependency is missing. Metadata features and the manual from 1.11.0 are included.
+- Fresh builds enforce static Exiv2 linking so the metadata provider has no undeployed `exiv2.dll` dependency.
 
 ## 1.11.0 — Metadata workspace and provider plugins {#v1-11-0}
 

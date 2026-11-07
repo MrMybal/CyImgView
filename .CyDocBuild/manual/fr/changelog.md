@@ -12,6 +12,7 @@ sourceRevision: 6
 
 - L’installeur et le ZIP portable incluent le runtime natif OpenMP nécessaire au plugin RAW, y compris avec les nouvelles versions de Visual Studio utilisées par GitHub.
 - La compilation et la vérification du paquet s’arrêtent désormais si cette dépendance manque. Les fonctions de métadonnées et le manuel de la version 1.11.0 sont inclus.
+- Les compilations neuves imposent la liaison statique d’Exiv2 pour que le fournisseur ne dépende pas d’une DLL `exiv2.dll` non distribuée.
 
 ## 1.11.0 — Éditeur de métadonnées et plugins dédiés {#v1-11-0}
 

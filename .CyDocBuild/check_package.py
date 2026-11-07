@@ -4,6 +4,8 @@ import hashlib
 import json
 import re
 import struct
+import sys
+import tempfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -44,6 +46,23 @@ with zipfile.ZipFile(archive) as package:
     manifest = json.loads(package.read(f"{name}/Documentation/DocData/manifest.json"))
     assert [locale["code"] for locale in manifest["locales"]] == ["en", "fr"], "Manual must offer complete EN/FR only"
     assert not any(page.get("kind") == "source" for page in manifest["pages"]), "Source browser in manual"
+
+    if sys.platform == "win32":
+        # Load only packaged dependencies and Windows system DLLs, not libraries
+        # left beside a build executable or installed elsewhere on the runner.
+        import ctypes
+        import _ctypes
+        with tempfile.TemporaryDirectory(prefix="package-native-", dir=ROOT / "build") as folder:
+            isolated = Path(folder)
+            for dll in ("metadata_exiv2.dll", "raw.dll", "vcomp140.dll"):
+                (isolated / dll).write_bytes(package.read(f"{name}/plugins/{dll}"))
+            for dll, entry in (("metadata_exiv2.dll", "CyImg_GetMetadataPlugin"), ("raw.dll", "CyImg_GetPlugin")):
+                library = ctypes.WinDLL(str(isolated / dll), winmode=0x100 | 0x800)
+                try:
+                    assert getattr(library, entry), f"Missing native provider entry: {dll}"
+                finally:
+                    _ctypes.FreeLibrary(library._handle)
+        print("Isolated packaged DLL loading: metadata + RAW passed (package directory and System32 only).")
 
 payload = archive.read_bytes()
 setup = installer.read_bytes()
