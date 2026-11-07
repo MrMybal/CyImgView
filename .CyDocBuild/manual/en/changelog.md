@@ -4,9 +4,14 @@ title: What changed?
 description: Discover recent changes that affect everyday image work.
 section: About
 order: 250
-revision: 5
+revision: 6
 ---
 
+
+## 1.11.1 — Complete RAW runtime distribution {#v1-11-1}
+
+- The installer and portable ZIP include the native OpenMP runtime needed by the RAW plugin, including when built with newer Visual Studio versions on GitHub.
+- Build and package validation now stop if that dependency is missing. Metadata features and the manual from 1.11.0 are included.
 
 ## 1.11.0 — Metadata workspace and provider plugins {#v1-11-0}
 

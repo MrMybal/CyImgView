@@ -31,6 +31,7 @@ with zipfile.ZipFile(archive) as package:
     assert package.read(f"{name}/CyImgView.exe") == (ROOT / "build/Release/bin/CyImgView.exe").read_bytes(), "Stale native executable"
     assert f"{name}/plugins/metadata_exiv2.dll" in names, "Native metadata provider missing"
     assert package.read(f"{name}/plugins/metadata_exiv2.dll") == (ROOT / "build/Release/bin/plugins/metadata_exiv2.dll").read_bytes(), "Stale metadata provider DLL"
+    assert package.read(f"{name}/plugins/vcomp140.dll") == (ROOT / "build/Release/bin/plugins/vcomp140.dll").read_bytes(), "Missing or stale RAW OpenMP runtime"
     assert not any("/testplugins/" in entry or "/metadata-fixtures-" in entry for entry in names), "Test metadata artifacts were packaged"
     for notice in ("exiv2-COPYING", "exiv2-LICENSE.txt", "exiv2-doc-COPYING-XMPSDK", "expat-expat-COPYING", "zlib-LICENSE"):
         assert f"{name}/licenses/{notice}" in names, f"Metadata dependency license missing: {notice}"

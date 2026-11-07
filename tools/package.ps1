@@ -20,6 +20,10 @@ if (-not $NoBuild) {
 }
 
 $bin = Join-Path $root 'build\Release\bin'
+# Le plugin RAW utilise OpenMP ; ne jamais publier un paquet qui dépend du PC de compilation.
+if (-not (Test-Path -LiteralPath (Join-Path $bin 'plugins/vcomp140.dll'))) {
+    throw 'Runtime OpenMP x64 absent du build : impossible de distribuer le plugin RAW.'
+}
 & node (Join-Path $root '.CyDocBuild\build.mjs') --out (Join-Path $bin 'Documentation')
 if ($LASTEXITCODE -ne 0) { throw 'La génération du manuel a échoué.' }
 $stage = Join-Path $root "dist\CyImgView-$ver-win64"

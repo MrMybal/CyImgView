@@ -4,9 +4,14 @@ title: Quoi de neuf ?
 description: Découvrez les évolutions récentes pour le travail sur les images.
 section: À propos
 order: 250
-sourceRevision: 5
+sourceRevision: 6
 ---
 
+
+## 1.11.1 — Distribution complète du runtime RAW {#v1-11-1}
+
+- L’installeur et le ZIP portable incluent le runtime natif OpenMP nécessaire au plugin RAW, y compris avec les nouvelles versions de Visual Studio utilisées par GitHub.
+- La compilation et la vérification du paquet s’arrêtent désormais si cette dépendance manque. Les fonctions de métadonnées et le manuel de la version 1.11.0 sont inclus.
 
 ## 1.11.0 — Éditeur de métadonnées et plugins dédiés {#v1-11-0}
 

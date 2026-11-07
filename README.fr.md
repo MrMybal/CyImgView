@@ -12,8 +12,8 @@
     </td>
     <td width="300" align="right" valign="top">
       <p><sub>Licence de l’application</sub><br><a href="LICENSE"><strong>GNU GPL v3.0</strong></a></p>
-      <p><sub>Version</sub><br><a href="docs/releases/1.11.0.md#français"><strong>1.11.0</strong></a><br><strong>Développement actif</strong></p>
-      <p><a href="https://github.com/MrMybal/CyImgView/releases/download/v1.11.0/CyImgView-1.11.0-Setup.exe"><strong>Télécharger</strong></a><br><sub>Windows x64 · installeur</sub><br><a href="https://github.com/MrMybal/CyImgView/releases/download/v1.11.0/CyImgView-1.11.0-win64.zip">ZIP portable</a></p>
+      <p><sub>Version</sub><br><a href="docs/releases/1.11.1.md#français"><strong>1.11.1</strong></a><br><strong>Développement actif</strong></p>
+      <p><a href="https://github.com/MrMybal/CyImgView/releases/download/v1.11.1/CyImgView-1.11.1-Setup.exe"><strong>Télécharger</strong></a><br><sub>Windows x64 · installeur</sub><br><a href="https://github.com/MrMybal/CyImgView/releases/download/v1.11.1/CyImgView-1.11.1-win64.zip">ZIP portable</a></p>
     </td>
   </tr>
 </table>
@@ -22,9 +22,9 @@
 
 Une visionneuse Windows native avec un éditeur pratique pour les photographes, les artistes et le travail quotidien sur les images. Parcourez un dossier, examinez les pixels, peignez, annotez, réglez une photo et enregistrez des projets modifiables.
 
-> **Développement actif · 1.11.0**
+> **Développement actif · 1.11.1**
 >
-> L’installeur et le ZIP portable Windows x64 sont disponibles. Cette version ajoute un éditeur de métadonnées avec recherche, un moteur natif et une API de plugins de lecture/écriture. L’écriture dépend du format et du groupe de métadonnées. Consultez les [changements et limites documentées](docs/releases/1.11.0.md#français).
+> L’installeur et le ZIP portable Windows x64 sont disponibles. Cette version ajoute un éditeur de métadonnées avec recherche, un moteur natif et une API de plugins de lecture/écriture. L’écriture dépend du format et du groupe de métadonnées. Consultez les [changements et limites documentées](docs/releases/1.11.1.md#français).
 
 [![CyImgView affichant un paysage, avec la barre d’outils et la pellicule du dossier](.CyDocBuild/assets/screenshots/viewer-fr.png)](.CyDocBuild/assets/screenshots/viewer-fr.png)
 
@@ -105,7 +105,7 @@ Appuyez sur **F1** ou **?** pour l’aide contextuelle. Le [manuel illustré CyD
 
 Les versions publiées sont destinées à **Windows x64**. L’exécutable principal utilise C++ natif et les API graphiques de Windows ; Node.js, Python et un environnement d’exécution distinct ne sont pas nécessaires pour utiliser l’application. Gardez les plugins fournis, dont la bibliothèque d’exécution OpenMP du plugin RAW.
 
-1. [Téléchargez l’installeur 1.11.0](https://github.com/MrMybal/CyImgView/releases/download/v1.11.0/CyImgView-1.11.0-Setup.exe) ou le [ZIP portable](https://github.com/MrMybal/CyImgView/releases/download/v1.11.0/CyImgView-1.11.0-win64.zip).
+1. [Téléchargez l’installeur 1.11.1](https://github.com/MrMybal/CyImgView/releases/download/v1.11.1/CyImgView-1.11.1-Setup.exe) ou le [ZIP portable](https://github.com/MrMybal/CyImgView/releases/download/v1.11.1/CyImgView-1.11.1-win64.zip).
 2. Lancez l’installeur pour une installation par utilisateur sans droits administrateur, ou extrayez **toute** l’archive portable.
 3. Lancez **CyImgView.exe**. En version portable, gardez `plugins/` et **tout le dossier `Documentation/`** à côté de l’exécutable.
 
@@ -182,7 +182,7 @@ Conservez les notices complètes fournies dans `licenses/` et `Documentation/Doc
 <a id="mises-à-jour-github-releases"></a><a id="utilisation"></a><a id="mode-édition"></a><a id="paramètres-touche-p-ou-bouton-engrenage"></a><a id="écrire-un-plugin"></a><a id="écrire-un-plugin-dédition"></a><a id="mesurer-les-performances"></a><a id="confidentialité"></a><a id="features"></a>
 
 - [Documentation](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/overview) · [Site web](https://mrmybal.github.io/CyImgView/?lang=fr) · [Dépôt des sources](https://github.com/MrMybal/CyImgView).
-- [Notes de version et limites](docs/releases/1.11.0.md#français) · [Versions publiées](https://github.com/MrMybal/CyImgView/releases) · [Suivi des problèmes](https://github.com/MrMybal/CyImgView/issues).
+- [Notes de version et limites](docs/releases/1.11.1.md#français) · [Versions publiées](https://github.com/MrMybal/CyImgView/releases) · [Suivi des problèmes](https://github.com/MrMybal/CyImgView/issues).
 - [Premiers pas](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/quickstart) · [Visionneuse](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/viewer) · [Retouche](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/edit).
 - [Calques et masques](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/layers) · [Effets](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/effects) · [Projets et export](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/export).
 - [Images vierges](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/new-document) · [Développement](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/develop) · [Noir et blanc](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/black-white) · [Raccourcis](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/keyboard-reference).
