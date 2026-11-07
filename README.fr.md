@@ -1,17 +1,42 @@
-[English](README.md) · **Français** · [Documentation](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/overview) · [Site web](https://mrmybal.github.io/CyImgView/?lang=fr)
-
-<p align="center">
-  <img src="docs/logo.png" alt="Logo CyImgView" width="160">
-</p>
+<table width="100%">
+  <tr>
+    <td width="300" align="left" valign="top">
+      <a href="https://mrmybal.github.io/CyImgView/?lang=fr">Site web</a><br>
+      <a href="https://mrmybal.github.io/CyImgView/Documentation.html#/fr/overview">Manuel</a><br>
+      <a href="https://github.com/MrMybal/CyImgView">GitHub</a><br><br>
+      <sub>README</sub><br>
+      <a href="README.md">English</a> · <a href="README.fr.md">Français</a>
+    </td>
+    <td width="400" align="center" valign="middle">
+      <a href="https://mrmybal.github.io/CyImgView/?lang=fr"><img src="docs/logo.png" alt="Logo de CyImgView" width="128"></a>
+    </td>
+    <td width="300" align="right" valign="top">
+      <p><sub>Licence de l’application</sub><br><a href="LICENSE"><strong>GNU GPL v3.0</strong></a></p>
+      <p><sub>Version</sub><br><a href="docs/releases/1.10.2.md#français"><strong>1.10.2</strong></a><br><strong>Développement actif</strong></p>
+      <p><a href="https://github.com/MrMybal/CyImgView/releases/download/v1.10.2/CyImgView-1.10.2-Setup.exe"><strong>Télécharger</strong></a><br><sub>Windows x64 · installeur</sub><br><a href="https://github.com/MrMybal/CyImgView/releases/download/v1.10.2/CyImgView-1.10.2-win64.zip">ZIP portable</a></p>
+    </td>
+  </tr>
+</table>
 
 <h1 align="center">CyImgView</h1>
 
-Visionneuse d'images pour Windows, pensée pour la vitesse : C++ natif, Direct2D (rendu GPU), WIC,
-aucun runtime externe pour l’exécutable principal. La distribution inclut les plugins de formats et un manuel complet hors ligne.
+Une visionneuse Windows native avec un éditeur pratique pour les photographes, les artistes et le travail quotidien sur les images. Parcourez un dossier, examinez les pixels, peignez, annotez, réglez une photo et enregistrez des projets modifiables.
 
-![CyImgView affichant un paysage, avec la barre d’outils et la pellicule du dossier](.CyDocBuild/assets/screenshots/viewer-fr.png)
+> **Développement actif · 1.10.2**
+>
+> L’installeur et le ZIP portable Windows x64 sont disponibles. Cette version ajoute une icône dédiée aux documents CyImg modifiables. Consultez les [changements et limites documentées](docs/releases/1.10.2.md#français).
 
-## Modes d’édition et effets
+[![CyImgView affichant un paysage, avec la barre d’outils et la pellicule du dossier](.CyDocBuild/assets/screenshots/viewer-fr.png)](.CyDocBuild/assets/screenshots/viewer-fr.png)
+
+## L’application
+
+Ouvrez une image et parcourez son dossier avec la pellicule. Zoomez autour du pointeur, examinez les canaux RVB/alpha et les informations EXIF, ou avancez dans une animation image par image. Passez en retouche pour peindre, ajouter du texte ou un cadre, ou composer avec des calques.
+
+Créez une image vierge à partir d’un modèle écran, photo ou impression, puis gardez un **projet .cyimg** pour conserver calques, objets et masques. Utilisez PNG/JPEG pour une image aplatie ou exportez les calques convertis en pixels vers PSD. Développement et Noir et blanc proposent des réglages photo ; la galerie d’effets permet de prévisualiser un rendu et de choisir sa cible avant de l’appliquer.
+
+<p><img src="docs/cyimg-document.png" alt="Icône de document CyImg, avec un coin replié et des calques" width="48"> Les documents natifs .cyimg ont leur propre icône, distincte du logo rond de l’application.</p>
+
+### Modes d’édition et effets
 
 Cliquez sur une capture pour l’ouvrir en grand.
 
@@ -60,62 +85,103 @@ Cliquez sur une capture pour l’ouvrir en grand.
   </tr>
 </table>
 
+## Fonctionnalités
+
+- **Parcourir et examiner** : pellicule du dossier, zoom centré sur la souris, lecture des animations, canaux, informations d’image et diaporamas.
+- **Peindre et composer** : pinceau, gomme, sélections, recadrage, remplissage, dégradé et textes, flèches et formes modifiables ; calques avec opacité, fusion et masques.
+- **Réglages photo** : exposition, balance des blancs, courbes, couleur et Noir et blanc, avec aperçu, application/annulation et historique.
+- **Effets et extensions** : plugins natifs et effets HLSL personnalisés ; application au calque actif ou à l’image entière. Aucun modèle IA ni service d’amélioration d’image n’est fourni.
+- **Formats** : images courantes, photos RAW, formats web modernes, aperçus de documents et textures techniques. Consultez la [référence des formats et ses limites](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/formats).
+- **Utilisation locale** : aucun compte ni télémétrie. L’interface propose 12 langues ; le manuel illustré complet existe en français et en anglais, en ligne et hors ligne.
+
+<a id="manuel-utilisateur"></a>
+
+Appuyez sur **F1** ou **?** pour l’aide contextuelle. Le [manuel illustré CyDoc](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/overview) comprend navigation, recherche, captures, schémas et comparaisons d’images. L’application ouvre `Documentation/Documentation.html` sans serveur ni connexion Internet ; les autres langues d’interface utilisent le manuel anglais.
+
+---
+
 ## Installation
 
-Téléchargez l’installeur ou le ZIP portable depuis les [releases GitHub](https://github.com/MrMybal/CyImgView/releases/latest).
-L’installation ne nécessite pas de droits administrateur. En version portable, gardez `plugins/` et **tout le dossier `Documentation/`** à côté de l’exécutable.
-[Installation, intégration, mises à jour et désinstallation](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/installation).
+Les versions publiées sont destinées à **Windows x64**. L’exécutable principal utilise C++ natif et les API graphiques de Windows ; Node.js, Python et un environnement d’exécution distinct ne sont pas nécessaires pour utiliser l’application. Gardez les plugins fournis, dont la bibliothèque d’exécution OpenMP du plugin RAW.
 
-## Manuel utilisateur
+1. [Téléchargez l’installeur 1.10.2](https://github.com/MrMybal/CyImgView/releases/download/v1.10.2/CyImgView-1.10.2-Setup.exe) ou le [ZIP portable](https://github.com/MrMybal/CyImgView/releases/download/v1.10.2/CyImgView-1.10.2-win64.zip).
+2. Lancez l’installeur pour une installation par utilisateur sans droits administrateur, ou extrayez **toute** l’archive portable.
+3. Lancez **CyImgView.exe**. En version portable, gardez `plugins/` et **tout le dossier `Documentation/`** à côté de l’exécutable.
 
-**[Documentation](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/overview)** — Consulter le manuel visuel complet en ligne.
+L’installeur enregistre les projets natifs `.cyimg` avec leur icône de document. Les mises à jour intégrées passent par GitHub ; les copies portables ne remplacent pas l’association de la version installée. [Installation, mises à jour et désinstallation](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/installation).
 
-Appuyez sur **F1** ou cliquez sur **?** dans l’application pour ouvrir l’aide du contexte courant.
-Le manuel s’ouvre localement depuis `Documentation/Documentation.html`, avec captures, schémas, recherche et comparaisons d’images interactives.
-Il fonctionne hors ligne, sans serveur. Le manuel est complet en français et en anglais. L’application conserve ses 12 langues d’interface ; l’aide s’ouvre en anglais pour les autres langues.
+<a id="compiler"></a>
 
-- [Bien démarrer](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/quickstart) · [Voir et parcourir les images](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/viewer)
-- [Créer un document vierge](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/new-document) · [Peindre et modifier les objets](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/edit)
-- [Calques, fusion et masques](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/layers)
-- [Galerie d’effets](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/effects) · [Développement](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/develop) · [Noir et blanc](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/black-white)
-- [Enregistrer et exporter](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/export) · [Raccourcis](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/keyboard-reference)
-- [Paramètres](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/settings) · [Résoudre un problème](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/troubleshooting)
+## Sources, compilation et bibliothèques nécessaires
 
-Ces liens ouvrent le lecteur HTML publié, avec navigation, recherche, images et schémas. Le même lecteur est également fourni hors ligne avec l’application.
+<details>
+<summary>Compiler CyImgView depuis les sources</summary>
 
-## Compiler
-
-Visual Studio 2022 avec le développement C++ Desktop, CMake/Ninja et **Node.js 22+** pour générer le manuel :
+Prérequis : Windows, **Visual Studio 2022** avec la charge **Développement Desktop en C++** et le SDK Windows, ses outils **CMake/Ninja**, et **Node.js 22+ avec npm** pour générer le manuel.
 
 ```powershell
-npm --prefix .CyDocBuild ci
-./build.ps1
+git clone https://github.com/MrMybal/CyImgView.git
+cd CyImgView
+npm --prefix .CyDocBuild ci --no-audit --no-fund
+.\build.ps1
+.\build\Release\bin\CyImgView.exe
 ```
 
-L’application et son aide complète sont produites dans `build/Release/bin`.
-[Compilation et distribution](.CyDocBuild/internal/previous-manual/fr/building.md) · [Outillage du manuel](.CyDocBuild/README.md).
+Les sources des bibliothèques de décodage natives sont déjà dans `third_party/` ; le tableau ci-dessous indique leurs rôles. La dépendance CyDoc est figée dans `.CyDocBuild/vendor/` et npm installe ses outils de génération. Seuls les modules image et gallery du lecteur sont exportés, sans Three.js. Node.js sert à générer le manuel, pas à le consulter.
 
-## Références
+Les fichiers produits se trouvent dans `build/Release/bin/`. Pour créer un installeur et une archive portable, lancez `./tools/package.ps1` ; il effectue une compilation Release complète et inclut tout le manuel hors ligne. Voir le [script de compilation](build.ps1), la [configuration CMake](CMakeLists.txt) et l’[outillage documentaire](.CyDocBuild/README.md).
 
-Les guides utilisateur sont dans le manuel ; les notes de compilation et de mesure restent séparées. Les anciennes adresses de section restent accessibles ici.
+</details>
 
-<a id="fonctionnalités"></a>
-- [Formats et fonctionnalités](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/formats)
-<a id="mises-à-jour-github-releases"></a>
-- [Mises à jour et releases GitHub](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/updates)
-<a id="utilisation"></a>
-- [Commandes de la visionneuse](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/keyboard-reference)
-<a id="mode-édition"></a>
-- [Commandes de l’éditeur](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/keyboard-reference) · [Référence des documents](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/editing-reference)
-<a id="paramètres-touche-p-ou-bouton-engrenage"></a>
-- [Paramètres](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/settings)
-<a id="écrire-un-plugin"></a>
-- [API et exemple de plugin de décodage](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/decoder-api)
-<a id="écrire-un-plugin-dédition"></a>
-- [API et exemples de plugins d’édition](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/editor-api) · [Effets HLSL](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/hlsl)
-<a id="mesurer-les-performances"></a>
-- [Mesurer les performances](.CyDocBuild/internal/previous-manual/fr/performance.md)
-<a id="confidentialité"></a>
-- [Confidentialité et fichiers locaux](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/privacy)
-<a id="licence"></a>
-- [Licences et crédits](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/licenses) · [GNU GPL v3.0](LICENSE)
+---
+
+## Licence
+
+**CyImgView utilise la [licence GNU GPL v3.0](LICENSE).** Les composants tiers conservent leurs propres licences ; leurs conditions ne remplacent pas celles de l’application.
+
+### Bibliothèques natives et composants d’exécution
+
+| Bibliothèque · sources | Licence · texte | Utilisation / périmètre |
+| --- | --- | --- |
+| [LibRaw](third_party/LibRaw) | [LGPL-2.1](third_party/LibRaw/LICENSE.LGPL) OR [CDDL-1.0](third_party/LibRaw/LICENSE.CDDL); [notices des composants](third_party/LibRaw/COPYRIGHT) | Décodage RAW dans le plugin `raw` fourni. |
+| [libwebp](third_party/libwebp) | [BSD-3-Clause](third_party/libwebp/COPYING) + [concession de brevets](third_party/libwebp/PATENTS) | WebP fixe et animé dans le plugin `webp`. |
+| [libheif](third_party/libheif) | [LGPL-3.0 licence de la bibliothèque](third_party/libheif/COPYING) | Conteneurs HEIF/HEIC/AVIF dans le plugin `heif`. |
+| [libde265](third_party/libde265) | [LGPL-3.0 licence de la bibliothèque](third_party/libde265/COPYING) | Décodage HEVC utilisé par `heif`. |
+| [dav1d](third_party/dav1d) | [BSD-2-Clause](third_party/dav1d/COPYING) | Décodage AV1 utilisé par `heif`. |
+| [libjxl](third_party/libjxl) | [BSD-3-Clause](third_party/libjxl/LICENSE) + [concession de brevets](third_party/libjxl/PATENTS) | Décodage JPEG XL et animation dans `jxl`. |
+| [Highway](third_party/highway) | [Apache-2.0 OR BSD-3-Clause; licences des composants](third_party/highway/LICENSE) | SIMD pour `jxl` ; la notice identifie aussi le composant distinct sous CC0. |
+| [OpenJPEG](third_party/openjpeg) | [BSD-2-Clause](third_party/openjpeg/LICENSE) | JPEG 2000 dans `jpeg2000`. |
+| [OpenEXRCore](third_party/openexr) / [Imath](third_party/Imath) | [BSD-3-Clause: OpenEXR](third_party/openexr/LICENSE.md), [Imath](third_party/Imath/LICENSE.md) | Décodage EXR et nombres flottants half dans `exr`. |
+| [libdeflate](third_party/libdeflate) | [MIT](third_party/libdeflate/COPYING) | Prise en charge ZIP/ZIPS dans `exr`. |
+| [Zstandard](third_party/openexr/external/zstd) | [BSD-3-Clause](third_party/openexr/external/zstd/LICENSE) | Prise en charge ZSTD dans `exr`. |
+| [OpenJPH](third_party/openexr/external/OpenJPH) | [BSD-2-Clause](third_party/openexr/external/OpenJPH/LICENSE) | Prise en charge HTJ2K dans `exr`. |
+| [Microsoft OpenMP](plugins/raw/plugin.cmake) | [Conditions de redistribution Visual Studio](https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution#visual-c-runtime-files) | `vcomp140.dll`, fourni pour LibRaw multithread. |
+
+### Documentation, génération et outils de maintenance
+
+| Bibliothèque · sources | Licence · texte | Utilisation / périmètre |
+| --- | --- | --- |
+| [CyDoc 0.1.0](https://github.com/MrMybal/CyDoc/tree/6ddf9a582defb2f11fbb3f992afef6f98dcadc93) | [MIT](https://github.com/MrMybal/CyDoc/blob/6ddf9a582defb2f11fbb3f992afef6f98dcadc93/LICENSE) | Paquet local figé pour la génération et lecteur hors ligne fourni ; image/gallery uniquement, sans Three.js. |
+| [marked 17.0.6](https://github.com/markedjs/marked) | [MIT](https://github.com/markedjs/marked/blob/v17.0.6/LICENSE.md) | Compilation Markdown par CyDoc pendant la génération. |
+| [PrismJS 1.30.0](https://github.com/PrismJS/prism) | [MIT](https://github.com/PrismJS/prism/blob/v1.30.0/LICENSE) | Coloration du code par CyDoc pendant la génération. |
+| [esbuild 0.25.12](https://github.com/evanw/esbuild) | [MIT](https://github.com/evanw/esbuild/blob/v0.25.12/LICENSE.md) | Assemblage du lecteur par CyDoc pendant la génération. |
+| [Happy DOM 21.0.4](https://github.com/capricorn86/happy-dom) | [MIT](https://github.com/capricorn86/happy-dom/blob/v21.0.4/LICENSE) | Vérifications du manuel et de la vitrine en développement, sans rôle à l’exécution de l’application. |
+| [Pillow](https://github.com/python-pillow/Pillow) | [MIT-CMU et notices des composants](https://github.com/python-pillow/Pillow/blob/main/LICENSE) | Outil optionnel de préparation des images de la vitrine ; inutile pour une compilation normale. |
+| [sharp](https://github.com/lovell/sharp) | [Apache-2.0](https://github.com/lovell/sharp/blob/main/LICENSE) + notices des composants natifs | Outil optionnel de régénération des icônes de document ; absent de l’application distribuée. |
+
+Conservez les notices complètes fournies dans `licenses/` et `Documentation/DocData/`. Ce tableau est un index, pas un remplacement des notices des composants et dépendances transitives. Les API Windows suivent les conditions de Windows et du SDK. Oodle est optionnel, propriétaire et **non distribué** ; les textures Unreal prises en charge peuvent utiliser une bibliothèque compatible provenant de l’installation de l’utilisateur.
+
+## Références et liens
+
+<a id="références"></a>
+
+<a id="mises-à-jour-github-releases"></a><a id="utilisation"></a><a id="mode-édition"></a><a id="paramètres-touche-p-ou-bouton-engrenage"></a><a id="écrire-un-plugin"></a><a id="écrire-un-plugin-dédition"></a><a id="mesurer-les-performances"></a><a id="confidentialité"></a><a id="features"></a>
+
+- [Documentation](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/overview) · [Site web](https://mrmybal.github.io/CyImgView/?lang=fr) · [Dépôt des sources](https://github.com/MrMybal/CyImgView).
+- [Notes de version et limites](docs/releases/1.10.2.md#français) · [Versions publiées](https://github.com/MrMybal/CyImgView/releases) · [Suivi des problèmes](https://github.com/MrMybal/CyImgView/issues).
+- [Premiers pas](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/quickstart) · [Visionneuse](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/viewer) · [Retouche](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/edit).
+- [Calques et masques](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/layers) · [Effets](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/effects) · [Projets et export](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/export).
+- [Images vierges](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/new-document) · [Développement](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/develop) · [Noir et blanc](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/black-white) · [Raccourcis](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/keyboard-reference).
+- [API des plugins](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/editor-api) · [API de décodage](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/decoder-api) · [Contrat HLSL](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/hlsl).
+- [Paramètres et langues](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/settings) · [Confidentialité](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/privacy) · [Dépannage](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/troubleshooting).
+- [Mises à jour](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/updates) · [Notes de mesure des performances](.CyDocBuild/internal/previous-manual/fr/performance.md).
