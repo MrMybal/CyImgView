@@ -35,7 +35,7 @@ async function files(path) {
 }
 const header = await readFile(join(root, 'src/version.h'), 'utf8');
 const version = ['MAJOR', 'MINOR', 'PATCH'].map(part => header.match(new RegExp(`CYIMG_VERSION_${part} (\\d+)`))[1]).join('.');
-const publicHeaders = ['include/cyimg_plugin.h', 'include/cyimg_edit_plugin.h'];
+const publicHeaders = ['include/cyimg_plugin.h', 'include/cyimg_edit_plugin.h', 'include/cyimg_metadata_plugin.h'];
 const inputs = [...await files(workspace), ...publicHeaders.map(path => join(root, path)), join(root, 'src/version.h'),
   ...await files(join(root, 'src/lang'))];
 const hash = createHash('sha256');

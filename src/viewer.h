@@ -228,6 +228,7 @@ private:
     void DrawHud(float cw, float ch);
     void DrawStrip(float cw, float ch, float alpha);
     void DrawInfoPanel(float cw, float ch);
+    void ShowMetadata();
     cyhelp::Topic HelpTopic() const;
     void OpenHelp(const cyhelp::Topic& topic = {"", "", ""});
     void ShowInstalledPlugins();

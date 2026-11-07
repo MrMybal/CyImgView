@@ -1,0 +1,6 @@
+Upstream: https://codeload.github.com/Exiv2/exiv2/zip/refs/tags/v0.28.9
+Archive SHA-256: c45569c2822b6a4d200f3232338551f82e44104e684c76ecc955d0b785d20fbc
+Subset: build sources, headers, CMake support and licenses.
+Local patch: src/value.cpp, XmpArrayValue::read preserves explicit empty array items.
+Rationale: metadata editing must not silently drop empty items or renumber following values.
+All other upstream source files are unmodified.

@@ -3,7 +3,9 @@
 useDefault = true
 
 [allowlist]
-description = "Faux positifs vérifiés : macro LibRaw, variables SIMD de xxhash (zstd), noms de raccourcis dans les fichiers de langue"
+description = "Faux positifs vérifiés : macro LibRaw, variables SIMD de xxhash, raccourcis traduits et nom exact d’un tag Exiv2"
+regexTarget = "secret"
+regexes = ['''^Exif\.NikonLd4$'''] # nom de groupe EXIF comparé à la variable key ; aucune clé API
 paths = [
     '''third_party/LibRaw/Changelog\.txt''',
     '''third_party/openexr/external/zstd/lib/common/xxhash\.h''',

@@ -318,6 +318,103 @@
       "references": [
         "begin-edit"
       ]
+    },
+    {
+      "key": "get-metadata",
+      "owner": null,
+      "field": "CyImgGetMetadataPluginFn",
+      "header": "include/cyimg_metadata_plugin.h",
+      "description": {
+        "en": "Export the versioned descriptor of a native metadata provider.",
+        "fr": "Exportez le descripteur versionné du fournisseur natif de métadonnées."
+      },
+      "returns": {
+        "en": "A persistent metadata provider descriptor.",
+        "fr": "Un descripteur de fournisseur conservé pendant son chargement."
+      },
+      "references": [
+        "read-metadata",
+        "write-metadata",
+        "metadata-field",
+        "metadata-group"
+      ],
+      "entry": "CyImg_GetMetadataPlugin"
+    },
+    {
+      "key": "read-metadata",
+      "owner": "CyImgMetadataPlugin",
+      "field": "read",
+      "header": "include/cyimg_metadata_plugin.h",
+      "description": {
+        "en": "Read complete typed fields and declare writable namespaces for this actual file format.",
+        "fr": "Lisez les champs typés complets et déclarez les espaces de noms modifiables de ce format."
+      },
+      "returns": {
+        "en": "CYMETA_OK, CYMETA_UNSUPPORTED or a failure result.",
+        "fr": "CYMETA_OK, CYMETA_UNSUPPORTED ou un résultat d’échec."
+      },
+      "references": [
+        "write-metadata",
+        "metadata-field",
+        "metadata-group"
+      ]
+    },
+    {
+      "key": "write-metadata",
+      "owner": "CyImgMetadataPlugin",
+      "field": "write",
+      "header": "include/cyimg_metadata_plugin.h",
+      "description": {
+        "en": "Validate and apply a metadata batch to the private copy while preserving encoded pixels and unrelated fields.",
+        "fr": "Validez et appliquez un lot sur la copie privée en conservant les pixels encodés et les autres champs."
+      },
+      "returns": {
+        "en": "CYMETA_OK only after verifying every requested edit; otherwise a failure result.",
+        "fr": "CYMETA_OK après vérification de chaque modification ; un résultat d’échec sinon."
+      },
+      "references": [
+        "read-metadata",
+        "metadata-field",
+        "metadata-group"
+      ]
+    },
+    {
+      "key": "metadata-field",
+      "owner": "CyImgMetadataHost",
+      "field": "field",
+      "header": "include/cyimg_metadata_plugin.h",
+      "description": {
+        "en": "Emit one complete metadata field with its type, flags and original occurrence.",
+        "fr": "Émettez un champ complet avec son type, ses indicateurs et son occurrence d’origine."
+      },
+      "returns": {
+        "en": "Nonzero to continue, zero to stop for cancellation or a resource limit.",
+        "fr": "Non nul pour continuer, zéro pour une annulation ou une limite de ressources."
+      },
+      "references": [
+        "read-metadata",
+        "write-metadata",
+        "metadata-group"
+      ]
+    },
+    {
+      "key": "metadata-group",
+      "owner": "CyImgMetadataHost",
+      "field": "writable_group",
+      "header": "include/cyimg_metadata_plugin.h",
+      "description": {
+        "en": "Declare a namespace that the current format can add and edit, even if it is empty.",
+        "fr": "Déclarez un espace de noms que ce format peut ajouter et modifier, même s’il est vide."
+      },
+      "returns": {
+        "en": "No return value.",
+        "fr": "Aucune valeur de retour."
+      },
+      "references": [
+        "read-metadata",
+        "write-metadata",
+        "metadata-field"
+      ]
     }
   ],
   "parameters": {
@@ -392,6 +489,30 @@
     "name": {
       "en": "Name of the new layer.",
       "fr": "Nom du nouveau calque."
+    },
+    "private_copy": {
+      "en": "Private working-file path owned by the host; never the original.",
+      "fr": "Chemin de la copie privée de travail, jamais celui de l’original."
+    },
+    "edits": {
+      "en": "Array of typed edits for this provider, addressing original occurrences.",
+      "fr": "Tableau de changements typés du fournisseur, visant les occurrences d’origine."
+    },
+    "field": {
+      "en": "Borrowed complete field descriptor, copied during this callback.",
+      "fr": "Descripteur de champ complet emprunté, copié pendant ce rappel."
+    },
+    "group": {
+      "en": "Writable metadata namespace for the current format.",
+      "fr": "Espace de noms modifiable de ce format."
+    },
+    "context": {
+      "en": "Opaque operation context supplied by the host.",
+      "fr": "Contexte opaque de l’opération fourni par l’hôte."
+    },
+    "count": {
+      "en": "Number of metadata edits.",
+      "fr": "Nombre de changements de métadonnées."
     }
   }
 }

@@ -4,7 +4,7 @@ title: Voir et parcourir les images
 description: Parcourez un dossier, zoomez, examinez les couches et lisez les animations.
 section: Guides / Visionneuse
 order: 20
-sourceRevision: 2
+sourceRevision: 3
 ---
 
 
@@ -22,7 +22,7 @@ Pour les images animées, **Espace** met en pause ou reprend ; virgule et point 
 
 ## Informations et filtrage {#information}
 
-**I** ouvre les informations. **P** ouvre les paramètres. **N** bascule sur les pixels bruts, utiles pour le pixel art. **F/F11** active ou quitte le plein écran. [Tous les raccourcis](doc:keyboard-reference#viewer).
+**I** ouvre [l’espace de métadonnées](doc:metadata#metadata) : recherche et lecture des champs complets, ajout, modification, suppression et sauvegarde de l’original. **Ctrl+I** l’ouvre aussi pendant l’édition. **P** ouvre les paramètres. **N** bascule sur les pixels bruts, utiles pour le pixel art. **F/F11** active ou quitte le plein écran. [Tous les raccourcis](doc:keyboard-reference#viewer).
 
 ```image
 {"id": "viewer-controls", "src": "assets/screenshots/viewer-fr.png", "alt": "Visionneuse et pellicule", "title": "Visionneuse et pellicule", "controls": "minimal"}

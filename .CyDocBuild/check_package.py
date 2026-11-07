@@ -29,6 +29,11 @@ with zipfile.ZipFile(archive) as package:
     for relative in expected_help:
         assert package.read(f"{name}/Documentation/{relative}") == (exported / relative).read_bytes(), f"Stale manual resource: {relative}"
     assert package.read(f"{name}/CyImgView.exe") == (ROOT / "build/Release/bin/CyImgView.exe").read_bytes(), "Stale native executable"
+    assert f"{name}/plugins/metadata_exiv2.dll" in names, "Native metadata provider missing"
+    assert package.read(f"{name}/plugins/metadata_exiv2.dll") == (ROOT / "build/Release/bin/plugins/metadata_exiv2.dll").read_bytes(), "Stale metadata provider DLL"
+    assert not any("/testplugins/" in entry or "/metadata-fixtures-" in entry for entry in names), "Test metadata artifacts were packaged"
+    for notice in ("exiv2-COPYING", "exiv2-LICENSE.txt", "exiv2-doc-COPYING-XMPSDK", "expat-expat-COPYING", "zlib-LICENSE"):
+        assert f"{name}/licenses/{notice}" in names, f"Metadata dependency license missing: {notice}"
     assert {entry.split('/')[0] for entry in packaged_help} == {"Documentation.html", "DocAI.md", "DocData"}, "Wrong export layout"
     info = json.loads(package.read(f"{name}/Documentation/DocData/build-info.json"))
     assert info["version"] == version and info["modules"] == ["image", "gallery"], "Wrong manual build or modules"

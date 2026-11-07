@@ -27,7 +27,7 @@ export async function generateApi({ root, workspace, content }) {
       return { name: parameter, type: text.slice(0, -parameter.length).trim() };
     });
     descriptions.set(name, item.description);
-    owners.set(name, item.header.endsWith('cyimg_plugin.h') ? 'decoder-api' : 'editor-api');
+    owners.set(name, item.header.endsWith('cyimg_plugin.h') ? 'decoder-api' : item.header.endsWith('cyimg_metadata_plugin.h') ? 'metadata-api' : 'editor-api');
     for (const locale of ['en', 'fr']) {
       if (!item.description[locale] || !item.returns[locale]) throw new Error(`Missing public API translation: ${item.key}/${locale}`);
       perLocale[locale].push({ key: item.key, name, kind: 'function', language: 'c',

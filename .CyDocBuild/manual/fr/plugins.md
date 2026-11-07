@@ -4,13 +4,15 @@ title: Installer et créer des extensions
 description: Installez des extensions locales de formats, d’outils, d’effets et d’actions.
 section: Extensions
 order: 170
-sourceRevision: 2
+sourceRevision: 3
 ---
 
 
 ## Familles de plugins {#overview}
 
 Les plugins sont des DLL dans le dossier `plugins`. Les plugins de décodage ouvrent des formats ; ceux d’édition ajoutent effets, outils, modes et actions Ouvrir avec. Les HLSL ajoutent des effets d’image. Redémarrez après un ajout. Les DLL exécutent du code dans l’application : utilisez des extensions de confiance.
+
+Les fournisseurs de métadonnées ajoutent des lecteurs typés et des moteurs d’écriture facultatifs, indépendamment du décodage des images. [API des métadonnées](doc:metadata-api#metadata-api).
 
 ## Installer une extension {#install}
 

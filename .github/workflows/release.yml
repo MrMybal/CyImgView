@@ -38,9 +38,11 @@ jobs:
       - name: Compiler et empaqueter
         shell: pwsh
         run: |
-          ./build.ps1 -Clean -ShellTests
+          ./build.ps1 -Clean -ShellTests -MetadataTests
           ./build/Release/bin/cyimg_shell_tests.exe ./build/Release/bin/CyImgView.exe
           if ($LASTEXITCODE -ne 0) { throw 'La vérification des associations Windows a échoué.' }
+          ./build/Release/bin/cyimg_metadata_tests.exe
+          if ($LASTEXITCODE -ne 0) { throw 'La vérification du moteur de métadonnées a échoué.' }
           ./tools/package.ps1 -NoBuild
 
       - name: Vérifier le manuel local

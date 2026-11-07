@@ -26,8 +26,8 @@ test('real guide and API parents form a readable tree', () => {
   assert.equal(docs.resolve('layers', 'en').page.parent, 'edit');
   assert.equal(docs.resolve('new-document', 'fr').page.parent, 'edit');
   const api = manifest.pages.filter(page => page.kind === 'api' && page.locale === 'en');
-  assert.equal(api.length, 18);
-  assert.ok(api.every(page => ['decoder-api', 'editor-api'].includes(page.parent)));
+  assert.equal(api.length, 23);
+  assert.ok(api.every(page => ['decoder-api', 'editor-api', 'metadata-api'].includes(page.parent)));
 });
 test('structured API import documents signatures, parameters, returns and relationships without source listings', () => {
   const page = docs.resolve('api-cyimghost-alloc-bgra-alloc-bgra', 'fr').page;

@@ -2,9 +2,10 @@
 #   .\build.ps1            -> Release
 #   .\build.ps1 -Config Debug
 #   .\build.ps1 -ShellTests -> construit aussi les tests isolés des associations Windows
+#   .\build.ps1 -MetadataTests -> construit les tests du moteur et des fournisseurs de métadonnées
 #   .\build.ps1 -Clean     -> recompile tout (obligatoire avant de livrer : un objet resté d'une
 #                              ancienne version de viewer.h donne une classe incohérente entre fichiers)
-param([ValidateSet('Release', 'Debug')][string]$Config = 'Release', [switch]$Clean, [switch]$ShellTests)
+param([ValidateSet('Release', 'Debug')][string]$Config = 'Release', [switch]$Clean, [switch]$ShellTests, [switch]$MetadataTests)
 $ErrorActionPreference = 'Stop'
 
 $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
@@ -17,6 +18,7 @@ $ErrorActionPreference = 'Continue'
 
 $cleanFirst = if ($Clean) { '--clean-first' } else { '' }
 $shellTestOption = if ($ShellTests) { '-DCYIMG_SHELL_TESTS=ON' } else { '' }
-cmd /c "`"$vcvars`" >nul && cmake -S `"$PSScriptRoot`" -B `"$build`" -G Ninja -DCMAKE_BUILD_TYPE=$Config $shellTestOption && cmake --build `"$build`" $cleanFirst"
+$metadataTestOption = if ($MetadataTests) { '-DCYIMG_METADATA_TESTS=ON' } else { '' }
+cmd /c "`"$vcvars`" >nul && cmake -S `"$PSScriptRoot`" -B `"$build`" -G Ninja -DCMAKE_BUILD_TYPE=$Config $shellTestOption $metadataTestOption && cmake --build `"$build`" $cleanFirst"
 if ($LASTEXITCODE -ne 0) { throw "La compilation a échoué." }
 Write-Host "OK -> $build\bin\CyImgView.exe"

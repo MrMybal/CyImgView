@@ -4,6 +4,7 @@
 #include "edit_plugins.h"
 #include "i18n.h"
 #include "help.h"
+#include "metadata.h"
 #include <algorithm>
 
 using namespace ui;
@@ -66,5 +67,8 @@ void Viewer::ShowInstalledPlugins() {
         append(registry.effects,"editapi.help.effects");append(registry.tools,"editapi.help.tools");
         append(registry.modes,"editapi.help.modes");append(registry.actions,"editapi.help.actions");
     }
+    metadata::Engine metadata;metadata.Init(m_exeDir);
+    message+=L"\n\n"+std::wstring(T("metadata.plugins"))+L"\n";
+    for(const auto& provider:metadata.Providers())message+=L"\n"+provider.name+L" — "+provider.version;
     MessageBoxW(m_hwnd,message.c_str(),T("help.plugins.title"),MB_OK|MB_ICONINFORMATION);
 }

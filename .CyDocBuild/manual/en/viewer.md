@@ -4,7 +4,7 @@ title: View and browse images
 description: Browse a folder, zoom, inspect channels and play animations.
 section: Guides / Viewing
 order: 20
-revision: 2
+revision: 3
 ---
 
 
@@ -22,7 +22,7 @@ On animated images, **Space** pauses or resumes; comma and period step backward 
 
 ## Information and filtering {#information}
 
-**I** opens image information. **P** opens settings. **N** toggles raw pixels, useful for pixel art. **F/F11** toggles fullscreen. [All shortcuts](doc:keyboard-reference#viewer).
+**I** opens the [metadata workspace](doc:metadata#metadata): search and inspect full fields, add/edit/delete metadata and save with an original backup. **Ctrl+I** also opens it while editing. **P** opens settings. **N** toggles raw pixels, useful for pixel art. **F/F11** toggles fullscreen. [All shortcuts](doc:keyboard-reference#viewer).
 
 ```image
 {"id": "viewer-controls", "src": "assets/screenshots/viewer-en.png", "alt": "Viewer and folder filmstrip", "title": "Viewer and folder filmstrip", "controls": "minimal"}

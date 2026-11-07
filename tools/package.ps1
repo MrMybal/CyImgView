@@ -52,7 +52,8 @@ $thirdLicenses = @(
     'libwebp\COPYING', 'libwebp\PATENTS', 'libheif\COPYING', 'libde265\COPYING', 'dav1d\COPYING',
     'libjxl\LICENSE', 'libjxl\PATENTS', 'highway\LICENSE', 'openjpeg\LICENSE', 'openexr\LICENSE.md',
     'openexr\PATENTS', 'openexr\external\zstd\LICENSE', 'openexr\external\OpenJPH\LICENSE',
-    'libdeflate\COPYING', 'Imath\LICENSE.md')
+    'libdeflate\COPYING', 'Imath\LICENSE.md', 'exiv2\COPYING', 'exiv2\LICENSE.txt', 'exiv2\doc\COPYING-XMPSDK',
+    'expat\expat\COPYING', 'zlib\LICENSE')
 foreach ($l in $thirdLicenses) {
     $src = Join-Path $root "third_party\$l"
     if (-not (Test-Path $src)) { throw "Licence manquante : $src" }

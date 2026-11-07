@@ -1,6 +1,7 @@
 #include "viewer.h"
 #include "i18n.h"
 #include "version.h"
+#include "metadata_dialog.h"
 #include "viewer_util.h"
 
 #include <dwmapi.h>
@@ -1526,9 +1527,7 @@ void Viewer::OnButton(Btn b) {
     case Btn::Rotate: Rotate(1); break;
     case Btn::Strip: m_showStrip = !m_showStrip; m_thumbReqLo = -1; RequestThumbs(); if (m_fit) ApplyFit(false); break;
     case Btn::Info:
-        m_showInfo = !m_showInfo;
-        m_showSettings = false;
-        m_showChannels = false;
+        ShowMetadata();
         break;
     case Btn::Settings:
         m_showSettings = !m_showSettings;
@@ -1562,6 +1561,7 @@ void Viewer::OnButton(Btn b) {
 void Viewer::OnKey(WPARAM vk) {
     const bool ctrl = GetKeyState(VK_CONTROL) < 0;
     const bool shift = GetKeyState(VK_SHIFT) < 0;
+    if (ctrl && vk == 'I') { ShowMetadata(); return; }
     POINT c = ClientCenter();
     if (m_slideshow) {  // diaporama : seules ses touches (et la copie) sont actives
         if (!SlideKey(vk) && ctrl && vk == 'C') CopyToClipboard();
@@ -1937,6 +1937,7 @@ LRESULT Viewer::Handle(UINT msg, WPARAM wp, LPARAM lp) {
     case WM_KEYDOWN:
         Poke();
         if (wp == VK_F1) { OpenHelp(); return 0; }
+        if (wp == 'I' && GetKeyState(VK_CONTROL) < 0) { ShowMetadata(); return 0; }
         if (m_edit.active && EditKey(wp)) return 0;
         OnKey(wp);
         return 0;

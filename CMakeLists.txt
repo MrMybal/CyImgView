@@ -12,12 +12,19 @@ set(CYIMG_WARNINGS /utf-8 /W4 /permissive- /Zc:__cplusplus /EHsc)
 
 set(OUT_DIR ${CMAKE_BINARY_DIR}/bin)
 
+
 # --- Code partagé (application, installeur, plugins) -----------------------------------------
 # deflate/zlib, archives zip, décodage des formats GPU par blocs (BC1 à BC7)
 add_library(cyimg_support STATIC src/inflate.cpp src/zip.cpp src/gpu_decode.cpp src/i18n.cpp src/file_associations.cpp)
 target_compile_options(cyimg_support PRIVATE ${CYIMG_WARNINGS})
 target_include_directories(cyimg_support PUBLIC src include)
 target_link_libraries(cyimg_support PUBLIC d3d11 advapi32 shell32)
+
+add_library(cyimg_metadata STATIC src/metadata.cpp src/metadata_dialog.cpp)
+target_compile_options(cyimg_metadata PRIVATE ${CYIMG_WARNINGS})
+target_include_directories(cyimg_metadata PUBLIC src include)
+target_link_libraries(cyimg_metadata PUBLIC cyimg_support windowscodecs propsys ole32 bcrypt
+    comctl32 comdlg32 dwmapi uxtheme)
 
 # --- Langues ---------------------------------------------------------------------------------
 # Tous les fichiers src/lang/*.lang sont intégrés comme ressources « LANG » (voir src/i18n.h) :
@@ -53,6 +60,7 @@ add_executable(CyImgView WIN32
     src/viewer_layers.cpp
     src/new_document_dialog.cpp
     src/viewer_document.cpp
+    src/viewer_metadata.cpp
     src/viewer_project.cpp
     src/viewer_effects.cpp
     src/viewer_modes.cpp
@@ -70,7 +78,7 @@ add_executable(CyImgView WIN32
     src/app.manifest)
 target_compile_options(CyImgView PRIVATE ${CYIMG_WARNINGS})
 target_link_libraries(CyImgView PRIVATE cyimg_support d2d1 d3d11 dxgi dwrite windowscodecs shlwapi dwmapi shell32
-    ole32 propsys comctl32 comdlg32 winhttp bcrypt dxguid version uxtheme)
+    ole32 propsys comctl32 comdlg32 winhttp bcrypt dxguid version uxtheme cyimg_metadata)
 target_include_directories(CyImgView PRIVATE ${CMAKE_BINARY_DIR}/gen)
 set_target_properties(CyImgView PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR})
 
@@ -84,6 +92,19 @@ add_dependencies(CyImgView cyimg_help)
 
 option(CYIMG_EDITOR_TESTS "Build offscreen editor integration tests" OFF)
 option(CYIMG_SHELL_TESTS "Build isolated Windows document-association tests" OFF)
+option(CYIMG_METADATA_TESTS "Build metadata read/write and plugin integration tests" OFF)
+if(CYIMG_METADATA_TESTS)
+    add_executable(cyimg_metadata_tests tools/metadata_tests.cpp tools/metadata_ui_tests.cpp src/save.cpp src/help.cpp src/app.rc)
+    target_include_directories(cyimg_metadata_tests PRIVATE ${CMAKE_BINARY_DIR}/gen)
+    target_compile_options(cyimg_metadata_tests PRIVATE ${CYIMG_WARNINGS})
+    target_link_libraries(cyimg_metadata_tests PRIVATE cyimg_metadata shlwapi)
+    set_target_properties(cyimg_metadata_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR})
+    add_library(metadata_example SHARED tools/metadata_test_plugin.cpp)
+    target_include_directories(metadata_example PRIVATE include)
+    target_compile_options(metadata_example PRIVATE ${CYIMG_WARNINGS})
+    set_target_properties(metadata_example PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR}/testplugins)
+    add_dependencies(cyimg_metadata_tests metadata_example)
+endif()
 if(CYIMG_SHELL_TESTS)
     add_executable(cyimg_shell_tests tools/shell_tests.cpp src/app.rc)
     target_compile_options(cyimg_shell_tests PRIVATE ${CYIMG_WARNINGS})

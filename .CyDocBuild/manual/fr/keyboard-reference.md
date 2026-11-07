@@ -3,7 +3,7 @@ id: keyboard-reference
 title: Toutes les commandes clavier
 section: Guides
 order: 111
-sourceRevision: 2
+sourceRevision: 3
 description: Retrouvez les commandes clavier de la visionneuse et de l’éditeur.
 parent: viewer
 ---
@@ -25,7 +25,7 @@ passer par « Ouvrir avec » / l'association de fichiers.
 | R / Maj+R | Pivoter |
 | F / F11 / Entrée / clic molette | Plein écran |
 | T | Pellicule |
-| I | Informations |
+| I / Ctrl+I | Métadonnées (Ctrl+I fonctionne aussi pendant l’édition) |
 | H / F1 | Aide |
 | F5 | Recharger le dossier |
 | Boutons latéraux de la souris | Image précédente / suivante |

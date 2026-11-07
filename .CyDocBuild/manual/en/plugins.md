@@ -4,13 +4,13 @@ title: Install and write extensions
 description: Install local extensions for image formats, tools, effects and actions.
 section: Extensions
 order: 170
-revision: 2
+revision: 3
 ---
 
 
 ## Plugin families {#overview}
 
-Plugins are DLLs in the app’s `plugins` directory. Decoder plugins open additional formats; editing plugins add effects, tools, modes and Open with actions. HLSL files add image effects. Restart after adding an extension. Native DLLs execute code inside the app: use trusted extensions.
+Plugins are DLLs in the app’s `plugins` directory. Decoder plugins open additional formats; editing plugins add effects, tools, modes and Open with actions. Metadata providers add typed readers and optional writers independently of image decoding. HLSL files add image effects. Restart after adding an extension. Native DLLs execute code inside the app: use trusted extensions.
 
 ## Install an extension {#install}
 
@@ -22,6 +22,7 @@ Plugins are DLLs in the app’s `plugins` directory. Decoder plugins open additi
 
 - [Decoder ABI and example](doc:decoder-api#decoder-api).
 - [Editing ABI, effects, tools and modes](doc:editor-api#editor-api).
+- [Metadata provider ABI](doc:metadata-api#metadata-api).
 - [HLSL shader contract](doc:hlsl#contract).
 
 ## Modes and future AI tools {#modes}

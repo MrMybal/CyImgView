@@ -4,9 +4,17 @@ title: Quoi de neuf ?
 description: Découvrez les évolutions récentes pour le travail sur les images.
 section: À propos
 order: 250
-sourceRevision: 4
+sourceRevision: 5
 ---
 
+
+## 1.11.0 — Éditeur de métadonnées et plugins dédiés {#v1-11-0}
+
+- Appuyez sur **I** ou **Ctrl+I** pour rechercher et lire les métadonnées typées, ajouter ou supprimer des champs, puis enregistrer les modifications ou une copie séparée. Exportez les données affichées au format JSON.
+- Le fournisseur natif intégré lit EXIF, IPTC, XMP, GPS, les profils ICC et les commentaires ; les blocs texte PNG exposent aussi les paramètres de génération et les autres textes libres. L’écriture dépend du conteneur et du groupe de métadonnées.
+- L’enregistrement utilise une copie privée, détecte les changements du fichier source, vérifie les champs écrits et conserve une sauvegarde lors du remplacement de la source. Les champs structurels et les formats sans moteur d’écriture restent en lecture seule.
+- Ajoutez des lecteurs et rédacteurs indépendants grâce à l’API publique de plugins DLL. Consultez le [guide des métadonnées](metadata.md) et la [référence des fournisseurs](metadata-api.md).
+- Ces opérations modifient le fichier image sur disque indépendamment des modifications de pixels et de calques non enregistrées. Exportez les projets natifs `.cyimg` vers une image avant d’utiliser cet éditeur.
 
 ## 1.10.2 — Icône dédiée aux documents CyImg {#v1-10-2}
 

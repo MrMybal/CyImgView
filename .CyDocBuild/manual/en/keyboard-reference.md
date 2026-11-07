@@ -3,7 +3,7 @@ id: keyboard-reference
 title: All keyboard commands
 section: Guides
 order: 111
-revision: 2
+revision: 3
 description: Find keyboard commands for viewing and editing.
 parent: viewer
 ---
@@ -24,7 +24,7 @@ parent: viewer
 | R / Shift+R | Rotate |
 | F / F11 / Enter / middle-click | Fullscreen |
 | T | Filmstrip |
-| I | Information |
+| I / Ctrl+I | Metadata workspace (Ctrl+I also works while editing) |
 | H / F1 | Help |
 | F5 | Reload folder |
 | Mouse side buttons | Previous / next image |

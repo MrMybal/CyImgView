@@ -12,8 +12,8 @@
     </td>
     <td width="300" align="right" valign="top">
       <p><sub>Licence de l’application</sub><br><a href="LICENSE"><strong>GNU GPL v3.0</strong></a></p>
-      <p><sub>Version</sub><br><a href="docs/releases/1.10.2.md#français"><strong>1.10.2</strong></a><br><strong>Développement actif</strong></p>
-      <p><a href="https://github.com/MrMybal/CyImgView/releases/download/v1.10.2/CyImgView-1.10.2-Setup.exe"><strong>Télécharger</strong></a><br><sub>Windows x64 · installeur</sub><br><a href="https://github.com/MrMybal/CyImgView/releases/download/v1.10.2/CyImgView-1.10.2-win64.zip">ZIP portable</a></p>
+      <p><sub>Version</sub><br><a href="docs/releases/1.11.0.md#français"><strong>1.11.0</strong></a><br><strong>Développement actif</strong></p>
+      <p><a href="https://github.com/MrMybal/CyImgView/releases/download/v1.11.0/CyImgView-1.11.0-Setup.exe"><strong>Télécharger</strong></a><br><sub>Windows x64 · installeur</sub><br><a href="https://github.com/MrMybal/CyImgView/releases/download/v1.11.0/CyImgView-1.11.0-win64.zip">ZIP portable</a></p>
     </td>
   </tr>
 </table>
@@ -22,9 +22,9 @@
 
 Une visionneuse Windows native avec un éditeur pratique pour les photographes, les artistes et le travail quotidien sur les images. Parcourez un dossier, examinez les pixels, peignez, annotez, réglez une photo et enregistrez des projets modifiables.
 
-> **Développement actif · 1.10.2**
+> **Développement actif · 1.11.0**
 >
-> L’installeur et le ZIP portable Windows x64 sont disponibles. Cette version ajoute une icône dédiée aux documents CyImg modifiables. Consultez les [changements et limites documentées](docs/releases/1.10.2.md#français).
+> L’installeur et le ZIP portable Windows x64 sont disponibles. Cette version ajoute un éditeur de métadonnées avec recherche, un moteur natif et une API de plugins de lecture/écriture. L’écriture dépend du format et du groupe de métadonnées. Consultez les [changements et limites documentées](docs/releases/1.11.0.md#français).
 
 [![CyImgView affichant un paysage, avec la barre d’outils et la pellicule du dossier](.CyDocBuild/assets/screenshots/viewer-fr.png)](.CyDocBuild/assets/screenshots/viewer-fr.png)
 
@@ -91,6 +91,7 @@ Cliquez sur une capture pour l’ouvrir en grand.
 - **Peindre et composer** : pinceau, gomme, sélections, recadrage, remplissage, dégradé et textes, flèches et formes modifiables ; calques avec opacité, fusion et masques.
 - **Réglages photo** : exposition, balance des blancs, courbes, couleur et Noir et blanc, avec aperçu, application/annulation et historique.
 - **Effets et extensions** : plugins natifs et effets HLSL personnalisés ; application au calque actif ou à l’image entière. Aucun modèle IA ni service d’amélioration d’image n’est fourni.
+- **Métadonnées** : lecture et modification EXIF, IPTC, XMP, GPS, ICC et textes PNG ; ajout de DLL de lecture/écriture indépendantes des décodeurs. **I** / **Ctrl+I** ouvre cet espace ; l’enregistrement conserve une sauvegarde de l’original. [Guide des métadonnées](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/metadata).
 - **Formats** : images courantes, photos RAW, formats web modernes, aperçus de documents et textures techniques. Consultez la [référence des formats et ses limites](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/formats).
 - **Utilisation locale** : aucun compte ni télémétrie. L’interface propose 12 langues ; le manuel illustré complet existe en français et en anglais, en ligne et hors ligne.
 
@@ -104,7 +105,7 @@ Appuyez sur **F1** ou **?** pour l’aide contextuelle. Le [manuel illustré CyD
 
 Les versions publiées sont destinées à **Windows x64**. L’exécutable principal utilise C++ natif et les API graphiques de Windows ; Node.js, Python et un environnement d’exécution distinct ne sont pas nécessaires pour utiliser l’application. Gardez les plugins fournis, dont la bibliothèque d’exécution OpenMP du plugin RAW.
 
-1. [Téléchargez l’installeur 1.10.2](https://github.com/MrMybal/CyImgView/releases/download/v1.10.2/CyImgView-1.10.2-Setup.exe) ou le [ZIP portable](https://github.com/MrMybal/CyImgView/releases/download/v1.10.2/CyImgView-1.10.2-win64.zip).
+1. [Téléchargez l’installeur 1.11.0](https://github.com/MrMybal/CyImgView/releases/download/v1.11.0/CyImgView-1.11.0-Setup.exe) ou le [ZIP portable](https://github.com/MrMybal/CyImgView/releases/download/v1.11.0/CyImgView-1.11.0-win64.zip).
 2. Lancez l’installeur pour une installation par utilisateur sans droits administrateur, ou extrayez **toute** l’archive portable.
 3. Lancez **CyImgView.exe**. En version portable, gardez `plugins/` et **tout le dossier `Documentation/`** à côté de l’exécutable.
 
@@ -155,6 +156,9 @@ Les fichiers produits se trouvent dans `build/Release/bin/`. Pour créer un inst
 | [libdeflate](third_party/libdeflate) | [MIT](third_party/libdeflate/COPYING) | Prise en charge ZIP/ZIPS dans `exr`. |
 | [Zstandard](third_party/openexr/external/zstd) | [BSD-3-Clause](third_party/openexr/external/zstd/LICENSE) | Prise en charge ZSTD dans `exr`. |
 | [OpenJPH](third_party/openexr/external/OpenJPH) | [BSD-2-Clause](third_party/openexr/external/OpenJPH/LICENSE) | Prise en charge HTJ2K dans `exr`. |
+| [Exiv2 0.28.9](third_party/exiv2) | [GPL-2.0-or-later](third_party/exiv2/LICENSE.txt) ; SDK XMP intégré [BSD-3-Clause](third_party/exiv2/doc/COPYING-XMPSDK) | Fournisseur natif de métadonnées : EXIF, IPTC, XMP, GPS, commentaires et ICC. |
+| [Expat 2.10.0](third_party/expat/expat) | [MIT](third_party/expat/expat/COPYING) | Lecture XML locale des métadonnées XMP. |
+| [zlib 1.3.2](third_party/zlib) | [Licence zlib](third_party/zlib/LICENSE) | Métadonnées PNG compressées. |
 | [Microsoft OpenMP](plugins/raw/plugin.cmake) | [Conditions de redistribution Visual Studio](https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution#visual-c-runtime-files) | `vcomp140.dll`, fourni pour LibRaw multithread. |
 
 ### Documentation, génération et outils de maintenance
@@ -178,7 +182,7 @@ Conservez les notices complètes fournies dans `licenses/` et `Documentation/Doc
 <a id="mises-à-jour-github-releases"></a><a id="utilisation"></a><a id="mode-édition"></a><a id="paramètres-touche-p-ou-bouton-engrenage"></a><a id="écrire-un-plugin"></a><a id="écrire-un-plugin-dédition"></a><a id="mesurer-les-performances"></a><a id="confidentialité"></a><a id="features"></a>
 
 - [Documentation](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/overview) · [Site web](https://mrmybal.github.io/CyImgView/?lang=fr) · [Dépôt des sources](https://github.com/MrMybal/CyImgView).
-- [Notes de version et limites](docs/releases/1.10.2.md#français) · [Versions publiées](https://github.com/MrMybal/CyImgView/releases) · [Suivi des problèmes](https://github.com/MrMybal/CyImgView/issues).
+- [Notes de version et limites](docs/releases/1.11.0.md#français) · [Versions publiées](https://github.com/MrMybal/CyImgView/releases) · [Suivi des problèmes](https://github.com/MrMybal/CyImgView/issues).
 - [Premiers pas](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/quickstart) · [Visionneuse](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/viewer) · [Retouche](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/edit).
 - [Calques et masques](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/layers) · [Effets](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/effects) · [Projets et export](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/export).
 - [Images vierges](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/new-document) · [Développement](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/develop) · [Noir et blanc](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/black-white) · [Raccourcis](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/keyboard-reference).

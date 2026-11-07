@@ -4,9 +4,17 @@ title: What changed?
 description: Discover recent changes that affect everyday image work.
 section: About
 order: 250
-revision: 4
+revision: 5
 ---
 
+
+## 1.11.0 — Metadata workspace and provider plugins {#v1-11-0}
+
+- Press **I** or **Ctrl+I** to search and inspect typed metadata, add or remove fields, and save changes or a separate copy. Export the complete displayed metadata to JSON.
+- The bundled native provider reads EXIF, IPTC, XMP, GPS, ICC profiles and comments; PNG text chunks also expose generation parameters and other arbitrary text. Write support depends on the container and metadata group.
+- Metadata saves run on a private file copy, check for source changes, verify the written fields and keep a backup when replacing the source. Structural fields and formats without a writer remain read-only.
+- Add independent metadata readers and writers through the public provider DLL API. Read the [metadata guide](metadata.md) and [provider reference](metadata-api.md).
+- These operations edit the image file on disk independently of unsaved pixel/layer edits. Export native `.cyimg` projects to an image before using the metadata workspace.
 
 ## 1.10.2 — Dedicated CyImg document icon {#v1-10-2}
 

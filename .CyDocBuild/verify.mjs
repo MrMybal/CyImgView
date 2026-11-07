@@ -7,7 +7,7 @@ export const helpRoutes = {
   layers: ['layers', 'masks', 'blending'], effects: ['gallery', 'apply', 'extensions'],
   develop: ['adjust'], 'black-white': ['cancel'], export: ['project', 'export'],
   shortcuts: ['viewer'], settings: ['settings'], plugins: ['overview', 'api', 'modes'],
-  troubleshooting: ['help'], hlsl: ['contract']
+  troubleshooting: ['help'], hlsl: ['contract'], metadata: ['metadata', 'inspect', 'edit', 'save', 'plugins']
 };
 export async function verifyManual(directory) {
   const data = join(directory, 'DocData');
