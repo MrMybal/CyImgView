@@ -1,0 +1,315 @@
+[
+  {
+    "asset": "viewer-en.webp",
+    "source": ".CyDocBuild/assets/screenshots/viewer-en.png",
+    "kind": "full screenshot",
+    "width": 1440,
+    "height": 900
+  },
+  {
+    "asset": "editor-en.webp",
+    "source": ".CyDocBuild/assets/screenshots/editor-en.png",
+    "kind": "full screenshot",
+    "width": 1440,
+    "height": 900
+  },
+  {
+    "asset": "develop-en.webp",
+    "source": ".CyDocBuild/assets/screenshots/develop-en.png",
+    "kind": "full screenshot",
+    "width": 1440,
+    "height": 900
+  },
+  {
+    "asset": "black-white-en.webp",
+    "source": ".CyDocBuild/assets/screenshots/black-white-en.png",
+    "kind": "full screenshot",
+    "width": 1440,
+    "height": 900
+  },
+  {
+    "asset": "effects-en.webp",
+    "source": ".CyDocBuild/assets/screenshots/effects-en.png",
+    "kind": "full screenshot",
+    "width": 1440,
+    "height": 900
+  },
+  {
+    "asset": "effect-preview-en.webp",
+    "source": ".CyDocBuild/assets/screenshots/effect-preview-en.png",
+    "kind": "full screenshot",
+    "width": 1440,
+    "height": 900
+  },
+  {
+    "asset": "new-document-en.webp",
+    "source": ".CyDocBuild/assets/screenshots/new-document-en.png",
+    "kind": "full screenshot",
+    "width": 977,
+    "height": 709
+  },
+  {
+    "asset": "layer-detail-en.webp",
+    "source": ".CyDocBuild/assets/screenshots/editor-en.png",
+    "kind": "screenshot detail",
+    "crop": [
+      1193,
+      100,
+      1430,
+      890
+    ],
+    "width": 237,
+    "height": 790
+  },
+  {
+    "asset": "tools-detail-en.webp",
+    "source": ".CyDocBuild/assets/screenshots/editor-en.png",
+    "kind": "screenshot detail",
+    "crop": [
+      6,
+      98,
+      310,
+      890
+    ],
+    "width": 304,
+    "height": 792
+  },
+  {
+    "asset": "develop-detail-en.webp",
+    "source": ".CyDocBuild/assets/screenshots/develop-en.png",
+    "kind": "screenshot detail",
+    "crop": [
+      1126,
+      108,
+      1430,
+      890
+    ],
+    "width": 304,
+    "height": 782
+  },
+  {
+    "asset": "effect-detail-en.webp",
+    "source": ".CyDocBuild/assets/screenshots/effect-preview-en.png",
+    "kind": "screenshot detail",
+    "crop": [
+      1193,
+      100,
+      1430,
+      344
+    ],
+    "width": 237,
+    "height": 244
+  },
+  {
+    "asset": "gallery-detail-en.webp",
+    "source": ".CyDocBuild/assets/screenshots/effects-en.png",
+    "kind": "screenshot detail",
+    "crop": [
+      330,
+      110,
+      1110,
+      790
+    ],
+    "width": 780,
+    "height": 680
+  },
+  {
+    "asset": "filmstrip-detail-en.webp",
+    "source": ".CyDocBuild/assets/screenshots/viewer-en.png",
+    "kind": "screenshot detail",
+    "crop": [
+      465,
+      810,
+      975,
+      895
+    ],
+    "width": 510,
+    "height": 85
+  },
+  {
+    "asset": "color-scene-en.webp",
+    "source": ".CyDocBuild/assets/screenshots/develop-en.png",
+    "kind": "screenshot detail",
+    "crop": [
+      12,
+      126,
+      1116,
+      862
+    ],
+    "width": 1104,
+    "height": 736
+  },
+  {
+    "asset": "mono-scene-en.webp",
+    "source": ".CyDocBuild/assets/screenshots/black-white-en.png",
+    "kind": "screenshot detail",
+    "crop": [
+      12,
+      126,
+      1116,
+      862
+    ],
+    "width": 1104,
+    "height": 736
+  },
+  {
+    "asset": "viewer-fr.webp",
+    "source": ".CyDocBuild/assets/screenshots/viewer-fr.png",
+    "kind": "full screenshot",
+    "width": 1440,
+    "height": 900
+  },
+  {
+    "asset": "editor-fr.webp",
+    "source": ".CyDocBuild/assets/screenshots/editor-fr.png",
+    "kind": "full screenshot",
+    "width": 1440,
+    "height": 900
+  },
+  {
+    "asset": "develop-fr.webp",
+    "source": ".CyDocBuild/assets/screenshots/develop-fr.png",
+    "kind": "full screenshot",
+    "width": 1440,
+    "height": 900
+  },
+  {
+    "asset": "black-white-fr.webp",
+    "source": ".CyDocBuild/assets/screenshots/black-white-fr.png",
+    "kind": "full screenshot",
+    "width": 1440,
+    "height": 900
+  },
+  {
+    "asset": "effects-fr.webp",
+    "source": ".CyDocBuild/assets/screenshots/effects-fr.png",
+    "kind": "full screenshot",
+    "width": 1440,
+    "height": 900
+  },
+  {
+    "asset": "effect-preview-fr.webp",
+    "source": ".CyDocBuild/assets/screenshots/effect-preview-fr.png",
+    "kind": "full screenshot",
+    "width": 1440,
+    "height": 900
+  },
+  {
+    "asset": "new-document-fr.webp",
+    "source": ".CyDocBuild/assets/screenshots/new-document-fr.png",
+    "kind": "full screenshot",
+    "width": 977,
+    "height": 709
+  },
+  {
+    "asset": "layer-detail-fr.webp",
+    "source": ".CyDocBuild/assets/screenshots/editor-fr.png",
+    "kind": "screenshot detail",
+    "crop": [
+      1193,
+      100,
+      1430,
+      890
+    ],
+    "width": 237,
+    "height": 790
+  },
+  {
+    "asset": "tools-detail-fr.webp",
+    "source": ".CyDocBuild/assets/screenshots/editor-fr.png",
+    "kind": "screenshot detail",
+    "crop": [
+      6,
+      98,
+      310,
+      890
+    ],
+    "width": 304,
+    "height": 792
+  },
+  {
+    "asset": "develop-detail-fr.webp",
+    "source": ".CyDocBuild/assets/screenshots/develop-fr.png",
+    "kind": "screenshot detail",
+    "crop": [
+      1126,
+      108,
+      1430,
+      890
+    ],
+    "width": 304,
+    "height": 782
+  },
+  {
+    "asset": "effect-detail-fr.webp",
+    "source": ".CyDocBuild/assets/screenshots/effect-preview-fr.png",
+    "kind": "screenshot detail",
+    "crop": [
+      1193,
+      100,
+      1430,
+      344
+    ],
+    "width": 237,
+    "height": 244
+  },
+  {
+    "asset": "gallery-detail-fr.webp",
+    "source": ".CyDocBuild/assets/screenshots/effects-fr.png",
+    "kind": "screenshot detail",
+    "crop": [
+      330,
+      110,
+      1110,
+      790
+    ],
+    "width": 780,
+    "height": 680
+  },
+  {
+    "asset": "filmstrip-detail-fr.webp",
+    "source": ".CyDocBuild/assets/screenshots/viewer-fr.png",
+    "kind": "screenshot detail",
+    "crop": [
+      465,
+      810,
+      975,
+      895
+    ],
+    "width": 510,
+    "height": 85
+  },
+  {
+    "asset": "color-scene-fr.webp",
+    "source": ".CyDocBuild/assets/screenshots/develop-fr.png",
+    "kind": "screenshot detail",
+    "crop": [
+      12,
+      126,
+      1116,
+      862
+    ],
+    "width": 1104,
+    "height": 736
+  },
+  {
+    "asset": "mono-scene-fr.webp",
+    "source": ".CyDocBuild/assets/screenshots/black-white-fr.png",
+    "kind": "screenshot detail",
+    "crop": [
+      12,
+      126,
+      1116,
+      862
+    ],
+    "width": 1104,
+    "height": 736
+  },
+  {
+    "asset": "logo.png",
+    "source": ".CyDocBuild/assets/app-logo.png",
+    "kind": "resized application logo",
+    "width": 128,
+    "height": 128
+  }
+]

@@ -7,6 +7,7 @@ on:
       - '.github/workflows/documentation.yml'
       - 'README*.md'
       - '.CyDocBuild/**'
+      - 'website/**'
       - 'src/version.h'
       - 'src/lang/**'
       - 'include/**'
@@ -45,13 +46,16 @@ jobs:
       - name: Check content, translations, resources and reader components
         run: npm --prefix .CyDocBuild test
 
-      - name: Stage only the verified export and legacy URL entry point
+      - name: Build the showcase alongside the verified documentation export
         run: node .CyDocBuild/stage_pages.mjs
+
+      - name: Verify showcase resources, languages and documentation links
+        run: node website/check.mjs
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      # Only the verified export is uploaded. No checkout, application data or build tools.
+      # Only the static showcase and documentation export; no application data or build tools.
       - name: Upload complete documentation export
         uses: actions/upload-pages-artifact@v4
         with:

@@ -31,7 +31,7 @@ The export is exactly `Documentation.html`, `DocAI.md` and `DocData/`. Open the 
 
 The pinned vendor archive and provenance in `vendor/` allow builds without private GitHub access. Installing build-time npm dependencies can require a connection; reading the generated manual never does.
 
-`stage_pages.mjs` copies only the verified `Documentation/` export into `build/pages/` and adds a compatibility entry for historical `/#/en/...` and `/#/fr/...` URLs. The official generated reader remains untouched. The Pages workflow deploys that staging directory when changes are later pushed; local generation does not publish anything.
+`stage_pages.mjs` copies the verified `Documentation/` export into `build/pages/` and builds the static showcase beside it. The showcase preserves historical `/#/en/...` and `/#/fr/...` URLs through redirects to the reader. The official generated reader remains untouched. The Pages workflow verifies both the showcase and documentation before deployment when changes are later pushed; local generation does not publish anything. See `../website/README.md` for local preview commands.
 
 After a native build and local packaging:
 

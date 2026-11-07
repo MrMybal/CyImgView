@@ -1,4 +1,4 @@
-[English](README.md) · **Français** · [Documentation](https://mrmybal.github.io/CyImgView/#/fr/overview)
+[English](README.md) · **Français** · [Documentation](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/overview)
 
 <p align="center">
   <img src="docs/logo.png" alt="Logo CyImgView" width="160">
@@ -64,22 +64,22 @@ Cliquez sur une capture pour l’ouvrir en grand.
 
 Téléchargez l’installeur ou le ZIP portable depuis les [releases GitHub](https://github.com/MrMybal/CyImgView/releases/latest).
 L’installation ne nécessite pas de droits administrateur. En version portable, gardez `plugins/` et **tout le dossier `Documentation/`** à côté de l’exécutable.
-[Installation, intégration, mises à jour et désinstallation](https://mrmybal.github.io/CyImgView/#/fr/installation).
+[Installation, intégration, mises à jour et désinstallation](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/installation).
 
 ## Manuel utilisateur
 
-**[Documentation](https://mrmybal.github.io/CyImgView/#/fr/overview)** — Consulter le manuel visuel complet en ligne.
+**[Documentation](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/overview)** — Consulter le manuel visuel complet en ligne.
 
 Appuyez sur **F1** ou cliquez sur **?** dans l’application pour ouvrir l’aide du contexte courant.
 Le manuel s’ouvre localement depuis `Documentation/Documentation.html`, avec captures, schémas, recherche et comparaisons d’images interactives.
 Il fonctionne hors ligne, sans serveur. Le manuel est complet en français et en anglais. L’application conserve ses 12 langues d’interface ; l’aide s’ouvre en anglais pour les autres langues.
 
-- [Bien démarrer](https://mrmybal.github.io/CyImgView/#/fr/quickstart) · [Voir et parcourir les images](https://mrmybal.github.io/CyImgView/#/fr/viewer)
-- [Créer un document vierge](https://mrmybal.github.io/CyImgView/#/fr/new-document) · [Peindre et modifier les objets](https://mrmybal.github.io/CyImgView/#/fr/edit)
-- [Calques, fusion et masques](https://mrmybal.github.io/CyImgView/#/fr/layers)
-- [Galerie d’effets](https://mrmybal.github.io/CyImgView/#/fr/effects) · [Développement](https://mrmybal.github.io/CyImgView/#/fr/develop) · [Noir et blanc](https://mrmybal.github.io/CyImgView/#/fr/black-white)
-- [Enregistrer et exporter](https://mrmybal.github.io/CyImgView/#/fr/export) · [Raccourcis](https://mrmybal.github.io/CyImgView/#/fr/keyboard-reference)
-- [Paramètres](https://mrmybal.github.io/CyImgView/#/fr/settings) · [Résoudre un problème](https://mrmybal.github.io/CyImgView/#/fr/troubleshooting)
+- [Bien démarrer](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/quickstart) · [Voir et parcourir les images](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/viewer)
+- [Créer un document vierge](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/new-document) · [Peindre et modifier les objets](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/edit)
+- [Calques, fusion et masques](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/layers)
+- [Galerie d’effets](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/effects) · [Développement](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/develop) · [Noir et blanc](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/black-white)
+- [Enregistrer et exporter](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/export) · [Raccourcis](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/keyboard-reference)
+- [Paramètres](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/settings) · [Résoudre un problème](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/troubleshooting)
 
 Ces liens ouvrent le lecteur HTML publié, avec navigation, recherche, images et schémas. Le même lecteur est également fourni hors ligne avec l’application.
 
@@ -100,22 +100,22 @@ L’application et son aide complète sont produites dans `build/Release/bin`.
 Les guides utilisateur sont dans le manuel ; les notes de compilation et de mesure restent séparées. Les anciennes adresses de section restent accessibles ici.
 
 <a id="fonctionnalités"></a>
-- [Formats et fonctionnalités](https://mrmybal.github.io/CyImgView/#/fr/formats)
+- [Formats et fonctionnalités](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/formats)
 <a id="mises-à-jour-github-releases"></a>
-- [Mises à jour et releases GitHub](https://mrmybal.github.io/CyImgView/#/fr/updates)
+- [Mises à jour et releases GitHub](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/updates)
 <a id="utilisation"></a>
-- [Commandes de la visionneuse](https://mrmybal.github.io/CyImgView/#/fr/keyboard-reference)
+- [Commandes de la visionneuse](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/keyboard-reference)
 <a id="mode-édition"></a>
-- [Commandes de l’éditeur](https://mrmybal.github.io/CyImgView/#/fr/keyboard-reference) · [Référence des documents](https://mrmybal.github.io/CyImgView/#/fr/editing-reference)
+- [Commandes de l’éditeur](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/keyboard-reference) · [Référence des documents](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/editing-reference)
 <a id="paramètres-touche-p-ou-bouton-engrenage"></a>
-- [Paramètres](https://mrmybal.github.io/CyImgView/#/fr/settings)
+- [Paramètres](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/settings)
 <a id="écrire-un-plugin"></a>
-- [API et exemple de plugin de décodage](https://mrmybal.github.io/CyImgView/#/fr/decoder-api)
+- [API et exemple de plugin de décodage](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/decoder-api)
 <a id="écrire-un-plugin-dédition"></a>
-- [API et exemples de plugins d’édition](https://mrmybal.github.io/CyImgView/#/fr/editor-api) · [Effets HLSL](https://mrmybal.github.io/CyImgView/#/fr/hlsl)
+- [API et exemples de plugins d’édition](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/editor-api) · [Effets HLSL](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/hlsl)
 <a id="mesurer-les-performances"></a>
 - [Mesurer les performances](.CyDocBuild/internal/previous-manual/fr/performance.md)
 <a id="confidentialité"></a>
-- [Confidentialité et fichiers locaux](https://mrmybal.github.io/CyImgView/#/fr/privacy)
+- [Confidentialité et fichiers locaux](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/privacy)
 <a id="licence"></a>
-- [Licences et crédits](https://mrmybal.github.io/CyImgView/#/fr/licenses) · [GNU GPL v3.0](LICENSE)
+- [Licences et crédits](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/licenses) · [GNU GPL v3.0](LICENSE)
