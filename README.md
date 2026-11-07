@@ -4,7 +4,7 @@
 
 <h1 align="center">CyImgView</h1>
 
-**English** · [Français](README.fr.md) · [Documentation](https://mrmybal.github.io/CyImgView/Documentation.html#/en/overview)
+**English** · [Français](README.fr.md) · [Documentation](https://mrmybal.github.io/CyImgView/Documentation.html#/en/overview) · [Website](https://mrmybal.github.io/CyImgView/?lang=en)
 
 A Windows image viewer built for speed: native C++, Direct2D GPU rendering, WIC and no
 external runtime for the main executable. The distribution includes format plugins and a complete offline manual.

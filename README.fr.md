@@ -1,4 +1,4 @@
-[English](README.md) · **Français** · [Documentation](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/overview)
+[English](README.md) · **Français** · [Documentation](https://mrmybal.github.io/CyImgView/Documentation.html#/fr/overview) · [Site web](https://mrmybal.github.io/CyImgView/?lang=fr)
 
 <p align="center">
   <img src="docs/logo.png" alt="Logo CyImgView" width="160">
