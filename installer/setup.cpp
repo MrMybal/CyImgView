@@ -15,6 +15,7 @@
 #include "../src/i18n.h"
 #include "../src/updater.h"
 #include "../src/version.h"
+#include "../src/file_associations.h"
 
 #include <commctrl.h>
 #include <shellapi.h>
@@ -61,10 +62,18 @@ std::wstring SelfPath() {
 }
 
 void SetString(HKEY root, const std::wstring& key, const wchar_t* name, const std::wstring& value) {
-    RegSetKeyValueW(root, key.c_str(), name, REG_SZ, value.c_str(), DWORD((value.size() + 1) * sizeof(wchar_t)));
+    HKEY handle;
+    if (RegCreateKeyExW(root, key.c_str(), 0, nullptr, 0, KEY_SET_VALUE, nullptr, &handle, nullptr) == ERROR_SUCCESS) {
+        RegSetValueExW(handle, name, 0, REG_SZ, reinterpret_cast<const BYTE*>(value.c_str()), DWORD((value.size() + 1) * sizeof(wchar_t)));
+        RegCloseKey(handle);
+    }
 }
 void SetDword(HKEY root, const std::wstring& key, const wchar_t* name, DWORD v) {
-    RegSetKeyValueW(root, key.c_str(), name, REG_DWORD, &v, sizeof(v));
+    HKEY handle;
+    if (RegCreateKeyExW(root, key.c_str(), 0, nullptr, 0, KEY_SET_VALUE, nullptr, &handle, nullptr) == ERROR_SUCCESS) {
+        RegSetValueExW(handle, name, 0, REG_DWORD, reinterpret_cast<const BYTE*>(&v), sizeof(v));
+        RegCloseKey(handle);
+    }
 }
 
 bool CreateShortcut(const std::wstring& lnk, const std::wstring& target, const std::wstring& dir) {
@@ -195,6 +204,7 @@ void RegisterApp(const std::wstring& dir, bool desktop) {
         SetString(HKEY_CURRENT_USER, classes + ext + L"\\OpenWithProgids", kProgId, L"");
         SetString(HKEY_CURRENT_USER, caps + L"\\FileAssociations", ext.c_str(), kProgId);
     }
+    cyimg::shell::RegisterProjectAssociation(exe);
     SetString(HKEY_CURRENT_USER, L"Software\\RegisteredApplications", L"CyImgView", caps);
 
     // Raccourcis
@@ -219,6 +229,7 @@ void RegisterApp(const std::wstring& dir, bool desktop) {
 
 void UnregisterApp() {
     const std::wstring classes = L"Software\\Classes\\";
+    cyimg::shell::UnregisterProjectAssociation();
     RegDeleteTreeW(HKEY_CURRENT_USER, (classes + kProgId).c_str());
     RegDeleteTreeW(HKEY_CURRENT_USER, (classes + L"Applications\\CyImgView.exe").c_str());
     for (const wchar_t* e : kExts) {

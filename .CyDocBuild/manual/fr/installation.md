@@ -3,7 +3,7 @@ id: installation
 title: Installer CyImgView
 section: Guides
 order: 5
-sourceRevision: 2
+sourceRevision: 3
 description: Installez l’application, gardez une copie portable ou désinstallez-la.
 parent: overview
 ---
@@ -28,3 +28,9 @@ Version portable : l'archive `CyImgView-<version>-win64.zip` contient l'exe et l
 
 
 Gardez le dossier `Documentation` complet à côté de l’exécutable pour l’aide hors ligne.
+
+## Reconnaître les projets CyImg {#documents}
+
+Les projets modifiables `.cyimg` utilisent une icône de document avec un coin replié, des calques et la mention CYIMG. Le logo rond de CyImgView identifie l’application elle-même.
+
+L’installeur enregistre ce format natif. Si une autre application est déjà définie par défaut, choisissez CyImgView pour `.cyimg` dans **Paramètres > Applications > Applications par défaut** lorsque vous souhaitez la remplacer. Windows conserve votre choix explicite d’application. Les copies portables ne s’enregistrent pas automatiquement.

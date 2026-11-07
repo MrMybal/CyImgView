@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <title>CyImg editing document</title>
+  <!-- A document silhouette and stacked image layers distinguish projects from the round app icon. -->
+  <path d="M52 12h106l50 50v164a18 18 0 0 1-18 18H52a18 18 0 0 1-18-18V30a18 18 0 0 1 18-18Z" fill="#e5f4f1" stroke="#237d77" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M158 12v36a14 14 0 0 0 14 14h36" fill="#69c9bd" stroke="#237d77" stroke-width="5" stroke-linejoin="round"/>
+  <rect x="72" y="97" width="108" height="76" rx="10" fill="#aedfd7" stroke="#358f86" stroke-width="4"/>
+  <rect x="62" y="85" width="108" height="76" rx="10" fill="#d3eee8" stroke="#358f86" stroke-width="4"/>
+  <rect x="52" y="73" width="108" height="76" rx="10" fill="#075b59"/>
+  <path d="m58 135 27-28 17 17 18-20 34 31v7H58Z" fill="#63c4b7"/>
+  <circle cx="136" cy="92" r="8" fill="#beece3"/>
+  <!-- The CY monogram is vector geometry: no font or linked logo is required. -->
+  <path d="M108 91a25 25 0 1 0 0 35" fill="none" stroke="#f4fffc" stroke-width="8"/>
+  <path d="m82 99 12 16 12-16M94 115v18" fill="none" stroke="#f4fffc" stroke-width="7" stroke-linejoin="miter"/>
+  <rect x="24" y="181" width="192" height="51" rx="10" fill="#075b59"/>
+  <!-- CYIMG, drawn as paths to keep the extension identical on every machine. -->
+  <g fill="none" stroke="#edfffa" stroke-width="5.5" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M62 195H48v23h14M72 195l9 11 9-11M81 206v12M103 195v23M117 218v-23l10 12 10-12v23M169 195h-17v23h17v-10h-7"/>
+  </g>
+</svg>

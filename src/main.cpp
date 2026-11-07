@@ -1,6 +1,7 @@
 #include "i18n.h"
 #include "version.h"
 #include "viewer.h"
+#include "file_associations.h"
 
 #include <shellapi.h>
 
@@ -56,6 +57,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show) {
         wchar_t exe[MAX_PATH * 2], lang[32] = {};
         DWORD n = GetModuleFileNameW(nullptr, exe, ARRAYSIZE(exe));
         std::wstring dir(exe, n);
+        cyimg::shell::RefreshInstalledProjectAssociation(dir);
         dir = dir.substr(0, dir.find_last_of(L'\\'));
         GetPrivateProfileStringW(L"settings", L"language", L"", lang, ARRAYSIZE(lang), SettingsIniPath().c_str());
         i18n::Init(dir, lang);

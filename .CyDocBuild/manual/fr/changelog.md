@@ -4,9 +4,15 @@ title: Quoi de neuf ?
 description: Découvrez les évolutions récentes pour le travail sur les images.
 section: À propos
 order: 250
-sourceRevision: 3
+sourceRevision: 4
 ---
 
+
+## 1.10.2 — Icône dédiée aux documents CyImg {#v1-10-2}
+
+- Repérez les projets modifiables `.cyimg` grâce à une icône de document avec des calques et la mention CYIMG, distincte du logo rond de l’application.
+- L’installeur enregistre le format de projet natif dans Windows. L’application installée actualise cette association après une mise à jour automatique.
+- Les choix existants pour d’autres applications et les formats d’image courants sont conservés. Les copies portables ne remplacent pas l’association de la version installée.
 
 ## 1.10.1 — Lecteur documentaire actualisé {#v1-10-1}
 

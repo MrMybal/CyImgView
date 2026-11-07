@@ -14,10 +14,10 @@ set(OUT_DIR ${CMAKE_BINARY_DIR}/bin)
 
 # --- Code partagé (application, installeur, plugins) -----------------------------------------
 # deflate/zlib, archives zip, décodage des formats GPU par blocs (BC1 à BC7)
-add_library(cyimg_support STATIC src/inflate.cpp src/zip.cpp src/gpu_decode.cpp src/i18n.cpp)
+add_library(cyimg_support STATIC src/inflate.cpp src/zip.cpp src/gpu_decode.cpp src/i18n.cpp src/file_associations.cpp)
 target_compile_options(cyimg_support PRIVATE ${CYIMG_WARNINGS})
 target_include_directories(cyimg_support PUBLIC src include)
-target_link_libraries(cyimg_support PUBLIC d3d11)
+target_link_libraries(cyimg_support PUBLIC d3d11 advapi32 shell32)
 
 # --- Langues ---------------------------------------------------------------------------------
 # Tous les fichiers src/lang/*.lang sont intégrés comme ressources « LANG » (voir src/i18n.h) :
@@ -36,6 +36,8 @@ file(WRITE ${CMAKE_BINARY_DIR}/gen/lang.rc.tmp "${CYIMG_LANG_RC}")
 file(COPY_FILE ${CMAKE_BINARY_DIR}/gen/lang.rc.tmp ${CMAKE_BINARY_DIR}/gen/lang.rc ONLY_IF_DIFFERENT)
 set_source_files_properties(src/app.rc installer/setup.rc tools/bench.rc PROPERTIES
     OBJECT_DEPENDS "${CYIMG_LANG_FILES};${CMAKE_BINARY_DIR}/gen/lang.rc")
+set_property(SOURCE src/app.rc APPEND PROPERTY OBJECT_DEPENDS
+    "${CMAKE_SOURCE_DIR}/src/app.ico;${CMAKE_SOURCE_DIR}/src/cyimg-document.ico;${CMAKE_SOURCE_DIR}/src/resource.h")
 
 # --- Application -----------------------------------------------------------------------------
 add_executable(CyImgView WIN32
@@ -81,6 +83,14 @@ add_custom_target(cyimg_help ALL
 add_dependencies(CyImgView cyimg_help)
 
 option(CYIMG_EDITOR_TESTS "Build offscreen editor integration tests" OFF)
+option(CYIMG_SHELL_TESTS "Build isolated Windows document-association tests" OFF)
+if(CYIMG_SHELL_TESTS)
+    add_executable(cyimg_shell_tests tools/shell_tests.cpp src/app.rc)
+    target_compile_options(cyimg_shell_tests PRIVATE ${CYIMG_WARNINGS})
+    target_include_directories(cyimg_shell_tests PRIVATE ${CMAKE_BINARY_DIR}/gen)
+    target_link_libraries(cyimg_shell_tests PRIVATE cyimg_support)
+    set_target_properties(cyimg_shell_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUT_DIR})
+endif()
 if(CYIMG_EDITOR_TESTS)
     get_target_property(editor_sources CyImgView SOURCES)
     list(REMOVE_ITEM editor_sources src/main.cpp)

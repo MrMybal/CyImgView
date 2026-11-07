@@ -4,9 +4,15 @@ title: What changed?
 description: Discover recent changes that affect everyday image work.
 section: About
 order: 250
-revision: 3
+revision: 4
 ---
 
+
+## 1.10.2 — Dedicated CyImg document icon {#v1-10-2}
+
+- Recognize editable `.cyimg` projects by their document icon with stacked image layers and a CYIMG label, distinct from the round application logo.
+- The installer registers the native project format with Windows. The installed app refreshes its project handler after an automatic update.
+- Existing defaults for other applications and ordinary image formats remain unchanged. Portable copies do not replace the installed file association.
 
 ## 1.10.1 — Updated documentation reader {#v1-10-1}
 

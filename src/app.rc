@@ -1,7 +1,9 @@
 #include <winver.h>
 #include "version.h"
+#include "resource.h"
 
 1 ICON "app.ico"
+IDI_CYIMG_DOCUMENT ICON "cyimg-document.ico"
 #include "lang.rc"  // textes de l'interface, toutes langues (généré par CMake)
 2 RCDATA "logo.png"  // logo affiché dans l'interface (accueil, aide)
 
